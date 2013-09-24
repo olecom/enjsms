@@ -1,0 +1,516 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Telnet GSM</title>
+    <link rel="shortcut icon" type="image/ico" href="/favicon.ico" />
+    <link rel="stylesheet" href="extjs/resources/css/ext-all.css">
+    <style>
+     .icon-grid { background-image:url(images/grid.png) !important; }
+     .add { background-image:url(images/add.gif) !important; }
+     .option { background-image:url(images/plugin.gif) !important; }
+     .remove { background-image:url(images/delete.gif) !important; }
+	</style>
+</head>
+<body>
+<center id='startup'><img src='images/loading.gif'><br/>
+Загрузка...
+<noscript><br/><h2 style="color:red;background-color:white">Без включенного Java Script ждать нечего!</h2></noscript>
+</center>
+<div id="smsops"></div>
+</body>
+<script src="extjs/ext-all-debug.js"></script>
+<script type="text/javascript">
+
+Ext.Loader.setConfig({enabled: true})
+Ext.Loader.setPath('Ext.ux', 'extjs/ux')
+Ext.require([
+     'Ext.ux.TabReorderer'
+	,'Ext.ux.TabScrollerMenu'
+	,'Ext.ux.RowExpander'
+])
+//Ext.require(['*']);
+Ext.Loader.onReady(function() {
+
+// данные для ussd from
+/*	Ext.define('USSD',{
+		extend: 'Ext.data.Model',
+		fields: ['ussdNumber', 'msg'],
+		proxy: {
+			type: 'ajax',
+			api: {
+				read: 'data/get_user',
+				update: 'data/update_user'
+			},
+			reader: {
+				type: 'json',
+				root: 'ussd'
+			}
+		}
+	  }
+	)*/
+
+// данные для sms grid
+    Ext.define('Company',{
+        extend: 'Ext.data.Model',
+        fields: [
+            {name: 'sms'},
+            {name: 'phonenum'},
+            {name: 'status'},
+            {name: 'startDate', type: 'date', dateFormat: 'c'},
+            {name: 'endDate', type: 'date', dateFormat: 'c'}
+         ]
+    })
+//
+    Ext.grid.dummyData = [
+        ['Ivan, nasha mmm trydydy bla blu bla!!!','+375(29)777-80-90','sent','2012-04-09T02:19:59','2012-04-09T04:19:59'],
+        ['Petr, nasha mmm trydydy bla blu bla!!!','+375(29)555-80-90','cnfd','2012-04-09T02:19:59','2012-04-09T05:44:00'],
+		['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+    ];
+
+    var getLocalStore = function() {
+        return Ext.create('Ext.data.ArrayStore', {
+            model: 'Company',
+            data: Ext.grid.dummyData
+        })
+    }
+
+	function _ta(){ //ISODateString
+		function pad(n){return n<10 ? '0'+n : n}
+		var d = new Date()
+		return '@[T<b>'
+		+ pad(d.getUTCHours())+'<blink style="color:orange">:</blink>'
+		+ pad(d.getUTCMinutes())+'<blink style="color:orange">:</blink>'
+		+ pad(d.getUTCSeconds())+'</b>Z] '
+	}
+	Ext._ta = _ta
+
+	function _date(){ //ISODateString
+		function pad(n){return n<10 ? '0'+n : n}
+		var d = new Date()
+		return d.getUTCFullYear()+'-'
+		+ pad(d.getUTCMonth()+1)+'-'
+		+ pad(d.getUTCDate())+'T'
+		+ pad(d.getUTCHours())+':'
+		+ pad(d.getUTCMinutes())+':'
+		+ pad(d.getUTCSeconds())+'Z'
+	}
+
+    function dateRndr(v) {
+/*		var val = parseFloat(v)
+	if (Ext.isNumber(v)) {
+        if (val > 0) {
+            return '<span style="color:green;">' + val + '</span>';
+        } else if (val <= 0) {
+            return '<span style="color:red;">' + val + '</span>';
+        }
+        return val
+	}
+	return v
+		Ext._log (val)
+		var val = v ? String(v) : ''
+*/
+		if(v) {
+			return Ext.util.Format.dateRenderer()(v) //.call(this, v)
+		} else {
+			return '<b style="color:red;">???</b>'
+		}
+    }
+
+    function objStatus(o) {
+        if ('cnfd' == o) {
+            return '<b style="color:green;">ДОСТАВЛЕНО</b>'
+        } else if ('unst' == o) {
+            return '<b style="color:red;">В ОЧЕРЕДИ</b>'
+        } else if ('sent' == o) {
+			return '<b style="color:orange;">ОТОСЛАНО</b>'
+        }
+        return o;
+    }
+	//ISO date format
+	Ext.Date.defaultFormat = 'c'
+
+// отображние
+    Ext.QuickTips.init();
+	
+var ussdC = Ext.create('Ext.data.Store',{
+    fields: ['n', 'd'],
+    data : [
+		 {n: '', d: ''}
+        ,{n:"*100#", d:'Баланс "*100#"'}
+        ,{n:"*147#", d:'Показать номер ("Velcom", "MTS") "*147#"'}
+        ,{n:"*111*10#", d:'Показать номер ("MTS") "*111*10#"'}
+		]
+	})
+
+var ussdH = function(){
+    var form = this.up('form').getForm() // get the basic form
+		,t = this
+    //if (form.isValid()) { // make sure the form contains valid data before submitting
+	
+		if(/^Отп/.test(t.text)) {
+			//form.
+		} else if(/^Пол/.test(t.text)) {
+		
+		}
+	
+        form.submit({
+            success: function(form, action){
+				Ext._ussd(t.text+': Успех. ' + action.result.msg)
+            }
+            ,failure: function(form, action){
+                Ext._ussd(t.text+': Ошибка. ' + action.result.msg)
+            }
+        })
+	}
+	Ext.fly('startup').remove()
+var cw, app_tabs
+    ,vp = Ext.create('Ext.Viewport', {
+        layout: { type: 'border', padding: 5 }
+        ,defaults: { split: true }
+		//без 'xtype' берётся как 'panel'
+        ,items: [{ 
+			region: 'north', title: 'верхнее поле прозапас', collapseMode: 'mini'
+            ,collapsible: true, collapsed: true, split: true
+			,height: 100, minHeight: 60
+            ,html: 'north'
+          },{
+            region: 'west'
+//////////////////////////
+//            ,collapsible: true, split: true, minWidth: 100, minHeight: 140
+			,layout: 'border', title: 'ЦУП'
+            ,collapsible: true, collapsed: false, collapseMode: 'mini'
+			,floatable: true
+			,width: '18%'
+            ,items: [{
+                region: 'north', title: 'софт и железо / software and hardware'
+				,collapsible: true, autoScroll: true, split: true
+				,height: '65%'
+                ,minHeight: 111
+				//html: 'center center', 
+                ,items: [cw = Ext.create('Ext.Window', {
+                    xtype: 'window', title: 'Constrained Window', itemId: 'center-window',
+                    closable: false, minimizable: true, constrain: true, height: 200, width: 400,
+                    html: 'могу быть только внутри панели',
+                    minimize: function() { this.floatParent.down('button#toggleCw').toggle(); }
+				  })
+				  ,{
+            xtype: 'dataview'
+			,itemId: 'id_swhw_stat'
+            ,tpl: '<tpl for="."><div class="item">' +
+'os: <b>{os}</b><br/>'+
+'server: <b>{server}</b><br/>'+
+'db: <b>{db}</b><br/>'+
+'gsm: <b>{gsm}</b><br/>'+
+'uptime: <b>{uptime}</b></div></tpl>'
+            ,itemSelector: 'div.item'
+			,loadMask: false
+            ,store: Ext.create('Ext.data.Store', {
+//bugfix 001: autoLoad is false. log widgets, created later in Ext.onReady()
+//            and they must have first nodeJS logs there otherwise this early load will eat them
+                autoLoad: !true, storeId: 'swhw'
+                ,proxy: { type: 'ajax', url : '/swhw_stat.json', reader: { type: 'json', root: 'stats' } }
+                ,fields: ['os', 'server', 'db', 'gsm', 'uptime' ]
+              }
+			)
+				  }
+				  , Ext.create('Ext.ProgressBar', {
+						text:'качество сигнала'
+						,itemId:'id_sigq'
+						,value: 1
+						}
+					)
+				],
+                dockedItems: [{
+					xtype: 'toolbar', dock: 'bottom'
+                    ,items:['управление:', ' ', {
+                        itemId: 'toggleCw'
+						, text: 'старт / стоп', enableToggle: true, disabled: !false
+                        ,toggleHandler: function() { cw.setVisible(!cw.isVisible()); }
+                      }
+					]
+                }
+				]
+              },{
+                region: 'center', title: 'ExtJS info'
+                ,height: '45%'
+				,split: true, collapsible: true, autoScroll: true
+				,html: '<div style="color:blue"><b id="id_extjslog_head">_ExtJS_</b></div>'
+              }
+			]
+        },{
+            region: 'center', layout: 'border', border: false
+////////////////////////////
+			,title: 'SMSки'
+            ,width: '77%'
+			,layout: 'fit'
+			,items: [ app_tabs = Ext.createWidget('tabpanel', {
+        width: 450
+        ,activeTab: 0
+        ,defaults :{
+            bodyPadding: 2
+        },
+
+        items: [{
+            //contentEl:'markup', 
+            title: 'Обработка очереди SMS'
+			,items: [
+
+Ext.create('Ext.grid.Panel', {
+        store: getLocalStore(),
+        columns: [
+			Ext.create('Ext.grid.RowNumberer')
+            ,{text: 'Текст SMS', flex: 1, dataIndex: 'sms'}
+            ,{text: 'Номер получателя', width: 111, dataIndex: 'phonenum'}
+            ,{text: 'Статус', dataIndex: 'status', renderer : objStatus}
+            ,{text: 'Время загрузки', width: 177,renderer: dateRndr, dataIndex: 'startDate'}
+            ,{text: 'Время отправки/доставки', width: 177,renderer: dateRndr, dataIndex: 'endDate'}
+			,{
+                xtype:'actioncolumn', 
+                width:50,
+                items: [{
+                    icon: 'images/delete.png',
+                    tooltip: 'Удалить',
+                    handler: function(grid, rowIndex, colIndex) {
+						Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
+						// var rec = grid.getStore().getAt(rowIndex);
+                    }                
+                }]
+			}
+        ],
+        width: '100%'
+        ,minHeight: 311
+        ,plugins: [{
+            ptype: 'rowexpander',
+            rowBodyTpl : [
+'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{sms}</p>'
++'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.sms.length]}</b>'
++'Время (минут): '
++'<b style="color:blue;">{[values.endDate ? Math.ceil((values.endDate - values.startDate)/60000) : ""]}</b>'
++'<b style="color:red;">{[ values.endDate ? "" : "Не известно"]}</b><p>'
+			]
+        }],
+        collapsible: true,
+        animCollapse: false,
+        title: 'Таблица: активные SMS',
+        iconCls: 'icon-grid',
+
+        // inline buttons
+        dockedItems: [{
+            xtype: 'toolbar',
+            items: [{
+                text:'Начать отправку SMS',
+                tooltip:'Добавить новый торговый объект для регистрации',
+                iconCls:'add'
+            }, '-'
+			/*, {
+                text:'Настройки',
+                tooltip:'Установить параметры',
+                iconCls:'option'
+            },'-'*/
+			,{
+                itemId: 'removeButton',
+                text:'Остановить отправку SMS',
+                tooltip:'Принудительно деактивировать торговый объект',
+                iconCls:'remove',
+                disabled: true
+            }]
+        }]
+    })
+			]
+        },{
+            title: 'Отправленные и доставленные SMS',
+            closable: !true
+        },{
+            title: 'Принятые SMS',
+            closable: !true
+        }]
+		,plugins: [{
+                ptype: 'tabscrollermenu'
+                ,maxText  : 15
+                ,pageSize : 5
+            }
+			,Ext.create('Ext.ux.TabReorderer')
+		]
+				})
+			]
+          },{
+            region: 'east',title: 'USSD', collapseMode: 'mini'
+//////////////////////////
+
+            ,collapsible: true, collapsed: !true, floatable: true, split: true
+            ,minWidth: 120, minHeight: 140, width: 200
+            ,layout: { type: 'vbox', align: 'stretch', padding: 5 }
+			,layout: 'border'
+            ,items: [
+				{	region: 'north'
+				/*{ xtype: 'textfield'
+				 ,fieldLabel: 'Ручной номер USSD'
+				 ,labelAlign:'top'
+				}
+				,Ext.create('Ext.Button', {
+					text: 'Отправить запрос'
+					,enableToggle: true
+					,toggleHandler: function() { / * send ussd cmd * / }
+				})
+				*/
+				,items: [
+				Ext.create('Ext.form.Panel', { title: 'Отправка USSD'
+		,layout: { type: 'vbox', align: 'stretch', padding: 5 }
+        ,height: 133
+        ,url: 'ussd.json'
+        ,items: [
+            {   xtype: 'combobox'
+				,fieldLabel: 'Ручной номер USSD'
+				,labelAlign:'top'
+                ,name: 'ussdNumber'
+				,store: ussdC
+				,queryMode: 'local'
+				,displayField: 'd'
+				,valueField: 'n'
+            }
+			,{  xtype: 'button'
+				,text: 'Отправить запрос'
+                ,handler: ussdH
+            }
+			,{  xtype: 'button'
+				,text: 'Получить баланс'
+                ,handler: ussdH
+            }
+        ]
+    })
+			]}
+			,{	region: 'center'
+				,autoScroll: true
+				,items: [
+				{	xtype: 'component'
+					,html: '<div style="color:green"><b id="id_ussdlog_head">_USSD_</b></div>'
+				}
+				]
+			}
+			]
+			/*,dockedItems: [{
+					xtype: 'toolbar', dock: 'top'
+                    ,items:[
+						{ itemId: 'toggleBS'
+						 ,text: 'Баланс *100#', enableToggle: true, disabled: false
+                         ,toggleHandler: function() { /* send ussd cmd * / }
+						//this.floatParent.down('button#toggleCw').toggle();
+						}
+						,{ itemId: 'toggleNM'
+						 ,text: 'Запросить номер', enableToggle: true, disabled: false
+                         ,toggleHandler: function() { /* send ussd cmd * / }
+						//this.floatParent.down('button#toggleCw').toggle();
+						}
+					]
+			}]*/
+          },{
+            region: 'south', title: 'Сообщения / Logs and info'
+            ,collapsible: true, split: true, height: 200, minHeight: 120
+            ,layout: { type: 'border', padding: 5 }
+            ,items: [{
+				region: 'center', title: 'GSM/SMS инфо'
+				,autoScroll: true, minWidth: 80
+				,html: '<div style="color:green"><b id="id_gsmlog_head">_gsm_</b></div>'
+              }, {
+                region: 'east', title: 'Логи приложения / nodeJS app logs '
+				,autoScroll: true,flex: 1, minWidth: 80, split: true, collapsible: true
+				,html: '<b id="id_srvlog_head">_srv_</b>'
+              }, {
+                title: 'Ошибки приложения / nodeJS app errors ', region: 'west'
+                ,flex: 1, minWidth: 80
+                ,autoScroll: true, split: true, collapsible: true, collapseMode: 'mini'
+				,html: '<div style="color:red"><b id="id_errlog_head">_err_</b></div>'
+              }
+			]
+          }
+		]
+    })
+	Ext._vp = vp
+	Ext._logview = document.getElementById('id_extjslog_head')
+	Ext._log = function(msg) {
+		if (/^err/.test(msg)) {
+			msg = '<div style="color:red">'+msg+'</div>'
+		}
+		Ext.DomHelper.insertBefore(Ext._logview, msg + "<br/>")
+		Ext._logview.scrollIntoView(false)
+	}
+	Ext._ussdlogview = document.getElementById('id_ussdlog_head')
+	Ext._ussd = function(msg) {
+		if (/err/i.test(msg)) {
+			msg = '<div style="color:red">'+msg+'</div>'
+		}
+		Ext.DomHelper.insertBefore(Ext._ussdlogview, msg + "<br/>")
+		Ext._ussdlogview.scrollIntoView(false)
+	}
+}, true)
+
+Ext.onReady(function() {
+	var sync_info = Ext._vp.down('#id_swhw_stat').store
+		,srvlog = document.getElementById('id_srvlog_head')
+		,gsmlog = document.getElementById('id_gsmlog_head')
+		,errlog = document.getElementById('id_errlog_head')
+		,sigq = Ext._vp.down('#id_sigq')
+		,_sync_logs = this
+		,sync_extjs_nodejs = function() {
+			sync_info.load(function(recs, op, noerr) {
+			var sd = sync_info.getProxy().getReader().rawData
+				,d = Ext._ta()
+				,sigqv = eval(sd.stats[0].sigq)
+			function inste(eid, m) { Ext.DomHelper.insertBefore(eid, m ? m : d) }
+			if (!noerr) {
+				Ext._log(d + 'err: sync_info store [' + noerr +']')
+				Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
+				return
+			}
+			if(sigqv != sigq.value)
+				sigq.updateProgress(sigqv, 'сигнал: ' + Math.ceil(sigqv*100) + '%')
+			if (sd.errs.length > 0) {
+			  inste(errlog)
+			  for (var i in sd.errs) {
+				inste(errlog, sd.errs[i]["l"] + "<br/>")
+			  }
+			  errlog.scrollIntoView(false)
+			}
+			if (sd.gsms.length > 0) {
+			  inste(gsmlog)
+			  for (var i in sd.gsms) {
+				inste(gsmlog, sd.gsms[i]["l"] + "<br/>")
+			  }
+			  gsmlog.scrollIntoView(false)
+			}
+			if (sd.logs.length > 0) {
+			  inste(srvlog)
+			  for (var i in sd.logs) {
+				inste(srvlog, sd.logs[i]["l"] + "<br/>")
+			  }
+			  srvlog.scrollIntoView(false) 
+			}			
+			Ext.defer(sync_extjs_nodejs, 2000, _sync_logs)
+		  })
+		}
+	if (!sync_info)
+		Ext._log("sync_info is null (to fast!)")
+	Ext.defer(sync_extjs_nodejs, 2000, _sync_logs)
+})
+			/*,items: { //TODO unwind to plain html
+            xtype: 'dataview'
+            ,tpl: '<tpl for="."><div class="i">{l}<br/></div></tpl>'
+			,itemId: 'id_srv_log'
+            ,itemSelector: 'div.i'
+			,loadMask: false
+            ,store: Ext.create('Ext.data.Store', {
+                autoLoad: true, storeId: 'swhw', data: { logs: [ { l: "== ExtJS app loaded ==" } ] }
+                ,proxy: { type: 'memory', reader: { type: 'json', root: 'logs' } }
+                ,fields: ['l']
+              }
+			)
+				  }
+		//TODO: unwind this hack to plain html; more than 1k objects in store already slow
+		//      insertBefore -appendChild-
+		var d = vp.down('#id_srv_log')
+		d.store.clearData = function() {}
+		d.store.getProxy().data = sync_info.getProxy().getReader().rawData
+		d.store.read() ; t.scrollIntoView(false)*/
+</script>
+</html>
+
