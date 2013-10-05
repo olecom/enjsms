@@ -130,7 +130,8 @@ Ext.override(Ext.selection.CellModel, {
             {name: 'dateQ', type: 'date', dateFormat: 'c'}
             ,{name: 'm'}
             ,{name: 'num'}
-            ,{name: 'module'}
+            ,{name: 'pmodule'}
+			,{name: 'pmodule'}
 			,{name: 'n'}
 			,{name: 'dateT', type: 'date', dateFormat: 'c'}
 			,{name: 'sid'}
@@ -141,13 +142,13 @@ Ext.override(Ext.selection.CellModel, {
         extend: 'Ext.data.Model'
 		,idProperty:'_id'
 		,fields: [
-            {name: 'm'},
-            {name: 'num'},
-            {name: 'sid'},
-            {name: 'dateQ', type: 'date', dateFormat: 'c'},
-            {name: 'dateS', type: 'date', dateFormat: 'c'},
-			{name: 'dateR', type: 'date', dateFormat: 'c'},
-            {name: 'module'}
+            {name: 'm'}
+            ,{name: 'num'}
+            ,{name: 'sid'}
+            ,{name: 'dateQ', type: 'date', dateFormat: 'c'}
+            ,{name: 'dateS', type: 'date', dateFormat: 'c'}
+			,{name: 'dateR', type: 'date', dateFormat: 'c'}
+            ,{name: 'module'}
          ]
     })
 
@@ -155,11 +156,12 @@ Ext.override(Ext.selection.CellModel, {
         extend: 'Ext.data.Model'
 		,idProperty:'_id'
 		,fields: [
-            {name: 'b'},
-            {name: 'num'},
-            {name: 'sid'},
-			{name: 'm'},
-            {name: 'd', type: 'date', dateFormat: 'c'}
+            {name: 'b'}
+            ,{name: 'num'}
+            ,{name: 'sid'}
+			,{name: 'm'}
+            ,{name: 'd', type: 'date', dateFormat: 'c'}
+			,{name: 'module'}
          ]
     })
 //config
@@ -202,7 +204,7 @@ var ussdC = Ext.create('Ext.data.Store',{
 	,tain = Ext.create('Ext.data.Store',{
 		storeId: 'tain'
 		,pageSize:pageSize
-		/*	,idProperty:'_id'*/
+		,idProperty:'_id'
 		,model: 'tain'
 		,proxy: { type: 'ajax' ,url: '/tain.json'
 			,reader: { type:'json' ,root:'data'}
@@ -325,11 +327,17 @@ var ussdC = Ext.create('Ext.data.Store',{
 		+ pad(d.getUTCSeconds())+'Z'
 	}
 
-	function smodRndr(v) {
+	Ext.taqRndr = function (v){
+	return '<b style="color:blue">'+dateRndr(v.dateT)+'</b>' + (
+		v.dateT ? '&nbsp;Результат: <b style="color:red">'+v.sid+'</b>&nbsp;Модуль: <b style="color:red">'+v.module+'</b></p>':''
+	  )
+	}
+
+	function smodRndr(v){
 		return v ? v : '<b style="color:green;">Любой модуль</b>'
 	}
 
-    function dateRndr(v) {
+    function dateRndr(v){
 /*		var val = parseFloat(v)
 	if (Ext.isNumber(v)) {
         if (val > 0) {
@@ -477,7 +485,6 @@ var ussdH = function(){
             }
             ,failure: function(form, conn){
 				var r, es = 'SMS q: <b style="color:red">Ошибка.</b><br/>'
-				console.log(conn)
 				if (conn.result && conn.result.msg) { // application error
 					es += conn.result.msg
 				} else { // http server error
@@ -489,6 +496,8 @@ var ussdH = function(){
 						: conn.response.statusText)
 				}
 				Ext._log(es)
+				Ext.Msg.show({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+				,title:"Ошибка SMS" ,msg:"Не возможно послать SMS. Технические детали: " + es})
 				t.setText(em)
 				t.disabled = !true
 				smsTextLenH(1,1)
@@ -504,6 +513,29 @@ var ussdH = function(){
 				tain.loadPage(1, tain.ui_reloadcb)
 			}
 			,failure: function(res, opts) {
+				Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+				,title:"Чтение памяти модулей" ,msg:"Ошибка чтения."})
+				Ext._log("read_gsm_mem ajax err:" +
+					 (res.responseText
+						? res.status + ' '
+						+ res.statusText + '<br/>'
+						+ res.responseText.replace(/(\r*\n)+/g, '<br/>')
+						: res.statusText)
+				)
+			}
+		})
+	}
+	,delt_gsm_mem = function(){
+		Ext.Ajax.request({
+			url: '/gsmemd.json'
+			,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
+				//TODO: disable read button
+				Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
+				,title:"Удаление памяти модулей" ,msg:"Память отчищена."})
+			}
+			,failure: function(res, opts) {
+				Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+				,title:"Удаление памяти модулей" ,msg:"Ошибка отчистки."})
 				Ext._log("read_gsm_mem ajax err:" +
 					 (res.responseText
 						? res.status + ' '
@@ -772,14 +804,14 @@ var app_tabs
 				xtype:"textarea" ,resizable: true ,height: 111 ,width: 222 }
 			}
         ]
-        ,plugins: [/*{ ptype: 'rowexpander',
+        ,plugins: [{ ptype: 'rowexpander',
             rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{txt}</p>'
 +'<p>Символов: <b style="color:blue;padding-right:11"> {[values.txt.length]}</b>'
 +'Количество SMS: '
 +'<b style="color:blue;">{[values.txt.length > 0 ? Ext.calc_sms_len(values.txt): "??"]}</b>'
 +'</p>'
         }
-		,*/Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1})
+		,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1})
 		],
         collapsible: true,
         animCollapse: false,
@@ -898,7 +930,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
 					xtype: 'toolbar', dock: 'bottom'
                     ,items:['управление:', ' ', { text: 'syncUI'
                         ,handler: function() {
-							Ext.defer(Ext.sync_extjs_nodejs, 0, _sync_logs)
+							Ext.defer(Ext.sync_extjs_nodejs, 0)
 						}
 					  },{ text: 'renodeJS'
                         ,handler: function() {
@@ -984,7 +1016,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             ,{text: 'Текст' ,flex: 1 ,dataIndex: 'm' }
             ,{text: 'Получатель', width: 111 ,dataIndex: 'num' }
             ,{text: 'Добавлено в', width: 177,renderer: dateRndr, dataIndex: 'dateQ'}
-			,{text: 'Предварительный канал', width: 177,renderer: smodRndr, dataIndex: 'module'}
+			,{text: 'Предварительный канал', width: 177,renderer: smodRndr, dataIndex: 'pmodule'}
             //,{text: 'Статус', dataIndex: 'status', renderer : objStatus}
             //,{text: 'Время отправки/доставки', width: 177,renderer: dateRndr, dataIndex: 'endDate'}
         ]
@@ -993,8 +1025,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
 			,expandOnDblClick: false
             ,rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
 +'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b><br/>'
-+'Последняя попытка: <b style="color:blue">{[Ext.dateRndr(values.dateT)]}</b>'
-+'&nbsp;Результат: <b style="color:red">{sid}</b></p>'
++'Последняя попытка: {[Ext.taqRndr(values)]}'
         }
 		//,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 2})
 		,Ext.create('Ext.ux.grid.plugin.DragSelector', {})
@@ -1035,7 +1066,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
 	//)
 			]
         },{
-            title: 'Отправленные и доставленные SMS'
+            title: 'Отправленные SMS'
             ,closable: !true
 			,layout:'fit'
 			,iconCls: 'icon-grid'
@@ -1053,10 +1084,10 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
         ,plugins: [{         ptype: 'rowexpander'
             ,rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
 +'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b><br/>'
-+'В очереди с: <b style="color:blue;">{dateQ}</b><br/>'
-+'Отослано: <b style="color:{[values.dateS ? "orange" : "red"]};">{[values.dateS ? values.dateS : "Нет, ошибка: " + values.sid]}</b><br/>'
-+'Доставленно: <b style="color:green;">{dateR}</b><br/>'
-+'Модулем: <b style="color:brown;">{module}</b>'
++'в очереди с: <b style="color:blue;">{[Ext.dateRndr(values.dateQ)]}</b> (время локальное)<br/>'
++'отослано: <b style="color:{[values.dateS ? "orange" : "red"]};">{[values.dateS ? Ext.dateRndr(values.dateS) : "Нет, ошибка: " + values.sid]}</b><br/>'
++'доставленно: <b style="color:green;">{[Ext.dateRndr(values.dateR)]}</b> (время GSM сети)<br/>'
++'через: <b style="color:brown;">{module}</b>'
         }
 			,Ext.create('Ext.grid.plugin.CellEditing' ,{ clicksToEdit: 1 })
 		]
@@ -1107,25 +1138,28 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
         ]
         ,plugins: [{
             ptype: 'rowexpander',
-            rowBodyTpl: '<p>Символов в тексте: <b style="color:blue;padding-right:11"> {[values.b.length]}</b>'
+            rowBodyTpl: '<p>Символов в тексте: <b style="color:blue;padding-right:11"> {[values.b.length]}</b><br/>'
++'Модуль: <b style="color:blue;">{module}</b>'
 +'<p style="border-bottom: blue solid 1px"><b>Raw text: </b>{m}</p>'
-//+'Время: <b style="color:blue;">{[Ext.dateRndr(d)]}</b>'
         }]
         ,header: !true
 		,dockedItems: [{
             xtype: 'toolbar',
             items: [
 			{
-                text:'Прочитать из GSM'
-                //,tooltip:'Добавить новый торговый объект для регистрации',
+				itemId: 'gsmemR'
+                ,text:'Прочитать SIM'
+                ,tooltip:'Чтение памяти SMS всех модулей'
                 ,iconCls:'add'
 				,handler: read_gsm_mem
+				,disabled: !true
             }, '-'
 			,{
-                itemId: 'removeButton'
-                ,text:'Удалить из GSM'
-                //,tooltip:'Принудительно деактивировать торговый объект'
+                itemId: 'gsmemD'
+                ,text:'Отчистить SIM'
+                ,tooltip:'Отчистка памяти SMS всех модулей'
                 ,iconCls:'remove'
+				,handler: delt_gsm_mem
                 ,disabled: !true
             }
 			,{	xtype: 'pagingtoolbar'
@@ -1276,7 +1310,6 @@ Ext.onReady(function() {
 		,errlog = document.getElementById('id_errlog_head')
 		,sigq1 = Ext._vp.down('#id_sigq1')
 		,sigq2 = Ext._vp.down('#id_sigq2')
-		,_sync_logs = this
 		,sync_extjs_nodejs = function() {
 			sync_info.load(function(recs, op, noerr) {
 			var sd = sync_info.getProxy().getReader().rawData
@@ -1291,7 +1324,7 @@ Ext.onReady(function() {
 ,msg:'<b>Ядро программы не отвечает.</b><br/><br/>sync_info.load():' + noerr
 					,buttons: Ext.Msg.OK ,icon: Ext.Msg.ERROR
 				})
-				Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
+				Ext.defer(sync_extjs_nodejs, 7777)
 				return
 			}
 		if(sd.modules.length > 0) {
@@ -1342,6 +1375,12 @@ m.buttonText = { ok: 'OK', cancel: 'Прекратить попытки (осв�
 m.msg = '<b>Невозможно подключиться к GSM модулю.</b><br/><br/>' + em
 				} else if (/FATAL GSMNET/.test(em)){
 m.msg = '<b>GSM сеть отказывается работать.</b><br/><br/>' + em
+				} else if (/TELNET ERR/.test(em)){
+m.title = 'Telnet связсь с устройством'
+m.msg = '<b>Ошибка комуникации ядра с устройством через telnet.</b><br/><br/>' + em
+				} else if (/TIMEOUT SMS/.test(em)){
+m.title = 'Обработка SMS'
+m.msg = '<b>Вышло время команды обработки SMS.</b><br/><br/>' + em
 				} else break
 				Ext.Msg.show(m)
 			   } while(!true)
@@ -1362,15 +1401,15 @@ m.msg = '<b>GSM сеть отказывается работать.</b><br/><br/
 			  }
 			  srvlog.scrollIntoView(false)
 			}
-			Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
+			Ext.defer(sync_extjs_nodejs, 7777)
 		  })
 		}
 	if (!sync_info)
 		Ext._log("sync_info is null (too fast!)")
-	Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
+	Ext.defer(sync_extjs_nodejs, 7777)
 	Ext.sync_extjs_nodejs = sync_extjs_nodejs
 })
 })(Ext)
 </script>
 </html>
-<!-- olecom: telsms.htm ends here-->
+<!-- olecom: telsms.htm ends here -->
