@@ -99,28 +99,42 @@ var ussdC = Ext.create('Ext.data.Store',{
         ,{d:'module2 "+375291234567"'}
 		]*/
 	})
+	,tain = Ext.create('Ext.data.Store',{
+		storeId: 'tain'
+		,pageSize:20
+		,fields: ['m' ,'num' ,'mid' ,'d']
+		,proxy: { 	type: 'ajax'
+			,url: '/tain.json'
+			,reader: { type: 'json' ,root: 'data'}
+		}
+		,autoLoad: !true /*{ callback: function (rec, op, success) {//true
+			/*if(!success) return
+			var v = modulesC.data.get(0)
+			Ext.getCmp('smsModule').setValue(v)
+			Ext.getCmp('ussdModule').setValue(v)* /
+			Ext._log('tain load: ' + success)
+		}}*/
+	})
+	,taout = Ext.create('Ext.data.Store',{
+		storeId: 'taout'
+		,pageSize:20
+		,fields: ['m' ,'num' ,'mid' ,'dateQ', 'dateS' ,'dateR', 'module']
+		,proxy: { 	type: 'ajax'
+			,url: '/taout.json'
+			,reader: { type: 'json' ,root: 'data'}
+		}
+		,autoLoad: !true
+	})
+	
 	Ext.modulesC = modulesC
+	Ext.tain = tain
+	Ext.taout = taout
 	Ext.smspasteS = Ext.create('Ext.data.ArrayStore', {
 		storeId: 'pasteSMS'
 		,model: 'modelSMS'
 		//,fields: ['sms', 'phonenum']
 		,data: []
     })
-
-	Ext.smspasteH = function(txt) {
-		var i ,j = 0 ,darr = [] ,larr = txt.split('\n')
-		if (!larr) return
-		for(i in larr) {
-			j = larr[i].split('\t')
-			if(j && j.length > 0)
-				if (j[0] && j[1] && /^[+]/.test(j[0]))
-					darr.push([j[1], j[0]])
-		}
-		if(darr.length > 0) {
-			Ext.smspasteS.loadData(darr)
-			Ext.getCmp('pasteSMS').update()
-		}
-	}
 
     Ext.grid.dummyData = [
         ['Ivan, nasha mmm trydydy bla blu bla!!!','+375(29)777-80-90','sent','2012-04-09T02:19:59','2012-04-09T04:19:59']
@@ -195,80 +209,7 @@ var ussdC = Ext.create('Ext.data.Store',{
         }
         return o;
     }
-/*
-	function ru_sms_text(str) { // based on to_ascii() from uglify-js by Mihai Bazon
-		return str.replace(/[\u0000-\uffff]/g, function(ch) {
-			ch = ch.charCodeAt(0)
-			return (128 > ch ? "00" : "0") + ch.toString(16)
-		}).toUpperCase()
-	}
-	
-/ *        if(128 > co) {
-            a = a && true
-        } else {
-            a = a && false
-        }
-(128 > ch ? "00" : "0") + ch.toString(16).toUpperCase()
-var smsText = "123456"
-console.log(s)
-* /
-//140 / 70
-function ru_sms_text(str) { // based on to_ascii() from ugly-js
-    var a, b, c = 0, s = []
 
-    b = str.replace(/[\u0000-\uffff]/g, function(ch) {
-        var co = ch.charCodeAt(0)
-        a = a && (128 > co)
-        if(a) {
-            if(140 == ++c ) { s.push({ascii:a, count:c}) ; c = 0 }
-        } else {
-            if(70 == ++c ) { s.push({ascii:a, count:c}) ; c = 0 }
-        }
-
-        return ch
-    })
-    if (s.length == 0) {
-    } else {
-}
-    console.log(s)
-}
-ru_sms_text('123')
-*/
-/*function calc_sms_len(smsText) { // based on to_ascii() from uglify-js by Mihai Bazon
-    const smsA = 140, smsU = smsA / 2
-    var a = true, aa = true, ws, c = 0, tc = 0, s = []
-
-    smsText.replace(/./g, function(ch) {
-        var co = ch.charCodeAt(0)
-
-        a = a && (128 > co)
-        ++tc
-        ++c
-        if (/[ .,\n\r:;!?]/.test(ch)) ws = c
-        if(a) {
-            if(smsA == c ) { s.push({ascii:a, count:c}) ; tc -= c ; c = 0 }
-            if(aa) aa = !true
-        } else {
-            if (c > 70 && c <= smsA && !aa) {
-                if (ws) { s.push({ascii:true, count:ws}) ; tc -= ws ; c -= ws ; ws = 0 }
-                   else { s.push({ascii:true, count:c - 1}) ;  tc -= c - 1 ; c -= 1 }
-                aa = true
-                a = true
-            }
-            if(smsU == c) {
-                if (ws) { s.push({ascii:a, count:ws}) ; tc -= ws ; c -= ws ; ws = 0 }
-                   else { s.push({ascii:a, count:c}) ;  tc -= c ; c = 0 }
-                if(aa) aa = !true
-                a = true
-            }
-        }
-    })
-
-    if(tc) {
-        s.push({ascii:a, count:tc})
-    }
-	return {s: s, l: smsText }
-}*/
 function calc_sms_len(smsText) { // based on to_ascii() from uglify-js by Mihai Bazon
     var smsA = 140, smsU = smsA / 2
         ,smsC = 0
@@ -328,7 +269,7 @@ var ussdH = function(){
         form.submit({
             success: function(form, conn){
 				Ext._ussd(t.text+': OK.<br/>'
-				+'<b style="color:blue">' + conn.result.msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+				+'<b style="color:blue">' + conn.result.msg
 				+'</b>')
             }
             ,failure: function(form, conn){
@@ -369,11 +310,6 @@ var ussdH = function(){
 			Ext._smsb.setRawValue('')
 			Ext._smsbtn.setText(em)
 		} else if(/^Ото/.test(t.text)) {
-			/*v = smsTextLenH(Ext._smsb)
-			for (var i in v.s) {
-				Ext._log(v.l.substr(b, v.s[i].count) + '\n`----')
-				b = b + v.s[i].count
-			}*/
 			if(!form.getValues().smsNumber) {
 				m = 'Номер пуст.'
 				if(Ext._smsb.getRawValue().length <= 0)
@@ -416,6 +352,75 @@ var ussdH = function(){
 				smsTextLenH(1,1)
             }
         })
+	}
+	,read_gsm_mem = function(){
+    var t = this
+		Ext.Msg.alert('button: ' ,t.text)
+		
+		Ext.Ajax.request({
+			url: '/gsmemr.json'
+			//,params: { unread: 1 }
+			,success: function(res, opts) {
+				var obj = Ext.decode(res.responseText);
+				console.dir(obj);
+			}
+			,failure: function(res, opts) {
+				Ext._log("read_gsm_mem ajax err:" + 
+					 (res.responseText
+						? res.status + ' '
+						+ res.statusText + '<br/>'
+						+ res.responseText.replace(/(\r*\n)+/g, '<br/>')
+						: res.statusText)
+				)
+			}
+		})
+
+/*.submit({
+            success: function(form, conn){
+				Ext._log('SMS q: OK.<br/>'
+				+'<b style="color:blue">' + conn.result.msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+				+'</b>')
+				t.setText(em)
+				t.disabled = !true
+				smsTextLenH(1,1)
+
+				//Ext._smsb.setRawValue('')
+				//Ext._log(t)
+            }
+            ,failure: function(form, conn){
+				var r, es = 'SMS q: <b style="color:red">Ошибка.</b><br/>'
+				console.log(conn)
+				if (conn.result && conn.result.msg) { // application error
+					es += conn.result.msg
+				} else { // http server error
+					es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
+						+ (conn.response.responseText
+						? conn.response.status + ' '
+						+ conn.response.statusText + '<br/>'
+						+ conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
+						: conn.response.statusText)
+				}
+				Ext._log(es)
+				t.setText(em)
+				t.disabled = !true
+				smsTextLenH(1,1)
+            }
+        })*/
+	}
+
+	Ext.smspasteH = function(txt) {
+		var i ,j = 0 ,darr = [] ,larr = txt.split('\n')
+		if (!larr) return
+		for(i in larr) {
+			j = larr[i].split('\t')
+			if(j && j.length > 0)
+				if (j[0] && j[1] && /^[+]/.test(j[0]))
+					darr.push([j[1], j[0]])
+		}
+		if(darr.length > 0) {
+			Ext.smspasteS.loadData(darr)
+			Ext.getCmp('pasteSMS').update()
+		}
 	}
 
 	Ext.fly('startup').remove()
@@ -609,7 +614,7 @@ var cw, app_tabs
                 itemId: 'removeButton'
                 ,text:'Удалить все'
                 ,iconCls:'remove'
-				,handler: function(){ Ext.smspasteS.removeAll() }
+				,handler: Ext.smspasteS.removeAll
             }, '-'
 			,{ xtype: 'container'
 		//,height:57
@@ -718,6 +723,7 @@ var cw, app_tabs
         items: [{
             title: 'Обработка очереди SMS'
 			,layout:'fit'
+			,iconCls: 'icon-grid'
 			,items: [
 //Ext.create('Ext.grid.Panel', 
 	{ 	xtype:'grid'
@@ -758,13 +764,13 @@ var cw, app_tabs
 +'<b style="color:red;">{[ values.endDate ? "" : "Не известно"]}</b></p>'
 			]
         }],
-        collapsible: true,
-        animCollapse: false,
-        title: 'Таблица: активные SMS',
-        iconCls: 'icon-grid',
+        //collapsible: true
+        //,animCollapse: false
+        title: '' //'Таблица: активные SMS',
+        ,header: !true
 
         // inline buttons
-        dockedItems: [{
+        ,dockedItems: [{
             xtype: 'toolbar',
             items: [{
                 text:'Начать отправку SMS',
@@ -789,11 +795,115 @@ var cw, app_tabs
 	//)
 			]
         },{
-            title: 'Отправленные и доставленные SMS',
-            closable: !true
+            title: 'Отправленные и доставленные SMS'
+            ,closable: !true
+			,layout:'fit'
+			,iconCls: 'icon-grid'
+			,items:[
+	{ 	xtype:'grid'
+		,layout:'fit'
+        ,store: Ext.taout
+        ,columns: [
+			{xtype: 'rownumberer' ,width: 30}
+            ,{text: 'Текст' ,flex: 1, dataIndex: 'm'}
+            ,{text: 'Номер' ,width: 111 ,dataIndex: 'num'}
+            ,{text: 'Статус',width: 30 ,dataIndex: 'mid'}
+            ,{text: 'Время доставки' ,width: 177,renderer: dateRndr, dataIndex: 'dateR'}
+        ]
+        ,plugins: [{
+            ptype: 'rowexpander',
+            rowBodyTpl : [
+'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
++'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b><br/>'
++'Время постановки в очередь: <b style="color:blue;">{dateQ}</b><br/>'
++'Время отсылки: <b style="color:orange;">{dateS}</b><br/>'
++'Время доставки: <b style="color:green;">{dateR}</b><br/>'
++'Прошло через модуль: <b style="color:brown;">{module}</b>'
+			]
+        }]
+        ,header: !true
+		,dockedItems: [{
+            xtype: 'toolbar',
+            items: [
+			/*{
+                text:'Прочитать из GSM'
+                //,tooltip:'Добавить новый торговый объект для регистрации',
+                ,iconCls:'add'
+				,,handler: Ext.smspasteS.removeAll
+            }, '-'
+			,{
+                itemId: 'removeButton'
+                ,text:'Удалить из GSM'
+                //,tooltip:'Принудительно деактивировать торговый объект'
+                ,iconCls:'remove'
+                ,disabled: !true
+            }
+			,*/{	xtype: 'pagingtoolbar'
+				,store: Ext.taout
+				,dock: 'top'
+				,beforePageText: 'страница'
+				,afterPageText: 'из {0}'
+				,displayInfo: true
+	            ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
+				,emptyMsg: "Ничего не загружено"
+			}]
+        }]
+    }// grid
+			]// tab items
         },{
-            title: 'Принятые SMS',
-            closable: !true
+            title: 'Принятые SMS'
+            ,closable: !true
+			,layout:'fit'
+			,iconCls: 'icon-grid'
+			,items:[
+	{ 	xtype:'grid'
+		,layout:'fit'
+        ,store: Ext.tain
+        ,columns: [
+			{xtype: 'rownumberer' ,width: 30}
+            ,{text: 'Текст' ,flex: 1, dataIndex: 'm'}
+            ,{text: 'Номер' ,width: 111 ,dataIndex: 'num'}
+            ,{text: 'Статус',width: 30 ,dataIndex: 'mid'}
+            ,{text: 'Время' ,width: 177,renderer: dateRndr, dataIndex: 'd'}
+        ]
+        ,plugins: [{
+            ptype: 'rowexpander',
+            rowBodyTpl : [
+'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
++'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b>'
++'Время: '
++'<b style="color:blue;">{d}</b>'
+			]
+        }]
+        ,header: !true
+		,dockedItems: [{
+            xtype: 'toolbar',
+            items: [
+			{
+                text:'Прочитать из GSM'
+                //,tooltip:'Добавить новый торговый объект для регистрации',
+                ,iconCls:'add'
+				,handler: read_gsm_mem
+            }, '-'
+			,{
+                itemId: 'removeButton'
+                ,text:'Удалить из GSM'
+                //,tooltip:'Принудительно деактивировать торговый объект'
+                ,iconCls:'remove'
+                ,disabled: !true
+            }
+			,{	xtype: 'pagingtoolbar'
+				,store: Ext.tain
+				,dock: 'top'
+				,beforePageText: 'страница'
+				,afterPageText: 'из {0}'
+				,displayInfo: true
+	            ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
+				,emptyMsg: "Ничего не загружено"
+			}]
+        }]
+    }// grid
+			]// tab items
         }]
 		,plugins: [{
                 ptype: 'tabscrollermenu'
