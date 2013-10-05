@@ -1,7 +1,7 @@
-<html>
+﻿<html>
 <head>
     <meta charset="utf-8">
-    <title>Telnet GSM</title>
+    <title>SMS Master</title>
     <link rel="stylesheet" href="extjs/resources/css/ext-all.css">
 	<style>
      .icon-grid { background-image:url(images/grid.png) !important; }
@@ -9,15 +9,25 @@
      .option { background-image:url(images/plugin.gif) !important; }
      .remove { background-image:url(images/delete.gif) !important; }
      .x-grid-row-over .x-grid-cell-inner { font-weight: bold; }
+	 .cpta { background-color:#CBE5CF;border:1px dashed;margin:0 11px 0 0;padding:0;height:30px;width:111px;float:left;overflow:hidden}
+	 .cpta:hover { background-color:#FFFFFF;}
+	 .row-new { background-color: #CBE5CF!important; }
+ 	 .row-err { background-color: #FF9787!important; }
+	 .wrap .x-grid-cell-inner { white-space: normal; }
+	 .x-grid-rowwrap-div .x-grid-cell, .x-grid-rowwrap-div .x-grid-cell-inner {
+		border-width: 0;
+	 }
+	 //.x-grid-cell-inner { white-space: pre-wrap !important; word-wrap: break-word !important;}
 	</style>
 </head>
 <body>
 <center id='startup'><img src='images/loading.gif'><br/>
 Загрузка...
+<img width="1" height="1" src="/extjs/resources/themes/images/default/shared/icon-error.gif"/>
 <noscript><br/><h2 style="color:red;background-color:white">Без включенного Java Script ждать нечего!</h2></noscript>
 <script type="text/javascript">setTimeout(function(){
 if(!window.hasOwnProperty("Ext"))
-	alert('Не найден EXTJS.\n'+'Нужно проверить конфигурацию "enjsms" и наличе директории "extjs-4.1".') }, 1024<<3)
+	alert('Не найден EXTJS.\n'+'Нужно проверить конфигурацию "enjsms" и наличе директории "ExtJS".') }, 1024<<3)
 </script>
 </center>
 <div id="smsops"></div>
@@ -25,8 +35,13 @@ if(!window.hasOwnProperty("Ext"))
 <script src="extjs/ext-all-debug.js"></script>
 <script type="text/javascript">(function(Ext){
 
-Ext.Loader.setConfig({enabled: true})
-Ext.Loader.setPath('Ext.ux', 'extjs/ux')
+Ext.Loader.setConfig({ enabled: true
+	,paths: {
+		'Ext.ux': 'extjs/ux'
+		,'Ext.ux.grid': 'grid'
+		//'Ext.ux.grid.plugin': '../../ux/grid/plugin'
+	}
+})
 Ext.require([
      'Ext.ux.TabReorderer'
 	,'Ext.ux.TabScrollerMenu'
@@ -35,36 +50,120 @@ Ext.require([
 //Ext.require(['*']);
 Ext.Loader.onReady(function() {
 
-// данные для ussd from
-/*	Ext.define('USSD',{
-		extend: 'Ext.data.Model',
-		fields: ['ussdNumber', 'msg'],
-		proxy: {
-			type: 'ajax',
-			api: {
-				read: 'data/get_user',
-				update: 'data/update_user'
-			},
-			reader: {
-				type: 'json',
-				root: 'ussd'
-			}
-		}
-	  }
-	)*/
+// Excel-like key editing and navigation: http://jsfiddle.net/mohammad_erdin/sDFfY/
+/*Ext.override(Ext.grid.plugin.CellEditing,{
+    onSpecialKey: function(ed, field, e) {
+        if (e.getKey() === e.TAB) {
+            e.stopEvent()
+            var sm = this.grid.getSelectionModel();
+            if (sm.onEditorTab) sm.onEditorTab(this, e)
+        }else if(e.getKey() === e.ENTER){
+            e.stopEvent();
+            var sm = this.grid.getSelectionModel()
+            if (sm.onEditorEnter) sm.onEditorEnter(this, e)
+        }
+    }
+})
+
+Ext.override(Ext.selection.CellModel, {
+    lastId: null
+    ,onEditorTab: function(ep, e) {
+        var me = this
+            ,view = me.view
+            ,header = ep.getActiveColumn()
+            ,position = view.getPosition(ep.getActiveRecord(), header)
+            ,direction = e.shiftKey ? 'left' : 'right'
+            ,newPosition = view.walkCells(position, direction, e, false)
+            ,newId = newPosition ? newPosition.row : null
+            ,grid = view.up('gridpanel')
+
+        if (me.lastId && newId && me.lastId != newId){
+            deltaX = me.lastId < newId ? -Infinity : Infinity
+            header = grid.headerCt.getHeaderAtIndex(newPosition.column)
+            if(header){
+                while(!header.getEditor()){
+                    newPosition = view.walkCells(newPosition, direction, e, false)
+                    header = grid.headerCt.getHeaderAtIndex(newPosition.column)
+                }
+            }
+        } else deltaX = ep.context.column.width * (e.shiftKey ? -1 : 1)
+        grid.scrollByDeltaX(deltaX)
+        me.lastId = newPosition.row
+        Ext.defer(function(){// queue start edit
+            if (newPosition) ep.startEditByPosition(newPosition)
+            else ep.completeEdit()
+        }, 111)
+    }
+    ,onEditorEnter:function(ep ,e){
+        var me = this
+            //,view = me.view
+			,column = ep.getActiveColumn()
+			//,grid = view.up('gridpanel')
+            ,position = me.view.getPosition(ep.getActiveRecord(), column)
+            ,direction = e.shiftKey ? 'up' : 'down'
+            ,newPosition
+			column = me.view.getEl(column)
+		do {
+			if(e.shiftKey) {
+				if (1 == position.row)
+					break
+			} else if (me.view.all.elements.length == (1 + position.row))
+				break
+			newPosition = me.view.walkCells(position, direction, e, false)
+			me.lastId = newPosition.row
+			ep.grid.scrollByDeltaY(ep.context.row.clientHeight * (e.shiftKey ? -1 : 1))
+		} while(false)
+		Ext.defer(function(){// queue start edit
+			if (newPosition) return ep.startEditByPosition(newPosition)
+			ep.completeEdit()
+			me.setCurrentPosition(me.getCurrentPosition())// select by cursor
+			column.focus()// activate cell
+		}, 111)
+    }
+})*/
 
 // данные для sms grid
-    Ext.define('modelSMS',{
-        extend: 'Ext.data.Model',
-        fields: [
-            {name: 'sms'},
-            {name: 'phonenum'},
-            {name: 'status'},
-            {name: 'startDate', type: 'date', dateFormat: 'c'},
-            {name: 'endDate', type: 'date', dateFormat: 'c'}
+    Ext.define('taq',{
+        extend: 'Ext.data.Model'
+		,idProperty:'_id'
+		,fields: [
+            {name: 'dateQ', type: 'date', dateFormat: 'c'}
+            ,{name: 'm'}
+            ,{name: 'num'}
+            ,{name: 'module'}
+			,{name: 'n'}
+			,{name: 'dateT', type: 'date', dateFormat: 'c'}
+			,{name: 'sid'}
+        ]
+    })
+
+    Ext.define('taout',{
+        extend: 'Ext.data.Model'
+		,idProperty:'_id'
+		,fields: [
+            {name: 'm'},
+            {name: 'num'},
+            {name: 'sid'},
+            {name: 'dateQ', type: 'date', dateFormat: 'c'},
+            {name: 'dateS', type: 'date', dateFormat: 'c'},
+			{name: 'dateR', type: 'date', dateFormat: 'c'},
+            {name: 'module'}
          ]
     })
-//
+
+    Ext.define('tain',{
+        extend: 'Ext.data.Model'
+		,idProperty:'_id'
+		,fields: [
+            {name: 'b'},
+            {name: 'num'},
+            {name: 'sid'},
+			{name: 'm'},
+            {name: 'd', type: 'date', dateFormat: 'c'}
+         ]
+    })
+//config
+var pageSize = 20, north = false
 
 var ussdC = Ext.create('Ext.data.Store',{
 		fields: ['n', 'd'],
@@ -75,7 +174,7 @@ var ussdC = Ext.create('Ext.data.Store',{
         ,{n:"*111*10#", d:'Показать номер ("MTS") "*111*10#"'}
 		]
 	})
-	,phonesC = Ext.create('Ext.data.Store',{
+	,phonesC = Ext.create('Ext.data.Store',{//TODO phone book
 		fields: ['n', 'd'],
 		data : [
 		 {n: '', d: '*#'}
@@ -99,15 +198,16 @@ var ussdC = Ext.create('Ext.data.Store',{
         ,{d:'module2 "+375291234567"'}
 		]*/
 	})
+//++ MongoDB collections
 	,tain = Ext.create('Ext.data.Store',{
 		storeId: 'tain'
-		,pageSize:20
-		,fields: ['m' ,'num' ,'mid' ,'d']
-		,proxy: { 	type: 'ajax'
-			,url: '/tain.json'
-			,reader: { type: 'json' ,root: 'data'}
+		,pageSize:pageSize
+		/*	,idProperty:'_id'*/
+		,model: 'tain'
+		,proxy: { type: 'ajax' ,url: '/tain.json'
+			,reader: { type:'json' ,root:'data'}
 		}
-		,autoLoad: !true /*{ callback: function (rec, op, success) {//true
+		,autoSync: !true ,autoLoad: !true /*{ callback: function (rec, op, success) {//true
 			/*if(!success) return
 			var v = modulesC.data.get(0)
 			Ext.getCmp('smsModule').setValue(v)
@@ -117,26 +217,50 @@ var ussdC = Ext.create('Ext.data.Store',{
 	})
 	,taout = Ext.create('Ext.data.Store',{
 		storeId: 'taout'
-		,pageSize:20
-		,fields: ['m' ,'num' ,'mid' ,'dateQ', 'dateS' ,'dateR', 'module']
-		,proxy: { 	type: 'ajax'
-			,url: '/taout.json'
-			,reader: { type: 'json' ,root: 'data'}
+		,pageSize:pageSize
+		//out: dateQ ,dateS ,sid ,dateR ,num ,m ,moduleN(fact) ,qid(trace back) ,_id
+		/*,idProperty:'_id'*/
+		,model: 'taout'
+		,proxy: { type: 'ajax' ,url: '/taout.json'
+			,reader: { type:'json' ,root:'data'}
 		}
-		,autoLoad: !true
+		,autoSync: !true ,autoLoad: !true
 	})
-	
-	Ext.modulesC = modulesC
-	Ext.tain = tain
-	Ext.taout = taout
-	Ext.smspasteS = Ext.create('Ext.data.ArrayStore', {
-		storeId: 'pasteSMS'
-		,model: 'modelSMS'
-		//,fields: ['sms', 'phonenum']
-		,data: []
-    })
+	,taq = Ext.create('Ext.data.Store',{
+		storeId: 'taq'
+		,pageSize:pageSize
+		//q: dateQ ,m ,num ,moduleN(proposed) ,_id
+		/*,fields: ['dateQ' ,'m' ,'num' ,'module' ,'_id']
+		,idProperty:'_id'*/
+		,model: 'taq'
+		,proxy: { type: 'rest' ,url: '/taq.json'
+			,reader: { type:'json' ,root:'data'}
+		}
+		,autoSync: !true ,autoLoad: true
+	})
+	tain.ui_reloadcb = { callback: function(records, operation, success){
+		if(!success) Ext.Msg.show({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+		,title:"БД получение" ,msg:"Ошибка при загрузке полученных сообщений."})
+	}}
+//++ Global store refs can be Ext.getStore()
+	Ext.smspasteS = Ext.create('Ext.data.Store',{
+		storeId: 'smspaste'
+		//smspaste: send pasted data into `taq` collection
+		,fields: ['rcp' ,'txt' /*,'module'*/]
+		,proxy: { type: 'rest' ,url: '/smsq.json' ,batchActions: true
+			,reader: { type:'json' ,idProperty:'_id' ,root:'data'}
+			,writer: { type:'json' ,allowSingle: false}
+		}
+		,autoSync: !true ,autoLoad: !true
+	})
 
-    Ext.grid.dummyData = [
+	/*Ext.smspasteS = Ext.create('Ext.data.ArrayStore', {
+		storeId: 'pasteSMS'
+		,fields: ['rcp' ,'sms']
+		,data: []
+    })*/
+
+    /*Ext.grid.dummyData = [
         ['Ivan, nasha mmm trydydy bla blu bla!!!','+375(29)777-80-90','sent','2012-04-09T02:19:59','2012-04-09T04:19:59']
         ,['Petr, nasha mmm trydydy bla blu bla!!!','+375(29)555-80-90','cnfd','2012-04-09T02:19:59','2012-04-09T05:44:00']
 		,['1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111. А вот я!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
@@ -147,12 +271,35 @@ var ussdC = Ext.create('Ext.data.Store',{
 		,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
     ]
 
+    Ext.define('modelSMS',{
+        extend: 'Ext.data.Model',
+        fields: [
+            {name: 'sms'},
+            {name: 'phonenum'},
+            {name: 'status'},
+            {name: 'startDate', type: 'date', dateFormat: 'c'},
+            {name: 'endDate', type: 'date', dateFormat: 'c'}
+         ]
+    })
+
     var getLocalStore = function() {
         return Ext.create('Ext.data.ArrayStore', {
             model: 'modelSMS',
             data: Ext.grid.dummyData
         })
     }
+
+    function objStatus(o) {
+        if ('cnfd' == o) {
+            return '<b style="color:green;">ДОСТАВЛЕНО</b>'
+        } else if ('unst' == o) {
+            return '<b style="color:red;">В ОЧЕРЕДИ</b>'
+        } else if ('sent' == o) {
+			return '<b style="color:orange;">ОТОСЛАНО</b>'
+        }
+        return o;
+    }
+	*/
 
 	//ISO date format
 	Ext.Date.defaultFormat = 'c'
@@ -178,6 +325,10 @@ var ussdC = Ext.create('Ext.data.Store',{
 		+ pad(d.getUTCSeconds())+'Z'
 	}
 
+	function smodRndr(v) {
+		return v ? v : '<b style="color:green;">Любой модуль</b>'
+	}
+
     function dateRndr(v) {
 /*		var val = parseFloat(v)
 	if (Ext.isNumber(v)) {
@@ -198,24 +349,14 @@ var ussdC = Ext.create('Ext.data.Store',{
 			return '<b style="color:red;">???</b>'
 		}
     }
-
-    function objStatus(o) {
-        if ('cnfd' == o) {
-            return '<b style="color:green;">ДОСТАВЛЕНО</b>'
-        } else if ('unst' == o) {
-            return '<b style="color:red;">В ОЧЕРЕДИ</b>'
-        } else if ('sent' == o) {
-			return '<b style="color:orange;">ОТОСЛАНО</b>'
-        }
-        return o;
-    }
+	Ext.dateRndr = dateRndr
 
 function calc_sms_len(smsText) { // based on to_ascii() from uglify-js by Mihai Bazon
     var smsA = 140, smsU = smsA / 2
         ,smsC = 0
 		,a = true ,aa = true ,c = 0 ,tc = 0 ,ws
 
-    smsText.replace(/[\s\S]/g, function(ch) {
+    smsText.replace(/[\u0000-\uffff]/g, function(ch) {
         var co = ch.charCodeAt(0)
         a = a && (128 > co)
         ++tc
@@ -246,7 +387,7 @@ function calc_sms_len(smsText) { // based on to_ascii() from uglify-js by Mihai 
 	Ext.calc_sms_len = calc_sms_len
 // отображние
     Ext.QuickTips.init();
-	
+
 // event handlers
 var ussdH = function(){
     var form = this.up('form').getForm()
@@ -271,6 +412,7 @@ var ussdH = function(){
 				Ext._ussd(t.text+': OK.<br/>'
 				+'<b style="color:blue">' + conn.result.msg
 				+'</b>')
+				tain.loadPage(1, tain.ui_reloadcb)
             }
             ,failure: function(form, conn){
 				var r, es = t.text+': <b style="color:red">Ошибка.</b><br/>'
@@ -354,18 +496,15 @@ var ussdH = function(){
         })
 	}
 	,read_gsm_mem = function(){
-    var t = this
-		Ext.Msg.alert('button: ' ,t.text)
-		
+    //var t = this //	Ext.Msg.alert('button: ' ,t.text)
 		Ext.Ajax.request({
 			url: '/gsmemr.json'
 			//,params: { unread: 1 }
-			,success: function(res, opts) {
-				var obj = Ext.decode(res.responseText);
-				console.dir(obj);
+			,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
+				tain.loadPage(1, tain.ui_reloadcb)
 			}
 			,failure: function(res, opts) {
-				Ext._log("read_gsm_mem ajax err:" + 
+				Ext._log("read_gsm_mem ajax err:" +
 					 (res.responseText
 						? res.status + ' '
 						+ res.statusText + '<br/>'
@@ -374,6 +513,23 @@ var ussdH = function(){
 				)
 			}
 		})
+	}
+	,start_sendq = function(){
+		Ext.Ajax.request({
+			url: '/shedm.json'
+			,success: function(res, opts) {
+			}
+			,failure: function(res, opts) {
+				Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+						,title:"Старт работы shedm" ,msg:"Ошибка запроса к ядру."})
+				Ext._log("shedm ajax err:" +
+					 (res.responseText
+					    ? res.status+' '+res.statusText+'<br/>'+res.responseText.replace(/(\r*\n)+/g, '<br/>')
+						: res.statusText)
+				)
+			}
+		})
+	}
 
 /*.submit({
             success: function(form, conn){
@@ -406,7 +562,6 @@ var ussdH = function(){
 				smsTextLenH(1,1)
             }
         })*/
-	}
 
 	Ext.smspasteH = function(txt) {
 		var i ,j = 0 ,darr = [] ,larr = txt.split('\n')
@@ -415,16 +570,37 @@ var ussdH = function(){
 			j = larr[i].split('\t')
 			if(j && j.length > 0)
 				if (j[0] && j[1] && /^[+]/.test(j[0]))
-					darr.push([j[1], j[0]])
+					darr.push([j[0], j[1]])
 		}
 		if(darr.length > 0) {
 			Ext.smspasteS.loadData(darr)
-			Ext.getCmp('pasteSMS').update()
+			i = Ext.getCmp('pasteSMS')
+			i.update()
+			i = i.down('toolbar')
+			i.getComponent('addsmsq').enable()
+			i.getComponent('rmsmsq').enable()
 		}
 	}
 
+//++ patches
+Ext.override(Ext.view.AbstractView, {
+	loadMask: {
+		msg: 'загрузка...'
+    }
+    ,onRender: function()
+    {//Rovak: http://www.sencha.com/forum/showthread.php?198341-4.1-Loading-mask
+        var me = this;
+
+        this.callOverridden();
+
+        if (me.mask && Ext.isObject(me.store)) {
+            me.setMaskBind(me.store);
+        }
+    }
+})
+
 	Ext.fly('startup').remove()
-var cw, app_tabs
+var app_tabs
     ,vp = Ext.create('Ext.Viewport', {
         layout: { type: 'border', padding: 5 }
         ,defaults: { split: true }
@@ -433,12 +609,12 @@ var cw, app_tabs
 ///////////////////////////
 			,header: !true
 			,collapseMode: 'mini'
-            ,collapsible: true//, collapsed: true, split: true
+            ,collapsible: true, collapsed: !north //, split: true
 			,minHeight: 170
 			,maxHeight:333
 			,layout: 'fit'
 			,items: [ Ext.createWidget('tabpanel', {
-				activeTab: 0
+				activeTab: 1
 				,defaults :{
 					bodyPadding: 2
 				},
@@ -446,7 +622,7 @@ var cw, app_tabs
 		{ title: 'Подготовка одинаковых SMS'
 			,layout:'fit'
 			,items: [
-			
+
 				 Ext.create('Ext.form.Panel', {
         url: 'sms.json'
 		,layout: { type: 'hbox'
@@ -516,7 +692,7 @@ var cw, app_tabs
 				}
 			]
 		}
-		
+
 		/*,dockedItems: [{
             xtype: 'toolbar',
             dock: 'bottom',
@@ -532,7 +708,7 @@ var cw, app_tabs
                 text: 'Cancel'
             }]
         }]*/
-		
+
         ]
 	}
 	,{ xtype: 'fieldset'
@@ -550,7 +726,7 @@ var cw, app_tabs
 		,{ title: 'Подготовка различных SMS из таблиц (MS Excel, текстовые файлы)'
 			,layout:'fit'
 			,items: [
-			
+
 	 Ext.create('Ext.form.Panel', {
         url: 'sms.json'
 		,layout:'fit'
@@ -574,10 +750,12 @@ var cw, app_tabs
 		,header:!true
 		,layout:'fit'
         ,store: Ext.smspasteS
+		,viewConfig: { loadMask: !true }
+		,selType: 'cellmodel'
         ,columns: [
 			Ext.create('Ext.grid.RowNumberer')
 			,{
-                xtype:'actioncolumn', 
+                xtype:'actioncolumn',
                 width:22,
                 items: [{
                     icon: 'images/delete.png',
@@ -586,49 +764,82 @@ var cw, app_tabs
 						Ext.smspasteS.removeAt(rowIndex)
 						Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
 						// var rec = grid.getStore().getAt(rowIndex);
-                    }                
+                    }
                 }]
 			}
-			,{text: 'Предварительные SMS', flex: 1, dataIndex: 'sms'}
-            ,{text: 'Номер получателя', width: 111, dataIndex: 'phonenum'}
+            ,{text: 'Получатель', width: 111, dataIndex: 'rcp' ,editor: {xtype:"textfield"}}
+			,{text: 'Сообщение', flex: 1, dataIndex: 'txt' ,tdCls: 'wrap' ,editor: {
+				xtype:"textarea" ,resizable: true ,height: 111 ,width: 222 }
+			}
         ]
-        ,plugins: [{
-            ptype: 'rowexpander',
-            rowBodyTpl : [
-'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{sms}</p>'
-+'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.sms.length]}</b>'
+        ,plugins: [/*{ ptype: 'rowexpander',
+            rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{txt}</p>'
++'<p>Символов: <b style="color:blue;padding-right:11"> {[values.txt.length]}</b>'
 +'Количество SMS: '
-+'<b style="color:blue;">{[values.sms.length > 0 ? Ext.calc_sms_len(values.sms): "??"]}</b>'
++'<b style="color:blue;">{[values.txt.length > 0 ? Ext.calc_sms_len(values.txt): "??"]}</b>'
 +'</p>'
-			]
-        }],
+        }
+		,*/Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1})
+		],
         collapsible: true,
         animCollapse: false,
         dockedItems: [{
             xtype: 'toolbar',
             items: [{
-                text:'Добавить в очередь отправки',
-                iconCls:'add'
+				itemId: 'addsmsq'
+                ,text:'Добавить в очередь отправки'
+                ,iconCls:'add'
+				,disabled: true
+				,handler: function(b, s){
+		s = b.up('gridpanel')
+		lm.show()
+		s = s.getStore()
+		s.sync({
+            success: function(batch, opts){
+				opts = s.getProxy().getReader().rawData
+Ext._log('smsq add OK data.length: ' + opts.data.length)
+				opts = opts.total / pageSize
+				s.removeAll()
+				s = Math.floor(opts) //load last page
+				taq.loadPage(opts - s ? s + 1 : s,{
+					callback: function(records, operation, success) {
+						if(!success) Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+						,title:"БД очередь" ,msg:"Ошибка при получении очереди сообщений."})
+
+					}
+				})
+				b.disable()
+				b.up('toolbar').getComponent('rmsmsq').disable()
+				lm.hide()
+			}
+            ,failure: function(batch, opts){
+				lm.hide()
+				Ext.Msg.alert({ title:"БД очередь" ,icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+					,msg:"Серьёзная ошибка при записи в очередь сообщений."})
+            }
+        })//sync
+				}
             }, '-'
 			,{
-                itemId: 'removeButton'
+                itemId: 'rmsmsq'
                 ,text:'Удалить все'
                 ,iconCls:'remove'
-				,handler: Ext.smspasteS.removeAll
+				,disabled:true
+				,handler: function(b, e) {
+					Ext.smspasteS.removeAll()
+					b.up('toolbar').getComponent('addsmsq').disable()
+					b.disable()
+				}
             }, '-'
 			,{ xtype: 'container'
 		//,height:57
-		,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать <b style="color:brown">CTRL+C</b> таблицу SMS<br/>из <b style="color:green">XLS</b> или <b style="color:blue">DOC</b>, вставить сюда <b style="color:orange">CTRL+V</b>:</div><textarea   style="background-color:#CBE5C5;border:1px dashed;margin:0 11px 0 0;padding:0;height:30px;width:111px;float:left;" oninput="Ext.smspasteH(this.value)"></textarea>'
+		,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать <b style="color:brown">CTRL+C</b> таблицу SMS<br/>из <b style="color:green">XLS</b> или <b style="color:blue">DOC</b>, вставить сюда <b style="color:orange">CTRL+V</b>:</div><textarea class="cpta" oninput="Ext.smspasteH(this.value)" onmouseover="this.focus();this.select()" onfocus="this.select()"></textarea>'
 	}
 			]
         }]
-	//}
-	//]
   }
   ]
     })
-			
-			
 			]
 		}
 		]})
@@ -639,20 +850,14 @@ var cw, app_tabs
 			,layout: 'border', title: 'ЦУП'
             ,collapsible: true, collapsed: false, collapseMode: 'mini'
 			,floatable: true
-			,width: '18%'
+			,width: '14%'
             ,items: [{
                 region: 'north', title: 'софт и железо / software and hardware'
 				,collapsible: true, autoScroll: true, split: true
 				,height: '65%'
                 ,minHeight: 111
-				//html: 'center center', 
-                ,items: [cw = Ext.create('Ext.Window', {
-                    xtype: 'window', title: 'Constrained Window', itemId: 'center-window',
-                    closable: false, minimizable: true, constrain: true, height: 200, width: 400,
-                    html: 'могу быть только внутри панели',
-                    minimize: function() { this.floatParent.down('button#toggleCw').toggle(); }
-				  })
-				  ,{
+				//html: 'center center',
+                ,items: [{
             xtype: 'dataview'
 			,itemId: 'id_swhw_stat'
             ,tpl: '<tpl for="."><div class="item">' +
@@ -691,10 +896,26 @@ var cw, app_tabs
 				],
                 dockedItems: [{
 					xtype: 'toolbar', dock: 'bottom'
-                    ,items:['управление:', ' ', {
-                        itemId: 'toggleCw'
-						, text: 'старт / стоп', enableToggle: true, disabled: !false
-                        ,toggleHandler: function() { cw.setVisible(!cw.isVisible()); }
+                    ,items:['управление:', ' ', { text: 'syncUI'
+                        ,handler: function() {
+							Ext.defer(Ext.sync_extjs_nodejs, 0, _sync_logs)
+						}
+					  },{ text: 'renodeJS'
+                        ,handler: function() {
+		Ext.Ajax.request({
+			url: '/reload.json'
+			,success: function(res, opts) {}
+			,failure: function(res, opts) {
+				Ext._log("reload ajax err:" +
+					 (res.responseText
+						? res.status + ' '
+						+ res.statusText + '<br/>'
+						+ res.responseText.replace(/(\r*\n)+/g, '<br/>')
+						: res.statusText)
+				)
+			}
+		})
+						}
                       }
 					]
                 }
@@ -721,74 +942,93 @@ var cw, app_tabs
         },
 
         items: [{
-            title: 'Обработка очереди SMS'
+            title: 'Очередь отправки'
 			,layout:'fit'
 			,iconCls: 'icon-grid'
 			,items: [
-//Ext.create('Ext.grid.Panel', 
 	{ 	xtype:'grid'
 		,layout:'fit'
-        ,store: getLocalStore()
+        ,store: taq
+		,selType: 'cellmodel'
+		,selModel: {mode: 'SIMPLE'}
+		,viewConfig: { loadMask: true
+			,stripeRows: false// with this `true`, bellow stripes too
+			,getRowClass: function(record, rowIndex, rowParams, store){
+				var n = record.get("n")
+				return n ? 'E' == n ? "row-err" : "row-new" : '';
+			}
+		}
         ,columns: [
 			Ext.create('Ext.grid.RowNumberer')
-            ,{text: 'Текст SMS', flex: 1, dataIndex: 'sms'}
-            ,{text: 'Номер получателя', width: 111, dataIndex: 'phonenum'}
-            ,{text: 'Статус', dataIndex: 'status', renderer : objStatus}
-            ,{text: 'Время загрузки', width: 177,renderer: dateRndr, dataIndex: 'startDate'}
-            ,{text: 'Время отправки/доставки', width: 177,renderer: dateRndr, dataIndex: 'endDate'}
-			,{
-                xtype:'actioncolumn', 
-                width:50,
-                items: [{
+			,{  xtype:'actioncolumn'
+                ,width:22
+                ,items: [{
                     icon: 'images/delete.png',
                     tooltip: 'Удалить',
-                    handler: function(grid, rowIndex, colIndex) {
-						Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
-						// var rec = grid.getStore().getAt(rowIndex);
-                    }                
+                    handler: function(view, rowIndex, colIndex) {
+						taq.removeAt(rowIndex)
+						taq.sync({
+							success: function(batch, opts){
+								taq.totalCount--//rFactor@http://stackoverflow.com/questions/4912426/
+								view.up('tabpanel').down('pagingtoolbar').onLoad()
+							}
+							,failure: function(batch, opts){
+								taq.rejectChanges()
+								Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+								,title:"БД очередь" ,msg:"Ошибка при удалении сообщения (восстановлено)."})
+							}
+						})
+                    }
                 }]
 			}
+            ,{text: 'Текст' ,flex: 1 ,dataIndex: 'm' }
+            ,{text: 'Получатель', width: 111 ,dataIndex: 'num' }
+            ,{text: 'Добавлено в', width: 177,renderer: dateRndr, dataIndex: 'dateQ'}
+			,{text: 'Предварительный канал', width: 177,renderer: smodRndr, dataIndex: 'module'}
+            //,{text: 'Статус', dataIndex: 'status', renderer : objStatus}
+            //,{text: 'Время отправки/доставки', width: 177,renderer: dateRndr, dataIndex: 'endDate'}
         ]
-        //,width: '100%'
-		//,height:'100%'
-		//,anchor:'100%'
-		//,flex:1
-        //,minHeight: 311
-        ,plugins: [{
-            ptype: 'rowexpander',
-            rowBodyTpl : [
-'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{sms}</p>'
-+'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.sms.length]}</b>'
-+'Время (минут): '
-+'<b style="color:blue;">{[values.endDate ? Math.ceil((values.endDate - values.startDate)/60000) : ""]}</b>'
-+'<b style="color:red;">{[ values.endDate ? "" : "Не известно"]}</b></p>'
-			]
-        }],
+        ,plugins: [{       ptype: 'rowexpander'
+			,expandOnEnter: false
+			,expandOnDblClick: false
+            ,rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
++'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b><br/>'
++'Последняя попытка: <b style="color:blue">{[Ext.dateRndr(values.dateT)]}</b>'
++'&nbsp;Результат: <b style="color:red">{sid}</b></p>'
+        }
+		//,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 2})
+		,Ext.create('Ext.ux.grid.plugin.DragSelector', {})
+		],
         //collapsible: true
         //,animCollapse: false
         title: '' //'Таблица: активные SMS',
         ,header: !true
-
         // inline buttons
         ,dockedItems: [{
             xtype: 'toolbar',
             items: [{
-                text:'Начать отправку SMS',
-                //tooltip:'Добавить новый торговый объект для регистрации',
-                iconCls:'add'
+                text:'Начать отправку SMS' //,tooltip:''
+                ,iconCls:'add'
+				,handler: start_sendq
             }, '-'
-			/*, {
-                text:'Настройки',
-                tooltip:'Установить параметры',
-                iconCls:'option'
+			/*, { text:'Настройки',tooltip:'',iconCls:'option'
             },'-'*/
 			,{
-                itemId: 'removeButton',
-                text:'Остановить отправку SMS',
-                //tooltip:'Принудительно деактивировать торговый объект',
-                iconCls:'remove',
-                disabled: true
-            }]
+                itemId: 'removeButton'
+                ,text:'Остановить отправку SMS' //,tooltip:''
+                ,iconCls:'remove'
+                ,disabled: true
+            }
+			,{	xtype: 'pagingtoolbar'
+				,store: taq
+				,dock: 'top'
+				,beforePageText: 'страница'
+				,afterPageText: 'из {0}'
+				,displayInfo: true
+	            ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
+				,emptyMsg: "Ничего не загружено"
+			}
+			]
         }
 		]
     }
@@ -802,25 +1042,24 @@ var cw, app_tabs
 			,items:[
 	{ 	xtype:'grid'
 		,layout:'fit'
-        ,store: Ext.taout
+        ,store: taout
         ,columns: [
 			{xtype: 'rownumberer' ,width: 30}
-            ,{text: 'Текст' ,flex: 1, dataIndex: 'm'}
+            ,{text: 'Текст' ,flex: 1, dataIndex: 'm' ,editor: {xtype:"textfield"}}
             ,{text: 'Номер' ,width: 111 ,dataIndex: 'num'}
-            ,{text: 'Статус',width: 30 ,dataIndex: 'mid'}
+            ,{text: 'Статус',width: 30 ,dataIndex: 'sid'}
             ,{text: 'Время доставки' ,width: 177,renderer: dateRndr, dataIndex: 'dateR'}
         ]
-        ,plugins: [{
-            ptype: 'rowexpander',
-            rowBodyTpl : [
-'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
+        ,plugins: [{         ptype: 'rowexpander'
+            ,rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
 +'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b><br/>'
-+'Время постановки в очередь: <b style="color:blue;">{dateQ}</b><br/>'
-+'Время отсылки: <b style="color:orange;">{dateS}</b><br/>'
-+'Время доставки: <b style="color:green;">{dateR}</b><br/>'
-+'Прошло через модуль: <b style="color:brown;">{module}</b>'
-			]
-        }]
++'В очереди с: <b style="color:blue;">{dateQ}</b><br/>'
++'Отослано: <b style="color:{[values.dateS ? "orange" : "red"]};">{[values.dateS ? values.dateS : "Нет, ошибка: " + values.sid]}</b><br/>'
++'Доставленно: <b style="color:green;">{dateR}</b><br/>'
++'Модулем: <b style="color:brown;">{module}</b>'
+        }
+			,Ext.create('Ext.grid.plugin.CellEditing' ,{ clicksToEdit: 1 })
+		]
         ,header: !true
 		,dockedItems: [{
             xtype: 'toolbar',
@@ -839,7 +1078,7 @@ var cw, app_tabs
                 ,disabled: !true
             }
 			,*/{	xtype: 'pagingtoolbar'
-				,store: Ext.taout
+				,store: taout
 				,dock: 'top'
 				,beforePageText: 'страница'
 				,afterPageText: 'из {0}'
@@ -858,22 +1097,19 @@ var cw, app_tabs
 			,items:[
 	{ 	xtype:'grid'
 		,layout:'fit'
-        ,store: Ext.tain
+        ,store: tain
         ,columns: [
 			{xtype: 'rownumberer' ,width: 30}
-            ,{text: 'Текст' ,flex: 1, dataIndex: 'm'}
+            ,{text: 'Текст' ,flex: 1, dataIndex: 'b'}
             ,{text: 'Номер' ,width: 111 ,dataIndex: 'num'}
-            ,{text: 'Статус',width: 30 ,dataIndex: 'mid'}
+            ,{text: 'Статус',width: 30 ,dataIndex: 'sid'}
             ,{text: 'Время' ,width: 177,renderer: dateRndr, dataIndex: 'd'}
         ]
         ,plugins: [{
             ptype: 'rowexpander',
-            rowBodyTpl : [
-'<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
-+'<p>Количество символов: <b style="color:blue;padding-right:11"> {[values.m.length]}</b>'
-+'Время: '
-+'<b style="color:blue;">{d}</b>'
-			]
+            rowBodyTpl: '<p>Символов в тексте: <b style="color:blue;padding-right:11"> {[values.b.length]}</b>'
++'<p style="border-bottom: blue solid 1px"><b>Raw text: </b>{m}</p>'
+//+'Время: <b style="color:blue;">{[Ext.dateRndr(d)]}</b>'
         }]
         ,header: !true
 		,dockedItems: [{
@@ -893,7 +1129,7 @@ var cw, app_tabs
                 ,disabled: !true
             }
 			,{	xtype: 'pagingtoolbar'
-				,store: Ext.tain
+				,store: tain
 				,dock: 'top'
 				,beforePageText: 'страница'
 				,afterPageText: 'из {0}'
@@ -975,7 +1211,7 @@ var cw, app_tabs
 			]
           },{              region: 'south', title: 'Сообщения / Logs and info'
 ///////////////////////////
-            ,collapsible: true, split: true, height: 200, minHeight: 120
+            ,collapsed: true ,collapsible: true, split: true, height: 200, minHeight: 120
             ,layout: { type: 'border', padding: 5 }
             ,items: [{
 				region: 'center', title: 'GSM/SMS инфо'
@@ -1005,7 +1241,7 @@ var cw, app_tabs
 		log.scrollIntoView(false)
 		console.log(msg)
 	}
-	
+
 	Ext.Error.handle = function(err) {
 		Ext._log(err)
 		//if (err.someProperty == 'NotReallyAnError') {
@@ -1013,12 +1249,14 @@ var cw, app_tabs
 		//	return true;
 		//}
 		// any non-true return value (including none) will cause the error to be thrown
-	}	
-	
+	}
+
 	Ext._ussd = function(msg) {
 		Ext._log(msg, Ext._ussdlogview)
 	}
 	Ext.smsTextLenH = smsTextLenH
+
+	var lm = new Ext.LoadMask(Ext.getCmp('pasteSMS'), {msg:'добавление...'});
 }, true)
 
 Ext.onReady(function() {
@@ -1049,6 +1287,10 @@ Ext.onReady(function() {
 			function inste(eid, m) { Ext.DomHelper.insertBefore(eid, m ? m : d) }
 			if (!noerr) {
 				Ext._log(d + 'err: sync_info store [' + noerr +']')
+				Ext.Msg.show({ title:'Фатальная ошибка'
+,msg:'<b>Ядро программы не отвечает.</b><br/><br/>sync_info.load():' + noerr
+					,buttons: Ext.Msg.OK ,icon: Ext.Msg.ERROR
+				})
 				Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
 				return
 			}
@@ -1065,35 +1307,41 @@ Ext.onReady(function() {
 					sigq2.updateProgress(sigqv2, sd.modules[1].op + ': ' + Math.ceil(sigqv2*100) + '%' )
 			} else if(sigq2.isVisible())
 				sigq2.updateProgress(0, '??: 0%' )
-		}	
+		}
 			if (sd.stats[0].gsm) {
 				//Ext.get("gsmid").setHTML(sd.stats[0].gsm)
 				document.getElementById('gsmid').innerHTML = sd.stats[0].gsm
 				if(!/^conn/.test(sd.stats[0].gsm)) {
-					Ext.modulesC.load()// if TA link is up
+					Ext.getStore('modules').load()// if TA link is up
 				}
 				//Ext._op = sd.stats[0].op
 				//Ext._smsp.setTitle(Ext._op + ' SMSки')
 			}
 			if (sd.errs.length > 0) {
+
 			  inste(errlog)
 			  for (var i in sd.errs) {
 				var em = sd.errs[i]
 				inste(errlog, em + "<br/>")
+				if(console) console.error(em)
 			   do {
 				var m = { title:'Фатальная ошибка'
-						,buttons: Ext.Msg.OKCANCEL
+						,buttons: Ext.Msg.OK//CANCEL
 						,icon: Ext.Msg.ERROR
 						,fn: function(bId, txt, opt){
 							Ext._log('bId: ' + bId+' txt: ' + txt + ' opt: ' + opt)
 						}
 					}
 				if(/FATAL ERROR/.test(em)) {
-m.msg = 'Что-то не то с конфигурацией.<br/>' + em
+m.msg = '<b>Что-то не то с конфигурацией.</b><br/><br/>' + em
 				} else if(/timeout AT/.test(em)) {
-m.msg = 'Сеть не может говорить с модемом.<br/>'+
-		'Таймаут AT команды модема. Повтораня попытка её записать.<br/>' + em
+m.msg = '<b>Сеть не может говорить с модемом.</b><br/><br/>'+
+		'Таймаут AT команды модема. Повтораня попытка её записать.<br/><br/>' + em
 m.buttonText = { ok: 'OK', cancel: 'Прекратить попытки (освободить очередь)' }
+				} else if (/ECONNREFUSED/.test(em)){
+m.msg = '<b>Невозможно подключиться к GSM модулю.</b><br/><br/>' + em
+				} else if (/FATAL GSMNET/.test(em)){
+m.msg = '<b>GSM сеть отказывается работать.</b><br/><br/>' + em
 				} else break
 				Ext.Msg.show(m)
 			   } while(!true)
@@ -1112,17 +1360,17 @@ m.buttonText = { ok: 'OK', cancel: 'Прекратить попытки (осв�
 			  for (var i in sd.logs) {
 				inste(srvlog, sd.logs[i] + "<br/>")
 			  }
-			  srvlog.scrollIntoView(false) 
+			  srvlog.scrollIntoView(false)
 			}
-			Ext.defer(sync_extjs_nodejs, 2000, _sync_logs)
+			Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
 		  })
 		}
 	if (!sync_info)
 		Ext._log("sync_info is null (too fast!)")
-	Ext.defer(sync_extjs_nodejs, 2000, _sync_logs)
+	Ext.defer(sync_extjs_nodejs, 7777, _sync_logs)
+	Ext.sync_extjs_nodejs = sync_extjs_nodejs
 })
 })(Ext)
 </script>
 </html>
-<!--
-olecom: telsms.htm ends here-->
+<!-- olecom: telsms.htm ends here-->

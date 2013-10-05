@@ -1,5 +1,5 @@
 ﻿/*====---- APP: self process management ----====*/
-(function(require, process, log, cerr, eval, setTimeout, RegExp, Math) {
+(function(require ,process ,log ,cerr , eval ,setTimeout ,clearTimeout ,RegExp ,Math) {
 	var http = require('http'), net = require('net'), inspect = require('util').inspect
 	,ctl_runs = null, app_runs = null, db_runs = null
 	,err_log = [], gsm_inf = [], srv_log = [ 'Log start @[' + _date() + ']']
@@ -243,14 +243,16 @@ _gsm('gsm do release')
 		_err('sms setup timout, schedule modules, sent_sms: ' + ta.sent_sms)
 		if(!ta)
 			return
-		if(gsmtel_runs == ta._cmd ||
-		   gsmtel_runs == ta._ater){
+		/*if(gsmtel_runs == ta._cmd ||
+		   gsmtel_runs == ta._ater){*/
 			ta.curm.cmdq.splice(0)
-			gsmtel.write('\u001b')//ESC will prevent possible hung in wating for sms text+\u001a
+_gsm('sms write ESC + at')
+			gsmtel.write('\u001b' + ta._cmdle)//ESC will prevent possible hung in wating for sms text+\u001a
+			//gsmtel.write('\u001b' + ta._cmdle)
 			gsmtel.write('at' + ta._cmdle)//make device live after ESC (or it stucks)
 			//if(ta._cmd_releaseTimeout) ta._cmd_releaseTimeout = 0
 			ta.release()// hard release
-		}
+		//}
 	}
 	,this.sms = function(sock){
 /* Remake all logic for this:
@@ -292,44 +294,47 @@ OK        |
 			if(gsmtel_runs == ta._cmd){
 				if(/ERROR/.test(ta_lines_arr[0])){
 					ta.sent_sms.push(ta_lines_arr[0])
-					gsmtel_runs = ta._ater// goto timeout
+					//gsmtel_runs = ta._ater// goto timeout
 					return ta.do_smsTimeout(true)
 				}
+/*_gsm('smH sms write: ' + ta.curm.cmdq[0])
+				sock.write(ta.curm.cmdq[0] + ta._smsle)*/
+				gsmtel_runs = ta._smsle
 _gsm('smH sms write: ' + ta.curm.cmdq[0])
 				sock.write(ta.curm.cmdq[0] + ta._smsle)
-				gsmtel_runs = ta._smsle
 				// fall thru
 			}
 			i = 0
 _gsm('smH sms sync not err')
 			do {
-_gsm('smH i = ' + i + 'line: ' + ta_lines_arr[i])
+_gsm('smH i = ' + i + 'line: ' + ta_lines_arr[i] + 'ta._sync_ok: ' + ta._sync_ok)
 				if(/ERROR/.test(ta_lines_arr[i])){
 					ta.sent_sms.push(ta_lines_arr[i])
-					gsmtel_runs = ta._ater
+					//gsmtel_runs = ta._ater
 					return ta.do_smsTimeout(true)
 				}
-				if(gsmtel_runs == ta._smsle)// ta._sync_ok = /^>/
+				/*if(gsmtel_runs == ta._smsle)// ta._sync_ok = /^>/
 					if(ta._sync_ok.test(ta_lines_arr[i])){
 _gsm('smsH sms 1st sync OK')
-						ta._sync_ok = /^[+]CMGS:(.*)$/
+						//ta._sync_ok = /^[+]CMGS:(.*)$/
 						gsmtel_runs = ta._atok// clear err
 						return ta._hsync// get data event after msg write
-					} else gsmtel_runs = ta._ater
-				m = ta_lines_arr[i].match(ta._sync_ok)
+					} else gsmtel_runs = ta._ater*/
+				m = ta_lines_arr[i].match(/^[+]CMGS:(.*)$/)//ta._sync_ok
 				if(m){
 _gsm('smsH sms id: ' + m[1])
 					ta.sent_sms.push(m[1])// id of sms
-					gsmtel_runs = ta._atok// clear err
-				} else gsmtel_runs = ta._ater
+					//gsmtel_runs = ta._atok// clear err
+				} //else gsmtel_runs = ta._ater
 _gsm('smH atok test i = ' + i + 'line: ' + ta_lines_arr[i])
 				if(RegExp(ta._atok).test(ta_lines_arr[i])){// sms sent, goto next sms
 					ta.curm.cmdq.shift()// sms body
 _gsm('more sms ta.curm.cmdq[0]: ' + ta.curm.cmdq[0])
 					if(ta._cmd_release != ta.curm.cmdq[0]){
 						ta._cmd = ta.curm.cmdq[0]
-						gsmtel_runs = ta._cmd
 						sock.write(ta._cmd + ta._cmdle)
+						gsmtel_runs = ta._cmd
+						//ta._sync_ok = /^>/
 						ta.sent_sms.push(ta._cmd)
 						ta.curm.cmdq.shift()
 						return ta._hsync// next sms
@@ -1254,15 +1259,16 @@ function mk_sms_body(smsText) { // based on to_ascii() from uglify-js by Mihai B
             if(smsA == c ) { s.push({ascii:a, count:c}) ; tc -= c ; c = 0 }
             if(aa) aa = !true
         } else {
-            if (c > 70 && c <= smsA && !aa) {
+            if (c > smsU && c <= smsA && !aa) {
                 if (ws) { s.push({ascii:true, count:ws}) ; tc -= ws ; c -= ws ; ws = 0 }
                    else { s.push({ascii:true, count:c - 1}) ;  tc -= c - 1 ; c -= 1 }
                 aa = true
                 a = true
             }
             if(smsU == c) {
-                if (ws) { s.push({ascii:a, count:ws}) ; tc -= ws ; c -= ws ; ws = 0 }
-                   else { s.push({ascii:a, count:c}) ;  tc -= c ; c = 0 }
+                /*if (ws) { s.push({ascii:a, count:ws}) ; tc -= ws ; c -= ws ; ws = 0 }
+                   else { s.push({ascii:a, count:c}) ;  tc -= c ; c = 0 }*/
+				s.push({ascii:a, count:c}) ;  tc -= c ; c = 0
                 if(aa) aa = !true
                 a = true
             }
@@ -1277,7 +1283,7 @@ function mk_sms_body(smsText) { // based on to_ascii() from uglify-js by Mihai B
 function UCS2(txt){// based on to_ascii() from uglify-js by Mihai Bazon
 	return txt.replace(/[\s\S]/g, function(ch) {
 		ch = ch.charCodeAt(0)
-		return (128 > ch ? 16 > ch ? "000": "00" : "0") + ch.toString(16)
+		return (128 > ch ? "00" : "0") + ch.toString(16)
 	}).toUpperCase()
 }
 
@@ -1546,5 +1552,6 @@ var db_run_check = function() {
 }
 db_run_check()
 
-})(require, process, console.log, console.error, eval, setTimeout, RegExp, Math)
+})(require ,process ,console.log ,console.error ,eval ,setTimeout ,clearTimeout
+  ,RegExp ,Math)
 //olecom: telsms.js ends here
