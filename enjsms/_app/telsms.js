@@ -1,4 +1,4 @@
-﻿/*====---- APP: self process management ----====*/
+/*====---- APP: self process management ----====*/
 (function(require, process, log, cerr, eval, setTimeout, RegExp, Math) {
 	var http = require('http'), net = require('net'), inspect = require('util').inspect
 	,ctl_runs = null, app_runs = null, db_runs = null
@@ -24,28 +24,6 @@ function _date(){ //ISODateString
       + pad(d.getUTCSeconds())+'Z'
 }
 var str2hex = function(s) {
-/* // from `websocket-client` by Peter Griess
-    var hexChars = [
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        'a', 'b', 'c', 'd', 'e', 'f'
-    ];
-
-    var out = '';
-    for (var i = 0; i < str.length; i++) {
-        var c = str.charCodeAt(i);
-        out += hexChars[(c & 0xf0) >>> 4];
-        out += hexChars[c & 0x0f];
-        out += ' ';
-    }
-
-    return out.trim();
-//reading char codes from stdin
-process.stdin.on('data', function (ch) {
-  process.stdout.write(' data: 0x' + ch.toString().charCodeAt(0).toString(16))
- }
-)
-*/
-//  using RE:
 	return s.replace(/./g,function(ch){ return ' '+ch.charCodeAt(0).toString(16) })
 			.toUpperCase()
 }
@@ -57,11 +35,6 @@ process.on('uncaughtException', function (err) {
 process.on('exit', function () {
 	log('telsms nodeJS exit.')
 })
-
-/*unsupported ---- OLD PLAN ---- process.on('SIGINT', function () {
-	log('nodeJS app got SIGINT. Grace shutting down...\n')
-	process.exit(0)
-})*/
 
 var ctl = http.createServer(function (req, res) { // new plan
 	var status = 200, len = 0, body = null
@@ -86,55 +59,49 @@ var ctl = http.createServer(function (req, res) { // new plan
 /*====---- APP: telnet GSM part ----====*/
 
 /* @inbuf		input buffer for full text lines from ME
-   @TE2ME_cmds	commands from user to modem
-
    @gsmtel_runs	HW connection flag for TE2ME cmd loop start
+   @TE_ME_mode  mid loop cmd chain sync (next cmd or give more data for same cmd)
+   @ta			current terminal adapter (GSM engine)
 */
-var inbuf = []
 
-function get_input_lines(s) {
+var	TE_ME_mode = 'login-mode' ,gsmtel_runs = null
+	,ta ,ME = {}
+	,inbuf = []
+
+function get_input_lines(s) { //loop this fun() on data until there is full set of lines
 	if(!ta) {
 		_err('app error get_input_lines(): ta is null')
 		return
 	}
-/* join chuncks from the network and queue them in full lines
- */
-	if (typeof s != 'string') {
-		try { s = String(s)
-		} catch(e) { return }
-	}
-
 _gsm('data event got:"' + s + '"')
 _gsm('data event got hex:"' + str2hex(s) + '"')
 
+//join chuncks from the network and queue them in full lines
 	inbuf.push(s) // add chunck to array
 /* Commands are usually followed by a response that includes
    "<CR><LF><response><CR><LF>". (XT55 Siemens Mobile doc)
+   this is case of "ATV1" setup
 */
-	if (RegExp(ta._end_ch).test(s)) { // full command in chunck
-		//join all and return to cmd handler
-		//remove repeated, front and tail new lines
-		s = inbuf.join('')
-			.replace(/\r+/g,'')
-			.replace(/(^\n+)|(\n+$)/g,'')
-			.replace(/\n+/g,'\n')
-		_gsm('s: "' + s.replace('\n', '|n') + '"')
-		inbuf.splice(0) // clear
-		return s ? s.split('\n') : null
-	} // else:
-	// 1  split by \n, return all but last cmds to cmd handler
-	// 2< or just loop this fun() until there is full set of lines
-	return
+	if (!RegExp(ta._end_ch).test(s))
+		return
+
+	// full command in chunck: join all and return to cmd handler
+	// remove repeated, front and tail new lines
+	s = inbuf.join('')
+		.replace(/\r+/g,'')
+		.replace(/(^\n+)|(\n+$)/g,'')
+		.replace(/\n+/g,'\n')
+_gsm('s: "' + s.replace('\n', '|n') + '"')
+	inbuf.splice(0) // clear
+	return s ? s.split('\n') : null
 }
-var	TE_ME_mode = 'sync' // || 'async'
-	,ta ,ME = {}
-	,gsmtel_runs = null //,gsmtel_cmds = []
 
 /* GSM engines -,   ME (Mobile Equipment), MS (Mobile Station),
    are referred	|   TA (Terminal Adapter), DCE (Data Communication Equipment)
 		   to as`:  or facsimile DCE (FAX modem, FAX board). (XT55 Siemens Mobile doc)*/
 
-ME.GSM = { _dscr: "GSM modem via Telnet interface"
+ME.GSM = function() {
+// general GSM interface via Telnet of Terminal.exe by <braypp@gmail.com>
 //== GSM command aliases: ==
 
 /* 1.7.1 Communication between Customer Application and XT55 (Siemens Mobile doc)
@@ -163,65 +130,102 @@ To avoid this conflict the following measures must be taken:
 i knew that!!!
 */
 //modules. default set up
-	,curm: null
-	,modules: [ { modid:null ,ownum:null ,re:null ,cmdq: ['login'] ,op: '??' ,sigq: '??'} ]
-	,modqlenTotal: 1 // 'login' above
-	,defmod: 1
+	this.modules = [ { modid:'единственный' ,ownum:null ,re:null ,cmdq: [] ,op: '??' ,sigq: 0} ]
+	,this.modqlenTotal = 0
+	,this.defmod = 1  // counts from one
+	,this.curm = null // general setup to: ta.modules[ta.defmod - 1]
+	,this._end_ch ='\n$'
+	,this._cmdle = '\r\n'// usual command's ending
+	,this.atsetup = 'ate1v1+CMEE=2' // _atok: 'OK$' || v0 -- _atok: '0$'
 //data
-	,initcmds: [ 'ate1v1+CMEE=2', 'ati', 'at+CSQ', 'at+COPS=3,0', 'at+COPS?' ]
-	,_end_ch:'\n$'
-	,atsetup: 'ate1v1+CMEE=2' // _atok: 'OK$' || v0 -- _atok: '0$'
-	,info: 'ati'
-	,signal: 'at+CSQ'
-	,cfgOpName: 'at+COPS=3,0'
-	,getOpName: 'at+COPS?'
+	this.initcmds = function() {
+		return [ this.atsetup ,'ati' ,'at+CSQ' ,'at+COPS=3,0' ,'at+COPS?' ]
+	}
+	,this.info = 'ati'
+	,this.signal = 'at+CSQ'
+	,this.cfgOpName = 'at+COPS=3,0'
+	,this.getOpName = 'at+COPS?'
 //== private ==
-	,  __err: function(e) { _gsm('E220 error: ' + e) ; return this._yes_next + '-err' }
-	,__errfa: function(e) { _gsm('E220 error fatal: ' + e) ; return this._yes_next + '-fatal-err' }
-	,  __nop: function(e) {}
-	,   _err: function(e) {}
-	,_cmd: 'no command'
-	,_yes_next: 'yes-next'
-	,_atdata: []
-	,_atok: 'OK$'
-	,_sync_ok: ''
+	,this.__err = function(e) { _err('GSM error: ' + e) ; return this._yes_next + '-err' }
+	,this.__errfa = function(e) {
+		_err('GSM error fatal: ' + e)
+		gsmtel_runs == 'fatal error'
+		ta.curm.cmdq.splice(0)
+		if(ta._cmdTimeout) {
+			clearTimeout(ta._cmdTimeout)
+			ta._cmdTimeout = null
+		}
+		return 'reconnect-fatal-err'
+	}
+	,this.__nop = function(e) {}
+//== const
+	,this._yes_next = 'yes-next'
+	,this._atok = 'OK$'
+//== var
+	,this._err = function(e) {}
+	,this._cmd = 'no command'
+	,this._atdata = []
+	,this._sync_ok = ''
 // std handlers
-	,_hsync: 'handle-sync'
-	,_handle: function(tamode, e) {}
-	,_async_handlers: []
-	,_appcb: null // ??? application's call back
+	,this._hsync = 'handle-sync'
+	,this._handle = function(tamode, e) {}
+	,this._async_handlers = []
+	,this._appcb = null // ??? application's call back
 //== public ==
-	,login: function(e) {
+	,this.login = function(e) {
 _gsm("login: GSM via Terminal Telnet server")
 		this._cmd = 'login'
 //serial terminal program writes first line on telnet: "Terminal remote server"
 		this._sync_ok = '^Terminal'
 		this._err = this.__err
 		this._handle = this.__handle
-		return 'handle-sync'
+		return this._hsync
 	}
-	,get: function(e) {
+	,this.get = function(e) {
 _gsm("get: noop")
 // empty command in this gsm interface, calls next without handling of income data
 		return this._yes_next
 	}
-	,release: function(e) {
+	,this.release = function(e) {
 _gsm("release: noop!")
+//TODO: slice(0) queue to prevent sync hungs (end session)
+//session clean up:
+		if(ta._USSDtimeoutH) {
+			clearTimeout(ta._USSDtimeoutH)
+			ta._USSDtimeoutH = null
+_err('ta._USSDtimeoutH clear AT enter')
+		}
 		return this._yes_next
 	}
-	,disconnect: function(e) {}
-	,at: function(sock, atcmd){
+	,this.disconnect = function(e) {}
+	,this._USSDtimeoutH = null
+	,this._cmdTimeout = null
+	,this.at = function(sock, atcmd){ //'at'- sync, AT - async commands
 		this._atdata_handler = null // sync atcmd --inside data--ok data handler
 		this._err = this.__err // common error trap
 		this._cmd = atcmd
+		this._sync_ok = this._atok
 
-		if (this._sync_ok !== this._atok) {
+		/*if(!/^aT/.test(atcmd)) { //`aT` like sms fail
+			gsmtel_runs = atcmd
+			ta._timeoutH = function(){
+			var cmd = atcmd, s = sock
+				if (gsmtel_runs == cmd) {
+					_err('timeout AT cmd(rewrite): ' + cmd)
+					s.write(cmd + this._cmdle)
+				}
+				if(ta)
+					ta._cmdTimeout = setTimeout(ta._timeoutH, 1024 << 3)
+			}
+			ta._cmdTimeout = setTimeout(ta._timeoutH, 1024 << 3)
+		}*/
+
+		if (atcmd == this.atsetup) {
 /* first `at` command and first setup of modem communication: 'ate1v1+CMEE=2' (@this.atsetup)
    1) e1: echo on for head and tail sync
    2) v1: verbose cmd run codes e.g. '^OK$'
    3) +CMEE=2: error descriptions instead of codes */
 
-			this._sync_ok = this._atok
 			this._handle = this.__handle //simple handler until full `at` sync
 // setup of `at` cmd sync. this command may or may not receive its echo
 // thus handling must wait usual @_atok reply
@@ -231,16 +235,15 @@ _gsm('at write setup: `' + atcmd + '`')
    To terminate a command line enter <CR>. (XT55 Siemens Mobile doc)
    <CR><LF> is used here:
 */
-			sock.write(atcmd + '\r\n')
-
-			this._async_handlers.push(
+			sock.write(atcmd + this._cmdle)
+			if(0 == this._async_handlers.length) this._async_handlers.push(
 				 this.SRVSTh
 				,this.CSQh
 				,this.CUSDh
 				,this.CUSDht
 			) //set up all async handlers
 
-			return 'handle-sync'
+			return this._hsync
 		} else if (this._handle !== this.__athandle){
 // head and tail sync of any `at` command
 			this._handle = this.__athandle
@@ -304,20 +307,42 @@ OK
 321 Invalid memory index
 322 Memory full
 */
-		switch (atcmd) {
+		if(/^AT[+]CUSD/.test(atcmd)) {
+			this._end_ch ='[\n ]$'
+			ta._USSDtimeoutH = function(){
+				if(ta) {
+					if(ta._appcb) {
+						ta._appcb('ussd timeout ' + ta._atdata.join('<br/>'))
+						ta._appcb = null
+					}
+					ta.curm.cmdq.unshift('release')
+					//ta.modqlenTotal++
+				}
+				ta._USSDtimeoutH = null
+_err('ta._USSDtimeoutH clear callback')
+			}
+			ta._USSDtimeoutH = setTimeout(ta._USSDtimeoutH, 1024 << 2)
+
+_err('endch: ' + ta._end_ch)
+		} else if(/^AT[+]CMSG/.test(atcmd)) {
+			this._end_ch =' $'
+			this._sync_ok = '> '
+		} else switch (atcmd) {
 		case 'ati': /* data inside cmd - ok block */
 			this._handle = function(ta_lines_arr) {
 				for (var i in ta_lines_arr) {
 					if (RegExp(this._sync_ok).test(ta_lines_arr[i])) {
-						//model + revision + imei
-						app.gsm = this._atdata.splice(1).join('<br/>')
+						app.gsm = 'GSM:&nbsp;' + this._atdata.splice(1).join('<br/>')
 						this._atdata.splice(0)
 						this._handle = this.__handle
+						gsmtel_runs = this._atok
+						clearTimeout(ta._cmdTimeout)
+						ta._cmdTimeout = null
 						return this._yes_next
 					} else this._atdata.push(ta_lines_arr[i])
 				}
 _gsm('ati handler awaits @_sync_ok')
-				return 'ati-loop'
+				return 'ati-loop'+this._hsync
 			}
         break
 		case this.getOpName:
@@ -328,34 +353,42 @@ _gsm('ati handler awaits @_sync_ok')
 		break
 		}
 _gsm('at write: `' + atcmd + '`')
-		sock.write(atcmd + '\r\n')
-		return 'handle-sync'
+		sock.write(atcmd + this._cmdle)
+		return this._hsync
 	}
 /*  Handlers
 	NOTE: async handler must look up all atdata[] for its match
 */
-	,SRVSTh: function(atdata) {
+	,this.SRVSTh = function(atdata) {
 		for(var i in atdata) {
 			if (/SRVST:2/.test(atdata[i])) {//async: ^SRVST:2
 				app.op = '??? '
 				ta.curm.cmdq.unshift(ta.getOpName)
 				ta.curm.cmdq.unshift(ta.atsetup)
+				//ta.modqlenTotal += 2
 			}
 		}
 	}
-	,COPSh: function(atdata) {
+	,this.COPSh = function(atdata) {
 		for(var i in atdata) {
 			if (/COPS:/.test(atdata[i])) {// async: +COPS: 0,0,"MTS.BY",2
-				app.op = atdata[i].replace(/(^[^"]+")|("[^"]*$)/g,'')
+				ta.curm.op = atdata[i].replace(/(^[^"]+")|("[^"]*$)/g,'')
+				if(gsmtel_runs == ta.getOpName && ta._cmdTimeout) {
+					clearTimeout(ta._cmdTimeout)
+					ta._cmdTimeout = null
+				}
 				break
 			}
 		}
 	}
-	,CSQ: 'at+CSQ'
-	,CSQh: function(atdata) {
+	,this.CSQ = 'at+CSQ'
+	,this.CSQh = function(atdata) {
 		var d
 		if (this.CSQ == atdata[0]) { // sync: '+CSQ: 20,99'
 			d = atdata[1]
+			gsmtel_runs = this._atok
+			clearTimeout(ta._cmdTimeout)
+			ta._cmdTimeout = null
 		} else for(var i in atdata) {
 			if (/RSSI:/.test(atdata[i])) { //async: '^RSSI:25'
 				d = atdata[i]
@@ -363,24 +396,33 @@ _gsm('at write: `' + atcmd + '`')
 			}
 		}
 		if (d)
-			app.sigq = d.replace(/[^:]*:([^,]+).*/,'$1') +'/31'
+			ta.curm.sigq = d.replace(/[^:]*:([^,]+).*/,'$1') +'/31'
 	}
-	,_in_ussd: !true
-	,CUSDht:function(atdata) {// ussd multiline tail
+	,this._in_ussd = null
+	,this.CUSDht = function(atdata) {// ussd multiline tail async
 		if(ta._in_ussd) for(var i in atdata) {
-			if (/",[^,]*$/.test(atdata[i])) {  // async: '...",15' || '.",1' as now in 'velcom'...
-				ta._atdata.push(atdata[i])
+			ta._atdata.push(atdata[i])
+
+			if (/",[^,]*$/.test(atdata[i]) ||
+				/^[+]CUSD: .$/.test(atdata[i])) {  // async: '...",15' || '.",1' as now in 'velcom'...
+_gsm('USSD tail: ' + atdata[i] + ' ta._in_ussd: ' + ta._in_ussd)
 				if(ta._appcb) {
 					ta._appcb(ta._atdata.join('<br/>'))
 					ta._appcb = null
 					ta._atdata.splice(0)
 				}
-				ta._in_ussd = !true
+				if('cancel' == 	ta._in_ussd) {
+					ta.curm.cmdq.unshift('AT+CUSD=2') //   second!
+					ta.curm.cmdq.unshift('\u001b') //<ESC> first!
+					//ta.modqlenTotal += 2
+				}
+				ta._in_ussd = null
+				//ta.modqlenTotal++
 				break // read all multiline ussd reply
-			} else ta._atdata.push(atdata[i])
+			} else ta._atdata.push(atdata[i])// or oush data for others
 		}
 	}
-	,CUSDh: function(atdata) {// ussd head
+	,this.CUSDh = function(atdata) {// ussd head async
 /*
 0 no further user action required (network initiated USSD-Notify,
   or no further information needed after mobile initiated operation)
@@ -393,20 +435,20 @@ _gsm('at write: `' + atcmd + '`')
 //??? не понимаю почему здесь не сработал `this`??? нужна привязка к глобальному `ta`
 // так как я не знаю контекста этого `this`, лучше использовать глобальные переменные и не мучиться
 		for(var i in atdata) { // async: '+CUSD: 0,"Vash balans sostavlyaet minus 3511 rublej...
-			if (/^[+]CUSD: [01]/.test(atdata[i])) {
+			if (/^[+]CUSD: [012345]/.test(atdata[i])) {
 _gsm('USSD head: ' + atdata[i])
-				ta._in_ussd = true
-				if (/^[+]CUSD: 1/.test(atdata[i])) {
-					// cancel USSD continuation (portals, spam etc.)
-					ta.curm.cmdq.unshift('AT+CUSD=2') //   second!
-					ta.curm.cmdq.unshift('\u001b') //<ESC> first!
-				}
-//????				process.nextTick(_do_TE2ME_cmd_loop)
+
+				if (/^[+]CUSD: 0/.test(atdata[i])) {
+					ta._in_ussd = 't'
+				// cancel USSD continuation (portals spam, errors etc.)
+				} else ta._in_ussd = 'cancel'
+
+				ta._end_ch ='\n$'
 				break
 			}
 		}
 	}
-	,__athandle: function(ta_lines_arr, samode) {
+	,this.__athandle = function(ta_lines_arr, samode) {
 /* when modem's `echo` is on, then all `at` command's ME data starts from command itself
    this is the first sync point, tail must be ended with _atok, final sync point
    if first fails, then something happened with connection or getting of a voip module
@@ -419,7 +461,10 @@ _gsm('at handler mode: ' + samode + ' arr: ' +ta_lines_arr)
 			var i = 0
 			if (/handle-sync$/.test(samode)) while (true) {
 				if (ta_lines_arr[i] == this._cmd) {
-_gsm("got head of async cmd: " + this._cmd)
+_gsm("got head of sync cmd: " + this._cmd)
+					gsmtel_runs = this._atok
+					clearTimeout(ta._cmdTimeout)
+					ta._cmdTimeout = null
 					break
 				}
 				if(++i >= ta_lines_arr.length)
@@ -438,9 +483,9 @@ _gsm("atdata: " + this._atdata.join('<br/>'))
 				} else this._atdata.push(ta_lines_arr[i])
 
 				if(++i >= ta_lines_arr.length)
-					return 'AT-sync'
+					return 'AT-sync'// sync -- no other command setup, but skip async spam
 			} // searching 4 tail
-_err("gsmtel: !!! MUST NOT BE HERE1 !!!" + this._cmd)
+_err("gsmtel __athandle(): !!! MUST NOT BE HERE1 !!!" + this._cmd)
 			return this._yes_next
 		} else { // the same way as this._handle = this.__handle
 			for (var i in this._async_handlers) {
@@ -449,24 +494,28 @@ _err("gsmtel: !!! MUST NOT BE HERE1 !!!" + this._cmd)
 			return 'yes-next-AT-asyn'
 		}
 	}
-	,__handle: function(ta_lines_arr, samode) {
+	,this.__handle = function(ta_lines_arr, samode) {
 /* simple sync and async handler
    sync commands are done, when any line from ta match RE(@this.sync_ok)
    async handlers are called otherwise */
 _gsm('handler ME mode: ' + samode + '\nthis._sync_ok:' + this._sync_ok + '\nthis._cmd:' + this._cmd)
-		if (/sync$/.test(samode)) {
+		if (/sync$/.test(samode) && this._sync_ok) {
 			var sync = RegExp(this._sync_ok)
 			for (var i in ta_lines_arr) {
 _gsm('ta_lines_arr[i]: ' + ta_lines_arr[i])
 				if (ta_lines_arr[i].match(sync)) {
 					_gsm("handled sync cmd: " + this._cmd)
-					return 'yes-next-sync'
+					/*if(ta._appcb) {// universal handler does such call back
+						process.nextTick(ta._appcb)
+						ta._appcb = null
+					}*/
+					return this._yes_next
 				}
 			}
 // no match, and since this is sync cmd, then error
 // _err() must return either next cmd or do something to actually get cmd done
 // clear sync flag to deal with possible async garbage between successive commands
-			return this._err(ta_lines_arr.join(''))
+			return this._err(ta_lines_arr ? ta_lines_arr.join('') : 'no-event-data')
 		} else {
 //there can be any async garbage between successive commands
 			for (var i in this._async_handlers) {
@@ -475,44 +524,57 @@ _gsm('ta_lines_arr[i]: ' + ta_lines_arr[i])
 			return 'yes-next-asyn'
 		}
 	}
-	,qcmds: function (append_this_cmds, modid) {
+	,this.qcmds = function (append_this_cmds, modid) {
 	/*if (!(cmd_queue instanceof Array)) {
 		_err('gsmtel queue_cmds(cmds, queue): @queue must be an array')
 		return
 	}*/
 	var mcmdq
-	if (!modid) {
-		mcmdq = ta.modules[ta.defmod - 1].cmdq
-	} else for (var i in ta.modules) {
+	if (modid) for (var i in ta.modules) {
 		if(ta.modules[i].modid == modid){
 			mcmdq = ta.modules[i].cmdq
 			break
 		}
 	}
-
+	if (!mcmdq) {
+		mcmdq = ta.modules[ta.defmod - 1].cmdq
+		modid = ta.modules[ta.defmod - 1].modid
+	}
 	if (append_this_cmds instanceof Array) {
 		if (append_this_cmds.length <= 0)
 			return
 		mcmdq.push('get')
+		mcmdq.push(ta.atsetup)
+		//ta.modqlenTotal += 2
+		var rel = true
 		for (var i in append_this_cmds) {
 			if (append_this_cmds[i]) {
 				if ('string' === typeof append_this_cmds[i]) {
 					mcmdq.push(append_this_cmds[i])
-					ta.modqlenTotal++
+					//ta.modqlenTotal++
+					if(/CUSD/.test(append_this_cmds))
+						rel = !true
 				} else {
 					_err('qcmds(arg): @arg['+i+'] is null, must be string')
 				}
 			}
 		}
-		mcmdq.push('release')
-		ta.modqlenTotal += 2
+		if(rel) {
+			mcmdq.push('release')
+			//ta.modqlenTotal++
+		}
 	} else {
+_err("append_this_cmds: " + append_this_cmds)
 		if ('string' === typeof append_this_cmds) {
 			if (append_this_cmds.length > 0) {
 				mcmdq.push('get')
+				mcmdq.push(ta.atsetup)
 					mcmdq.push(append_this_cmds)
-				mcmdq.push('release')
-				ta.modqlenTotal += 3
+				//ta.modqlenTotal += 3
+				if(!/CUSD/.test(append_this_cmds)){
+					mcmdq.push('release')
+					//ta.modqlenTotal++
+				}
 			}
 		} else {
 			_err('qcmds(arg): @arg is not string or array!')
@@ -522,32 +584,35 @@ _gsm('mcmdq in "'+modid+'": '+JSON.stringify(mcmdq))
 }// qcmds
 }// ME.GSM
 
-ME.E220 = { _dscr: "HUAWEI E220"
-}
-
-ME.MV37X = { _dscr: "MV-374 / MV-378 VoIP GSM Gateway"
+//NOTE: function() objects aren't simple {}, ME['GSM']._dscr is undefined via fun() {this._dscr}
+//      RegExp(undefined) matches everything /*if (!/^GSM$/.test(i)) */
+ME.GSM._dscr =          "GSM modem via Telnet interface"
+ME.E220      = { _dscr: "HUAWEI E220" }
+ME.MV37X     = { _dscr: "MV-374"
 	,login: function(sock, e) {
 		const pass_sync = 'word:.*$'
-_gsm("MV37X login! : " + ta._sync_ok)
+_gsm("MV37X login! : " + ta._sync_ok + ' ta._cmd: ' + ta._cmd)
 	if('login' !== ta._cmd) { // init once
 			ta._cmd = 'login'
 //on telnet connect /^user/name and password is asked interactively (EOL != \n)
 			ta._sync_ok = '^user'
-			ta._end_ch =':.*$' // ME interractive mode
+			//ta._end_ch =':.*$' // ME interractive mode
+			ta._end_ch =' $' // space
+			ta._err = this.__errfa
 		}
 		ta._handle = function(arg) {
-		var r = ta.__handle(arg)
+		var r = ta.__handle(arg, 'sync')
 _gsm("MV37X login handle r: " + r)
 			if(/^yes/.test(r)) {
 				if('^user' == ta._sync_ok) {
 					ta._sync_ok = pass_sync
 _gsm("MV37X sock write: login")
-					sock.write('voip\r\n')
+					sock.write('voip'+ta._cmdle)
 				} else if (pass_sync == ta._sync_ok){
-					sock.write('1234\r\n')
+					sock.write('1234'+ta._cmdle)
 _gsm("MV37X sock write: 1234")
 					ta._sync_ok = '\]$'
-					ta._end_ch = '\n$' // ME normal mode line reading mode
+					ta._end_ch = ta._sync_ok
 					ta._handle = ta.__handle // all chain handeled, goto next command
 					ta._err = ta.__nop // eat stuff in std handler
 					return ta._hsync // set next (std) handler's arg
@@ -558,18 +623,21 @@ _gsm("MV37X sock write: 1234")
 	}
 	,get: function(sock) {
 _gsm('MV37X get cmd param write: `' + ta.curm.modid + '`')
-		sock.write(ta.curm.modid + '\r\n')
+		sock.write(ta.curm.modid + ta._cmdle)
 		ta._cmd = 'get'
 //MV37X on get writes 'got!! press ctrl+x to release module X.'
 		ta._sync_ok = '^got'
-		ta._err = ta.__nop //on error nothing happens
+		ta._end_ch = '\n$'
+		ta._err = ta.__nop //TODO: on error nothing happens, say that module is `none`
 		ta._handle = ta.__handle //give job to std handler's
 		return ta._hsync         //sync part
 	}
-	,release: function(e) {
+	,release: function(sock) {
 _gsm("MV37X release. send CTRL+X CAN 0x18")
+		ta._cmd = 'release'
 		sock.write('\u0018')
-		ta._sync_ok = '\]$' //switch std sync handler to MV37X's cmds
+		ta._sync_ok = '^release' //switch std sync handler to MV37X's telnet cmds
+		ta._end_ch = '\]$'
 		ta._err = ta.__nop
 		ta._handle = ta.__handle
 		return ta._hsync
@@ -578,46 +646,52 @@ _gsm("MV37X release. send CTRL+X CAN 0x18")
 
 var modring = 0
 
-function _do_TELNET2MODULES_cmd_loop(setup) {
+function _do_TELNET2MODULES_cmd_loop() {
+/* Modules manager
+   On Telnet connect MODEL setup is done.
+   Current module is set to default one or first otherwise.
+   In its cmd queue's head `login` command is inserted and
+   do_TE2ME handler is called.
+   It events until cmdq is empty, thus nextTicking this manager.
+*/
 	if(!gsmtel_runs) {
-//TODO: check if user closes all manually `connect` && `disconnect` commands
-		//ta.curm.cmdq.splice(0) // clear cmds
-// last cmd in queue must receive error
-// not last, but currently set up handler must get show stop event
 		_gsm('telnet2modules: NOLINK')
 		return
 	}
 
-	if(setup){// first run
-		if(ta.modules.length > 0) {
-			modring = 1
-			ta.curm = ta.modules[modring - 1]
+	if(0 == modring){// first run
+		if(ta.modules.length <= 0) {
+			_err('app err: ta.modules[] is empty')
+			return
 		}
-		_do_TELNET2MODULES_cmd_loop()
+		modring = ta.defmod
 	}
-_gsm('sch: ta.modqlenTotal: ' + ta.modqlenTotal)
+	ta.modqlenTotal = 0
+	for (var i in ta.modules)
+		ta.modqlenTotal += ta.modules[i].cmdq.length
+_err('sch: ta.modqlenTotal: ' + ta.modqlenTotal)
 
 	if(ta.modqlenTotal <= 0)
-		return
+		return// nothing to do, wait app commands
+
+_err('modring: ' + modring + " cmdq: "+ ta.modules[modring - 1].cmdq)
+	var cm = modring
 
 	while (ta.modules[modring - 1].cmdq.length <= 0){
 		if(++modring > ta.modules.length)
 			modring = 1
+_err('modring2: ' + modring)
+		/*if (cm == modring){
+			return //ring is over, but there are total commands
+		}*/
 	}
+_err('selected modring: ' + modring)
 	ta.curm = ta.modules[modring - 1]
-
 _gsm('sch: selecting "' + ta.curm.modid + '"')
-	while (true) {
-		if('release' != ta.curm.cmdq[0]){
-			if (ta.curm.cmdq <= 0) {
-				ta.qcmds('release', ta.curm.modid)
-				_do_TE2ME_cmd_loop()
-				break
-			}
-			_do_TE2ME_cmd_loop()
-		}
-	}
-	process.nextTick(_do_TELNET2MODULES_cmd_loop)
+
+// give currently selected module into evented data handling
+	TE_ME_mode = ta._yes_next
+	process.nextTick(_do_TE2ME_cmd_loop)
 }
 
 function _do_TE2ME_cmd_loop(ta_lines_arr) {
@@ -631,13 +705,6 @@ function _do_TE2ME_cmd_loop(ta_lines_arr) {
               because link is down and new set up chain of command will be needed
               and queued on connect)
 */
-	if (undefined !== ta_lines_arr) {
-		if (!(ta_lines_arr instanceof Array)) {
-			_err('gsmtel _do_TE2ME_cmd_loop(arr): @arr must be arrays if defined')
-			return
-		}
-	}
-
 	if(!gsmtel_runs) {
 //TODO: check if user closes all manually `connect` && `disconnect` commands
 		//ta.curm.cmdq.splice(0) // clear cmds
@@ -646,59 +713,46 @@ function _do_TE2ME_cmd_loop(ta_lines_arr) {
 		_gsm('telnet: NOLINK')
 		return
 	}
-	var next_cmd = 'yes-next-sync'
-	//              ^^^ -- run do() in the end
-	//                  ^^^^ - set up next cmd?
-	//                       ^^^^ - TE_ME mode
-_gsm('do loop')
+	var next_cmd
+
+_gsm('do loop, TE_ME_mode: ' + TE_ME_mode)
 	if (ta_lines_arr) {
-_gsm('cmd handle: ' + ta_lines_arr.join('|'))
+_gsm('cmd handle: ' + (ta_lines_arr.join('|')))
 		next_cmd = ta._handle(ta_lines_arr, TE_ME_mode)
-	}
+		if(!next_cmd) {// handler without yes_next, wait for more data
+_gsm('no next more data')
+			return
+		}
+	} else next_cmd = TE_ME_mode// first setup
 
-	_gsm('handler ret || cmd to setup: ' + c)
-
-	if (RegExp(ta._yes_next).test(next_cmd)) {
+	_gsm('handler ret || cmd to setup: ' + next_cmd)
+	while (RegExp(ta._yes_next).test(next_cmd)) {
 		var c = ta.curm.cmdq[0]
 _gsm('cmd to setup: ' + c)
-do {
 		if (!c) {
-			TE_ME_mode = ''
-			return //and cmd queue
-		}
-		if(/^at/i.test(c)) {
+			ta._cmd = TE_ME_mode = ta._yes_next +" end of module's cmd queue"
+// schedule module ring by upper event loop
+			process.nextTick(_do_TELNET2MODULES_cmd_loop)
+			return //end cmd queue
+		} else if(/^at/i.test(c)) {
 //AT: specially handeled subset of commands
 			next_cmd = ta.at(gsmtel, c)
-			break // like goto ta.curm.cmdq.shift()
-		}
-//all others gsm iface commands
-		if(ta.hasOwnProperty(c)) {
-// current module is scheduled in modules ring by upper event loop
+		} else if(ta.hasOwnProperty(c)) {
 			next_cmd = ta[c](gsmtel)
-			break
-		}
-		if(c.charCodeAt(0) < 0x20) {
+		} else {
 _gsm('direct write of:' + c)
 			gsmtel.write(c)
-			break
+			//loop next cmd
 		}
-		_err('no command `' + c + '` in module "' + ta._dscr)
-} while(false)
 		ta.curm.cmdq.shift()
-		ta.modqlenTotal--
+		//loop next cmd
+		//ta.modqlenTotal--
 	}
-	if (next_cmd) { // if set
-		if(/^yes/.test(next_cmd)) {
-// 1. command is empty in the gsm interface, thus try to set up next one
-// 2. or handler done its job, next command must be set up
-			_do_TE2ME_cmd_loop()
-		} else
-			TE_ME_mode = next_cmd // sets up new mode
-	} // else same cmd handler does it's data handling
+	TE_ME_mode = next_cmd // sets up new mode in handlers
 }
 
 var gsmtel_addr = { //GSM_TELNET="localhost:8023"
-		port: process.env.GSM_TELNET.replace(/[^:]*:/,'')
+		 port: process.env.GSM_TELNET.replace(/[^:]*:/,'')
 		,fqdn: process.env.GSM_TELNET.replace(/:[^:]*/,'')
 	}
 	,gsmtel = net.connect(gsmtel_addr.port, gsmtel_addr.fqdn, gsmtel_ok)
@@ -724,24 +778,32 @@ or `node` will say:
 		gsmtel.connect(gsmtel_addr.port, gsmtel_addr.fqdn /*, no need in another callback*/)
 	}
 }
+
+function gsmtel_init() {
+	gsmtel_runs = null
+	ta = null
+	modring = 0
+	TE_ME_mode = 'login-mode'
+	app.gsm = 'connecting....' //reloads modules store in extjs
+}
+
 // set up event handlers once
 gsmtel.on('connect', function(){
 	var model = process.env.GSM_MODEL, i, j
 
 	gsmtel.setEncoding('ascii')
-// general GSM interface via Telnet of Terminal.exe by <braypp@gmail.com>
-	ta = {}
-	for(j in ME.GSM)
-		ta[j] = ME.GSM[j]
+	ta = new ME.GSM
 
 	if (/^{/.test(model)) {
 /*GSM_MODEL='{ "name": "MV-374 / MV-378 VoIP GSM Gateway"
-,"module1": { "own":"+375298714075", numre: "+37529[2578] +37533" }
-,"module2": { "own":"set me in cfg", numre: "+37529[136]  +37544" }
+,"module1": { "own":"+375298714075", "numre": "+37529[2578] +37533" }
+,"module2": { "own":"set me in cfg", "numre": "+37529[136]  +37544" }
 ,"default": 1
+,"_other_cfg": "be-be"
 }'*/
 	try {
 		var cfg = JSON.parse(model)
+
 		for(i in ME) {
 			if(RegExp(ME[i]._dscr).test(cfg.name)) {
 				var m = ME[i]
@@ -755,15 +817,17 @@ gsmtel.on('connect', function(){
 		ta.modules.splice(0)// remove default
 		j = 0
 		for(i in cfg){
-			if(/(^default)|(^name)|(^_)/.test(i)) {
+			if(!/(^default)|(^name)|(^_)/.test(i)) {
 				var m
-				if(!ta.defmod && cfg.default == ++j)
-					ta.defmod = i //default module
+				if(cfg.default == ++j)
+					ta.defmod = j //default module number in (array + 1)
 				m = {} // new module object
 				m.modid = i
-				m.op = m.sigq = '??' // stats
+				m.op = '??' // stats
+				m.sigq = 0
 				m.ownum = cfg[i].own
 				m.re = []
+_err("json cfg: i = " + i)
 				cfg[i].numre.replace(/[+]/g, '^[+]').split(' ').forEach(
 function(re_str){
 	if(re_str)
@@ -772,9 +836,9 @@ function(re_str){
 				)
 				m.cmdq = []
 				ta.modules.push(m)
-				ta.qcmds(ta.initcmds ,m.modid)
 			} else if(/^_/.test(i))
 				ta[i] = cfg[i] // possible other cfg stuff
+
 		}
 		if(!j) {
 			_err('model JSON config err: no modules found')
@@ -782,12 +846,15 @@ function(re_str){
 			_gsm('model module selection: "default" module number is out of range or is not defined, setting "module1"')
 			ta.defmod = 1
 		}
+		if(ta._atsetup)
+			ta.atsetup = ta._atsetup
+		j = ta.initcmds()
+		for (i in ta.modules)
+			ta.qcmds(j ,ta.modules[i].modid)
 	} catch(e) {
-		_err('model JSON config err: ' + e)
+		_err('model JSON config err: ' + e + e.stack)
 		_gsm('JSON cfg err, use default module config')
-		ta = {}
-		for(j in ME.GSM)
-			ta[j] = ME.GSM[j]
+		ta = new ME.GSM
 	}
 	} else {
 //simple GSM_MODEL='HUAWEI E220 HSDPA USB modem'
@@ -801,7 +868,7 @@ function(re_str){
 			}
 		}
 		ta._dscr = model
-		ta.qcmds(initcmds)
+		ta.qcmds(ta.initcmds())
 	}
 _gsm('ta: ' + inspect(ta))
 
@@ -809,29 +876,43 @@ _gsm('ta: ' + inspect(ta))
 				+ gsmtel_addr.fqdn + ':'
 				+ gsmtel_addr.port
 	_log(gsmtel_runs)
+	if(!ta.curm)// setup of current module
+		 ta.curm = ta.modules[ta.defmod - 1]
+	ta.curm.cmdq.unshift('login')// first module runs `login`
+	//ta.modqlenTotal++
 
-	_do_TE2ME_cmd_loop() // first ever cmd is default curmod's 'login'
-	process.nextTick(_do_TELNET2MODULES_cmd_loop)
-	//was: _do_TE2ME_cmd_loop()
+	TE_ME_mode = ta._yes_next
+	_do_TE2ME_cmd_loop()
+
+/*login runs current module's cmd queue,
+  last cmd in it runs _do_TELNET2MODULES_cmd_loop()
+
+  otherwise this timeout will reboot gsmtel: */
+	setTimeout(function(){
+		if(gsmtel_runs && ta && 'login' == ta._cmd) {
+			_err('\n'+
+'==== FATAL ERROR: ====\n'+
+'Telnet login fails. Maybe module config is wrong:\n"'+
+process.env.GSM_MODEL+'"\n'+
+'====')
+			gsmtel.end()
+		}
+	}, 1024 << 3)
 })
 
-gsmtel.on('data', function(chars){
-//gsmtel.write('ate1\r', 'utf-8', function(e,c) { log("2e: " + e + "c: " + c)})
-//log('gsmtel `data` event' + chars)
-	var lines = get_input_lines(chars)
+gsmtel.on('data', function(chBuffer){
+	var lines = get_input_lines(chBuffer.toString())
 _gsm('gsmtel `data` event lines:' + (lines ? lines.join('|'): 'null'))
 	if (null == lines)
 		return
-	///process.nextTick(_do_TELNET2MODULES_cmd_loop)
 	_do_TE2ME_cmd_loop(lines)
 })
 
 gsmtel.on('end', function(){
 _gsm('gsmtel `end` event')
 	// other end closed connection FIN packet
-	gsmtel_runs = null
-	_do_TELNET2MODULES_cmd_loop() //last cmd in queue must receive error
-
+	//_do_TELNET2MODULES_cmd_loop() //last cmd in queue must receive error
+	gsmtel_init()
 	//TODO: if !user
 	setTimeout(gsmtel_ok, 4096)
     // ITS OVER!
@@ -842,9 +923,8 @@ gsmtel.on('error', function(e){
 //NOTE: net error handler must not be inside init callback!!!
 	if (e) {
 		 _err('gsm telnet {addr:'+process.env.GSM_TELNET+'} err : ' + e)
-		gsmtel_runs = null
-
-		_do_TELNET2MODULES_cmd_loop()
+		gsmtel_init()
+		//_do_TELNET2MODULES_cmd_loop()
 		setTimeout(gsmtel_ok, 4096)
 		//state_machine_append(err)
 		return
@@ -855,16 +935,6 @@ gsmtel.on('error', function(e){
 
 var express = require('express')
     ,app = express() ,app_srv
-
-// patch Express's Connect stuff
-express.errorHandler = function errorHandler(){
-	return function errorHandler(err, req, res, next){
-		if (err.status) res.statusCode = err.status;
-		if (res.statusCode < 400) res.statusCode = 500;
-		res.writeHead(res.statusCode, { 'Content-Type': 'text/plain' });
-		res.end(err.stack);
-	}
-}
 
 // Configuration
 app.configure(function(){
@@ -879,10 +949,12 @@ app.configure(function(){
     app.use('/extjs', express.static(__dirname + '/../../extjs-4.1'))
 	app.use('/extjs/examples/ux', express.static(__dirname + '/../../extjs-4.1/ux'))
     app.use(express.static(__dirname + '/../_ui-web'))
-/*	app.use(express.errorHandler({
-        resType: 'text'
-    }))*/
-	app.use(express.errorHandler())
+	app.use(function errorHandler(err, req, res, next){
+		if (err.status) res.statusCode = err.status;
+		if (res.statusCode < 400) res.statusCode = 500;
+		res.writeHead(res.statusCode, { 'Content-Type': 'text/plain' });
+		res.end(err.stack);
+	})
 })
 /*
 app.configure('development', function(){
@@ -922,11 +994,72 @@ app_gsm = function(logmsg, atcmds_arr, cb, module) {
 	}
 
 	ta._appcb = cb
-	//queue_cmds(atcmds_arr, gsmtel_cmds)
 	ta.qcmds(atcmds_arr, module)
 
-!!!	process.nextTick(_do_TE2ME_cmd_loop) // post-event queuing is preferable here
+	process.nextTick(_do_TELNET2MODULES_cmd_loop) // post-event queuing is preferable here
 }
+
+//app.post('/qsms.json', function (req, res) {
+
+/* Первый SMS через форму:
+aT+cmgs="+375298022483"
+
+>
+test sms
+^BOOT:10389262,0,0,0,6
+
++CMGS: 239
+
+OK
+ ExtJS SMS form load:
+ smsNumber: +375298077782
+ smsBody(str or array): text
+ smsModule: module1 "+375297XXYY677"
+*/
+
+
+app_sms = function(smsnum, smsbody, cb, module) {
+	_gsm("sms 2 " + smsnum)
+	if(!gsmtel_runs) {
+	return { success: !true,msg: 'telnet: NOLINK'}
+	} else if ('reconnect' == gsmtel_runs) {
+	return { success: !true,msg: 'telnet: reconnecting...'}
+	} else if (!ta) {
+	return { success: !true,msg: 'ME is undefined. Unexpected.'}
+	}
+	//ta._appcb = cb
+	var smscmds =[ 'at+cmgf=1' ], i
+	if (smsbody instanceof Array) {
+		for(i in smsbody) {
+			//smscmds.push('aT+cmgs="'+smsnum+'"\r' + smsbody[i] + '\u001a')
+		}
+	} else {// simple string; TODO: even simple string can be 'ascii' or 'ucs2'
+		smscmds.push('aT+CMSG="'+smsnum+'"')
+		smscmds.push(smsbody + '\u001a')
+	}
+	ta.qcmds(smscmds, module)
+	process.nextTick(_do_TELNET2MODULES_cmd_loop)
+	return { success: true,msg: 'SMS at executed'}
+}
+
+app.post('/sms.json', function (req, res) {
+	var ret
+	if (!req.body.smsNumber) ret = {
+		success: !true
+		,msg: "form's smsNumber is null. Unexpected."
+	};else ret = app_sms(req.body.smsNumber
+		,req.body.smsBody
+//ExtJS ussd form reply format: { "success": true, "msg": "A command was done" }
+	,function(msg) {
+		res.json({
+			success: true
+			,msg: msg
+		})
+	}
+	,req.body.smsModule.replace(/ .*$/, ''))
+	if (ret) res.json(ret) // error or other info which ends res here
+  }
+)
 
 app.post('/ussd.json', function (req, res) {
 //ExtJS USSD form load
@@ -944,40 +1077,58 @@ app.post('/ussd.json', function (req, res) {
 			,msg: msg
 		})
 	}
-	,req.module)
+	,req.body.module.replace(/ .*$/, ''))
 	if (ret) res.json(ret) // error or other info which ends res here
   }
 )
 
 app.get('/swhw_stat.json', function (req, res) {
 //ExtJS will load this once in a while into Ext Store for dataview
-	var logs = [], gsms = [], errs = []
+	var i, logs = [], gsms = [], errs = []
 	if (srv_log.length > 0) {
-		for (var i in srv_log) { logs.push(app._htmlf(srv_log[i])) }
+		for (i in srv_log) { logs.push(app._htmlf(srv_log[i])) }
 		srv_log.splice(0)
 	}
 	if (gsm_inf.length > 0) {
-		for (var i in gsm_inf) { gsms.push(app._htmlf(gsm_inf[i])) }
+		for (i in gsm_inf) { gsms.push(app._htmlf(gsm_inf[i])) }
 		gsm_inf.splice(0)
 	}
 	if (err_log.length > 0) {
-		for (var i in err_log) { errs.push(app._htmlf(err_log[i])) }
+		for (i in err_log) { errs.push(app._htmlf(err_log[i])) }
 		err_log.splice(0)
+	}
+	modules = []
+	if (ta) for (i in ta.modules){
+		modules.push({op: ta.modules[i].op, sigq: ta.modules[i].sigq })
 	}
     res.json({
 		stats: [
 { os: app.os
   ,server: app.server
   ,db: app.db
-  ,op: app.op
-  ,gsm: app.gsm
   ,uptime: Math.ceil(process.uptime())
-  ,sigq: app.sigq
+  ,gsm: app.gsm
 }
 		]
+		,modules: modules
 		,logs: logs, gsms: gsms, errs: errs
 	  }
 	)
+	if(app.gsm) app.gsm = null
+  }
+)
+
+app.get('/mods.json', function (req, res) {
+// serv static store of configured modules
+	var m
+	if (ta) {
+		m = []
+		for (var i in ta.modules) {
+			m.push({d: ta.modules[i].modid+
+				  (ta.modules[i].ownum ? ' "'+ta.modules[i].ownum+'"':'')})
+		}
+	} else m = [{d:'нет связи с движком GSM'}]
+	res.json(m)
   }
 )
 
@@ -1054,7 +1205,7 @@ ctl    .    listen(process.env.JSAPPCTLPORT, '127.0.0.1', function() {
 			app.db = 'connecting....'
 			//setting up link with gsm
 			app.gsm = 'connecting....'
-			app.op = 'none....'
+			//app.op = 'none....'
 		  }
 		)
 	  }
