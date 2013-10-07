@@ -11,7 +11,7 @@ function _chklen(logs) {
     if (logs.length > 177)
         logs = logs.slice(87)
 }
-function _gsm(msg) { log (msg) ; _chklen(gsm_inf) ; gsm_inf.push(msg) }
+function _gsm(msg) { log (msg) ; _chklen(gsm_inf) ; gsm_inf.push(msg) ; return msg }
 function _log(msg) { log (msg) ; _chklen(srv_log) ; srv_log.push(msg) }
 function _err(msg) { cerr(msg) ; _chklen(err_log) ; err_log.push(msg) }
 function _date(){ //ISODateString
@@ -144,7 +144,7 @@ i knew that!!!
     ,this._atok = /OK$/
     ,this._ater = 'ERR'
 //== var
-    ,this._err = function(e) {}
+    ,this._err = this.__nop
     ,this._cmd = 'no command'
     ,this._atdata = []
     ,this._sync_ok = null
@@ -181,6 +181,7 @@ _gsm("login: GSM via Terminal Telnet server")
     ,this._USSDtimeoutH = null
     ,this.do_release = function(){
 _gsm('gsm do release')
+        ta.curm.cmdq.splice(0)
         ta._handle = ta.__handle ; TE_ME_mode = null// std handler && its mode
         if(ta._appcb) ta._appcb = null// multimodule cmds can't clear this
         process.nextTick(_do_TELNET2MODULES_cmd_loop)
@@ -188,7 +189,7 @@ _gsm('gsm do release')
     ,this._cmd_get = 'get'
     ,this._cmd_release = 'release'
     ,this.release = function(e) {
-_err('basic release fun()')
+_gsm('basic release fun()')
 //`release` gives back AT control on module,
 // but any AT data is queued by module for next `get`
 //`release` does not clear modules's cmdq
@@ -205,20 +206,90 @@ _err('basic release fun()')
         } else ta.do_release()
 //returns nothing
     }
-    ,this.logout = function() {}
+    ,this.logout = this.__nop
     ,this._cmdTimeoutH = null
     ,this._sms_schedule = {
         startTime:"16:00" ,endTime:"18:00"
         ,deltaOneMsgSec:7 ,sendSMSCount:2
     }
     ,this._smsle = "\u001a" + this._cmdle
-    ,this.sms_mem_setup = 'smsmem'
-    // `ate1` is needed; it is in `atsetup`
-    // which also is in initcmds and any cmdq push
+    ,this._cbcmdres = null // app response object for final cmd call back
+    ,this._cmd_smsmemr = 'rsmsmem'// for curmod, read all msgs from ME into db
+    ,this._cmd_smsmemd = 'dsmsmem'// remove all
+    ,this._cmd_sms_mem_setup = 'pms'
+    ,this.pms = function(sock){
+    // another custom command because it checks what mem is set and then chooses 'ME' type
+_gsm('pms')
+        ta._err = ta.__err
+        ta._cmd = 'at+cpms?'
+        ta._end_ch = /\n$/
+        sock.write(ta._cmd+ta._cmdle)
+
+        if(ta._cmdTimeoutH) clearTimeout(ta._cmdTimeoutH)
+        ta._cmdTimeoutH = setTimeout(ta.do_at_timeout, ta._timeoutAtSync)
+
+        ta._handle = function(ta_lines_arr, samode){
+            var i ,l ,m
+            for (i in ta._async_handlers){
+                ta._async_handlers[i](ta_lines_arr)
+            }// possible async stuff
+            ta.releaseH(ta_lines_arr)
+            i = 0
+            while(l = ta_lines_arr[i++]){
+                if(/ERROR/.test(l)){
+                    return ta.do_at_timeout(' error: ' + l)
+                }
+                if(l == ta._cmd)// at+cpms?
+                    continue// head sync OK
+                m = l.match(/^[+]CPMS: "(..)",\d+,/)
+                if(m){//+CPMS: "SM",24,30,"SM",24,30,"SM",24,30
+                      //+CPMS: "ME",2,255,"SM",5,30,"SM",5,30
+_gsm('mem current: ' + m[1])
+                    if('ME' != m[1]){
+_gsm('mem pushing: "ME"')
+                        ta.curm.cmdq.unshift('at+cpms="ME"')//,"ME","ME"
+                    }
+                    continue
+                }
+                if(ta._atok.test(l))
+                    return ta._yes_next
+            }
+            return this._hsync
+        }
+        return this._hsync
+    }
+    ,this.dsmsmem = function(sock){// deletion via app_runs="SIMD" and sms read command
+        if('SIMD' != app_runs){// setup delete seq
+            app_runs = 'SIMD'
+            // anyway there are must be indexes of messages to use `at+cmgd`
+            ta.curm.cmdq.unshift(ta._cmd_smsmemr)
+            ta.curm.cmdq.unshift('')
+        } else {
+            if(ta._cbcmdres){
+                ta._cbcmdres.json({ success: true })
+                ta._cbcmdres = undefined// clear ref to http res()
+            }
+            app_runs = 'FINE'
+        }
+        return this._yes_next
+    }// read calls this one:
+    ,this.delete_sim_sms = function(){
+      do {
+        if('SIMD' != app_runs) break// app setup or mem delete cmd
+
+        var i ,midx = /^[+]CMGL: (\d+)/
+        for(i in ta.rcvd_sms){
+            i = ta.rcvd_sms[i].match(midx)
+//NOTE: no general delete yet, just status reports //if(i) ta.curm.cmdq.unshift('at+cmgd='+i[1])
+        }
+      } while (false)
+        ta.rcvd_sms.splice(0)
+    }
+    // `ate1` is needed; it is in `atsetup`, which also is in initcmds and any cmdq push
     ,this._sms_mem_read = 'at+cmgf=1;+cpms?;+cmgl="ALL";+cpms?'
     ,this.rcvd_sms = []//+CDSI: "SM",11 async event of sms delivery and sync +CMGL
-    ,this.smsmem = function(sock){// for curmod, read all SM, ME in db, remove all
-_gsm('OK we in smsmem ta.curm.cmdq: ' + ta.curm.cmdq)
+    ,this.rsmsmem = function(sock){// read all SM, ME in db, (remove all)
+_gsm('OK we in read smsmem ta.curm.cmdq: ' + ta.curm.cmdq)
         ta._err = ta.__err
         gsmtel_runs = ta._cmd = ta._sms_mem_read
         ta._end_ch = /\n$/
@@ -280,8 +351,10 @@ _gsm('sms 2 read: ' + m)
                 } else {// tail sync + read exactly m "shall be records": /^[+]CMGL: /
                     if((ta._sync_ok == l) && (ta._yes_next == gsmtel_runs)){
                         clearTimeout(ta._cmdTimeoutH)
+                        if(ta.rcvd_sms.length){
             db_read_gsm_mem((ta.rcvd_sms.join('\n') + '\n').split('+CMGL'))
-                        ta.rcvd_sms.splice(0)
+                            ta.delete_sim_sms()
+                        }
                         return ta._yes_next// obviously it will be OK or timeout
                     }
                     ta.rcvd_sms.push(l)
@@ -311,10 +384,10 @@ _gsm('sms 2 read: ' + m)
     ,this._smst = this._timeoutSendSMS
     ,this.sms2send = []//+CMGS: 152     at cmd got sms id
     ,this.do_smsTimeout = function(now){// serious error, clear cmdq, `release` module
-_err('do_smsTimeout now:' + now)
+_gsm('do_smsTimeout now:' + now)
         if(gsmtel){
         //ta.curm.cmdq.splice(0)
-_err('do_smsTimeout sms write ESC + at')
+_err('TIMEOUT SMS: do_smsTimeout sms write ESC + at')
             //ESC will prevent possible hung in wating for sms text+\u001a
             gsmtel.write('\u001b' + ta._cmdle)
             //any cmd makes device live after ESC (or it stucks)
@@ -324,14 +397,14 @@ _err('do_smsTimeout sms write ESC + at')
             return
         if(now && ta._cmdTimeoutH) clearTimeout(ta._cmdTimeoutH)
         ta._cmdTimeoutH = null
-        ta.release()// hard release
 
-        var sid = ta.sms2send[0]
+        var sid = ta.sms2send[0] ,module = ta.curm.ownum
+        ta.release()// hard release
         taq.update({ _id: sid._id } ,{ $set:
             { sid: sid.sid ? sid.sid : 'timeout = ' + ta._smst + '(ms)'
-             ,dateT: new Date() ,n:'E' }
+             ,dateT: new Date() ,n:'E' ,module: module }
             } ,function(e, rec){
-_err('taq updated: ' + inspect(rec) + ' with:' + rec.sid)
+_gsm('taq updated: ' + inspect(rec) + ' with:' + rec.sid)
                 if(e) {
                     app_runs = 'SMbe'//sms taq.remove error when send error
                     return _err('db err save sent sms: ' + e)
@@ -339,7 +412,7 @@ _err('taq updated: ' + inspect(rec) + ' with:' + rec.sid)
                 app_runs = 'SMSE'//sms sent error
             }
         )
-_err('sms setup timeout or schedule modules')
+_gsm('sms setup timeout or schedule modules')
     }
     ,this.sms = function(sock){
 /* smscmds in cmdq: [ 'at+cmgf=1;+cnmi=0,1,0,2,1',
@@ -387,7 +460,7 @@ MV sends OK before actual send and +CMGS
                 if (sms.atcmd.substr(0,20) == ta._sms_smp_ucs2){
                     m = UCS2(sms.m)
                 } else m = sms.m
-_err('smH no wait for prompt "> ", sms write: ' + m)
+_gsm('smH no wait for prompt "> ", sms write: ' + m)
                 sock.write(m + ta._smsle)
                 // fall thru
             }
@@ -409,17 +482,17 @@ _gsm('smH atok ||| sms.sid test i = ' + i + 'line: ' + ta_lines_arr[i])
                 if(ta._atok.test(ta_lines_arr[i]) || sms.sid){
                 // sms sent, goto next sms
 _gsm('sent sms: ' + inspect(sms))
-                    sms.module = ta.curm.ownum + ' ' + ta.curm.modid
                     var sid = sms._id
                     // no need in tech info in db
                     delete sms._id ; delete sms.atcmd ; delete n ; delete dateT
+                    sms.module = ta.curm.ownum //+ ' ' + ta.curm.modid
                     taout.insert(sms ,function(e, rec){
                         if(e){
                             app_runs = 'SMBE'// taout.insert error when send is OK
                             return _err('taout.insert error: ' + e)
                         }
                         taq.remove({_id: sid} ,function(e, rec){
-_err('taq removed: ' + inspect(rec))
+_gsm('taq removed: ' + inspect(rec))
                             if(e) {
                                 app_runs = 'SMBe'// taq.remove error when send is OK
                                 return _err('taq.remove error: ' + e)
@@ -427,7 +500,7 @@ _err('taq removed: ' + inspect(rec))
                             app_runs = 'SMSD'//send is ok db is ok
                         })
 //TODO: async event pops up to the user interface. here can be cmd for UI to update `tout` store
-_err('taout saved: ' + inspect(rec))
+_gsm('taout saved: ' + inspect(rec))
                     })// async race with shift???, seems like no
                     taql--
                     ta.sms2send.shift()// next sms in q
@@ -761,8 +834,9 @@ _gsm('handler ME mode: ' + samode + '\nthis._sync_ok:' + this._sync_ok + '\nthis
             for (var i in ta_lines_arr) {
 _gsm('ta_lines_arr[i]: ' + ta_lines_arr[i])
                 if (ta_lines_arr[i].match(sync)) {
+                    if(ta._cmdTimeoutH) { clearTimeout(ta._cmdTimeoutH) ; ta._cmdTimeoutH = undefined }
                     _gsm("handled sync cmd: " + this._cmd)
-                    /*if(ta._appcb) {// universal handler does such call back
+                    /*very old*: if(ta._appcb) {// universal handler does such call back
                         process.nextTick(ta._appcb)
                         ta._appcb = null
                     }*/
@@ -816,7 +890,7 @@ _gsm('ta_lines_arr[i]: ' + ta_lines_arr[i])
 //creating common release timeout, like it was: if(!/CUSD/.test(append_this_cmds)){
         mcmdq.push(ta._cmd_release)
     } else {
-_err("append_this_cmds: " + append_this_cmds)
+_gsm("append_this_cmds: " + append_this_cmds)
         if ('string' === typeof append_this_cmds) {
             if (append_this_cmds.length > 0) {
                 mcmdq.push(ta._cmd_get)
@@ -888,7 +962,7 @@ _gsm('MV37X get cmd param write: `' + ta.curm.modid + '`')
 _gsm('`get` handle data')
             do {
                 if(/bad command/.test(ta_lines_arr[i])){
-_err("telnet err bad cmd")
+_err("TELNET ERR: bad command")
                     ta.curm.cmdq.splice(0)
                     return ta._yes_next// empty cmdq will schedule modules
                 }
@@ -903,7 +977,7 @@ _gsm('`get` head: ' + ta.curm.modid)
                                 //release current, schedule modules
                                 ta.curm.cmdq.splice(0)
                                 process.nextTick(_do_TELNET2MODULES_cmd_loop)
-_err('get module: timeout2 cannot get ' + ta.curm.modid)
+_err(_gsm('get module: timeout2 cannot get ' + ta.curm.modid))
                             }
                         }, ta._timeoutGet)
                     }
@@ -929,7 +1003,7 @@ _gsm("got sync ok telnet cmd: " + ta._cmd)
                 //release current, schedule modules
                 ta.curm.cmdq.splice(0)
                 process.nextTick(_do_TELNET2MODULES_cmd_loop)
-_err('get module: timeout1, clear cmdq: ' + ta.curm.modid)
+_err(_gsm('get module: timeout1, clear cmdq: ' + ta.curm.modid))
             }
             ta._cmdTimeoutH = null
         }, ta._timeoutGet)
@@ -993,7 +1067,7 @@ hard fail: while doing `at` commands -> write msg to `tout` with error status,
         sms.sid = null //'timeout'
         ta._smst = ta._timeoutSendSMS
         ta.sms2send.push(sms)
-_err('sms2send: ' + inspect(ta.sms2send))
+_gsm('sms2send: ' + inspect(ta.sms2send))
         ta.qcmds([ ta._sms_setup, 'sms' ], ta.curm.modid)
         //async event: do modules as in _do_TELNET2MODULES_cmd_loop()
         app_runs = 'WSMS'// wait for module `get`
@@ -1034,16 +1108,18 @@ function _do_TELNET2MODULES_cmd_loop(){
 //TODO: !!!insert other command in cmdq only iff sms2send is empty!!!
 //SMS Q
 
-_err('sch app_runs: ' +app_runs)
+_gsm('sch app_runs: ' +app_runs)
 
     if('WSMS' == app_runs){// module `get` failed, try hard to send via next
         _ring_modueles()// change: ta.curm, sms send by other module
         ta.qcmds([ ta._sms_setup, 'sms' ] ,ta.curm.modid)
     } else {
         ta.modqlenTotal = 0
-        for (var i in ta.modules)
+        for (var i in ta.modules){
             ta.modqlenTotal += ta.modules[i].cmdq.length
-_err('sch: ta.modqlenTotal: '+ta.modqlenTotal+' modring: '+modring)
+_gsm('mod i:' + i + 'cmdq:' + inspect(ta.modules[i].cmdq))
+        }
+_gsm('sch: ta.modqlenTotal: '+ta.modqlenTotal+' modring: '+modring)
         if(ta.modqlenTotal <= 0)// wait for UI commands or
             return _do_SMSQ()// async SMS Q: check taq length, find sms and ta.curm.cmdq.push()
         while (ta.curm.cmdq.length <= 0)
@@ -1051,7 +1127,7 @@ _err('sch: ta.modqlenTotal: '+ta.modqlenTotal+' modring: '+modring)
     }
     TE_ME_mode = ta._yes_next
     process.nextTick(_do_TE2ME_cmd_loop)
-_err('sch: selected "' + ta.curm.modid + '" modring: ' + modring)
+_gsm('sch: selected "' + ta.curm.modid + '" modring: ' + modring)
 }
 
 function _do_TE2ME_cmd_loop(ta_lines_arr) {
@@ -1236,13 +1312,16 @@ _gsm('db collection prefix: ' + tain)
     taq = db.collection(tain+'_taq')
     taout = db.collection(tain+'_taout')
     tain  = db.collection(tain+'_tain' )
-    tain.stats(function(e, stats){
+
+    for (var i in ta.modules)// check && select MEM type, read && clear it
+        ta.qcmds([ ta._cmd_sms_mem_setup ,ta._cmd_smsmemr ] ,ta.modules[i].modid)
+    /*old*: tain.stats(function(e, stats){
         if(e) return _err('tain stats err: ' + e)
         if(stats ? !stats.count : true)
         // if income is empty or undefined, fill it from SIM
             for (var i in ta.modules)
-                ta.qcmds(ta.sms_mem_setup ,ta.modules[i].modid)
-    })
+                ta.qcmds([ ta._cmd_sms_mem_setup ,ta._cmd_smsmem ] ,ta.modules[i].modid)
+    })*/
     taq.stats(function(e, stats){
         if(e) return _err('taq stats err: ' + e)
         if(stats ? stats.count : false)
@@ -1433,7 +1512,7 @@ function mk_sms_body(smsText) { // based on to_ascii() from uglify-js by Mihai B
 }
 
 function UCS2(text){// based on to_ascii() from uglify-js by Mihai Bazon
-_err('UCS2(text): ' + text)
+_gsm('UCS2(text): ' + text)
     return text.replace(/[\u0000-\uffff]/g ,function(ch){
         ch = ch.charCodeAt(0)
         return (128 > ch ? 16 > ch ? "000": "00" : "0") + ch.toString(16)
@@ -1455,16 +1534,18 @@ app_sms = function(smsnum, smsbody, module) {
     return { success: !true ,msg: 'ME is undefined. Unexpected.'}
     }
     var i ,j ,k ,m
-//normalize numbers: +375 29 8077782 +375 (29) 8077782 (29) 80-777-82 +37529234234
-        ,smsnums = smsnum.replace(/ +/g,' ')
-                   .replace(/ *[(]/g,' +375') .replace(/ *[+]375 *([+]375)/g,' $1')
-                   .replace(/(-)|([)] *)/g,'').replace(/ +(\d\d) +/g,'$1')
-                   .split(' ')
 //ascii and ucs2 body parts, ta._sms_smp
         ,smsbods = mk_sms_body(smsbody)
+//normalize numbers: +375 29 8077782 +375 (29) 8077782 (29) 80-777-82 +37529234234
+/*		,smsnums = smsnum.replace(/ +/g,' ')
+                   .replace(/ *[(]/g,' +375') .replace(/ *[+]375 *([+]375)/g,' $1')
+                   .replace(/(-)|([)] *)/g,'').replace(/ +(\d\d) +/g,'$1')
+                   .split(' ')*/
+//olecom +375(29)80-777-82, вася +345298077733; pedro +234 (34) 9009899
+        ,smsnums = smsnum.replace(/[^+]*([+][^+ ,;/|]*)/g,'|$1').replace(/[-() ]/g,'').split('|')
+    smsnums.shift()// first empty number after split
 _gsm("sms 2 " + smsnums)
 _gsm('smsbods: ' + inspect(smsbods))
-
     ta._smst = ta._timeoutSendSMS
     for(i in smsnums) {
         if(!smsnums[i])
@@ -1525,6 +1606,7 @@ app.post('/ussd.json', function (req, res){
             tain.insert({ m: msg
                 ,b: msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
                 ,num: req.body.ussdNumber
+                ,module: req.body.module
                 ,d: new Date()
                 } ,function(e){
                     if(e) _err('db ussd save err: ' + e)
@@ -1547,11 +1629,23 @@ app.get('/shedm.json', function (req, res){
   }
 )
 
+app.get('/gsmemd.json', function (req, res){
+    db_runs = ''
+    ta._cbcmdres = res// res.json({ success: true })
+    for (var i in ta.modules){
+        ta.qcmds(ta._cmd_smsmemd ,ta.modules[i].modid)
+        db_runs += '>'
+    }
+    db_runs += 'E'
+    process.nextTick(_do_TELNET2MODULES_cmd_loop)
+  }
+)
+
 app.get('/gsmemr.json', function (req, res){
 //ExtJS table load: USSD and SMS from DB: start=80&limit=20
     db_runs = ''
     for (var i in ta.modules){
-        ta.qcmds(ta.sms_mem_setup ,ta.modules[i].modid)
+        ta.qcmds(ta._cmd_smsmemr ,ta.modules[i].modid)
         db_runs += '>'
     }
     db_runs += 'E'
@@ -1741,7 +1835,7 @@ _err("controlling channel: " + e)
 )
 
 app_srv.on('listening', function(){
-    app_runs = _date()
+    app_runs = 'SIMD'// _date()
   }
 )
 
@@ -1780,6 +1874,7 @@ smsas RE:      ^^^^^^^^+++^            das RE: ^++++++++++++++++++++^^^+++++++++
 smsd RE:       ^^^^^^^+++++++++++++^  ^++++++++++++++++++++^^ = dad
 */
     var  smss = /READ",6,([^,]+),/
+        ,smssidx = /^: (\d+)/
         ,smsd = /READ","([^"]+)"/
         ,gsmd = /(\d\d)[/](\d\d)[/](\d\d),(\d\d):(\d\d):(\d\d)/
         ,das = /"([^"]+)","([^"]+)"/
@@ -1796,7 +1891,7 @@ _gsm('sms arr len: ' + arr.length)
       for(i in arr){// record header can be removed in UI
 //in: d, num || sid, m, b
 //d - date, number sent2 or msgid status, m -- raw message, b -- decoded body
-        r = { m: arr[i] }// default
+        r = { module: ta.curm.ownum ? ta.curm.ownum : ta.curm.modid ,m: arr[i] }// default
         if(m = r.m.match(smsd)){
             r.num = m[1]
             if(m = r.m.match(dad)){
@@ -1815,16 +1910,15 @@ _gsm('sms arr len: ' + arr.length)
                 } else r.b = d
             }
         } else if(m = r.m.match(smss)){
+            d = r.m.match(smssidx)
+            if(d) ta.curm.cmdq.unshift('at+cmgd='+d[1])//remove status msgs from TA's ME
             r.sid = parseInt(m[1] ,10)
             if(m = r.m.match(das)){
                 d = m[1].match(gsmd)// poslan    Date()
                 r.p = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
                 d = m[2].match(gsmd)// dostavlen Date()
                 r.d = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
-                //if (status){// sms status reports and check of sid
-                //no deletes
                 reports.push(r)
-                //}
             }
         }
         if(/^>/.test(db_runs))
@@ -1842,30 +1936,32 @@ _gsm('sms arr len: ' + arr.length)
     if(reports.length > 0){
         for(i in reports){
         // arg is send by value, not by ref, thus update is safe in loop
-            fix_sid_date_update(reports[i])
+            status_report_date_update(reports[i])
         }
     }
 }
 
-function fix_sid_date_update(d){
+function status_report_date_update(d){
 var dl ,dh = (15*60*1000)// 15 minutes
     // local send date +- possible delta with GSM time, can be in config
     dl = new Date(d.p.getTime() - dh)
     dh = new Date(d.p.getTime() + dh)
-_err('fix sid: ' + d.sid)
-    taout.find({sid: d.sid, dateS: {$gt: dl ,$lt: dh }} ,function(e ,r){
-        if(e) {
-            _err('db.taout sid err: ' + e)
-            return
-        }
-        if (r.length == 1){
-_log('4updater found: ' + inspect(r))
+_gsm('update find sid: ' + d.sid)
+    taout.find({sid: d.sid, dateS: {$gt: dl ,$lt: dh } ,module: ta.curm.ownum}
+         ,function(e ,r){
+            if(e) {
+                _err('db.taout sid err: ' + e)
+                return
+            }
+            if (r.length == 1){
+_log('status report OK for: ' + inspect(r))
             //real i.e. GSM send and receive time
-            taout.update({ _id: r[0]._id }, {
-                $set: { sid: -d.sid, dateS: d.p, dateR: d.d }
-            })
+                taout.update({ _id: r[0]._id }, {
+                    $set: { sid: -d.sid, dateS: d.p, dateR: d.d }
+                })
+            }
         }
-    })
+    )
 }
 
 function db_add_smsq(arr ,res){
