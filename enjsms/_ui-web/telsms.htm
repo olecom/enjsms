@@ -3,23 +3,23 @@
     <meta charset="utf-8">
     <title>SMS Master v000</title>
     <link rel="stylesheet" href="extjs/resources/css/ext-all.css">
-	<style>.r{color:red}.g{color:green}.wg{color:#34C421}
+    <style>.r{color:red}.g{color:green}.wg{color:#34C421}
      .icon-grid { background-image:url(images/grid.png) !important; }
      .add { background-image:url(images/add.gif) !important; }
      .option { background-image:url(images/plugin.gif) !important; }
      .remove { background-image:url(images/delete.gif) !important; }
-	 .addrow { background-image:url(images/add_row.png) !important; }
+     .addrow { background-image:url(images/add_row.png) !important; }
      .x-grid-row-over .x-grid-cell-inner { font-weight: bold; }
-	 .cpta { background-color:#CBE5CF;border:1px dashed;margin:0 11px 0 0;padding:0;height:30px;width:111px;float:left;overflow:hidden;resize:none}
-	 .cpta:hover { background-color:#FFFFFF;}
-	 .row-new { background-color: #CBE5CF!important; }
+     .cpta { background-color:#CBE5CF;border:1px dashed;margin:0 11px 0 0;padding:0;height:30px;width:111px;float:left;overflow:hidden;resize:none}
+     .cpta:hover { background-color:#FFFFFF;}
+     .row-new { background-color: #CBE5CF!important; }
  	 .row-err { background-color: #FF9787!important; }
-	 .wrap .x-grid-cell-inner { white-space: normal; }
-	 .x-grid-rowwrap-div .x-grid-cell, .x-grid-rowwrap-div .x-grid-cell-inner {
-		border-width: 0;
-	 }
-	 //.x-grid-cell-inner { white-space: pre-wrap !important; word-wrap: break-word !important;}
-	</style>
+     .wrap .x-grid-cell-inner { white-space: normal; }
+     .x-grid-rowwrap-div .x-grid-cell, .x-grid-rowwrap-div .x-grid-cell-inner {
+        border-width: 0;
+     }
+     //.x-grid-cell-inner { white-space: pre-wrap !important; word-wrap: break-word !important;}
+    </style>
 </head>
 <body>
 <center id='startup'><img src='images/loading.gif'><br/>
@@ -38,16 +38,16 @@ alert('Долго грузиться или не найден (см. консо�
 <script type="text/javascript">(function(Ext){
 
 Ext.Loader.setConfig({ enabled: true
-	,paths: {
-		'Ext.ux': 'extjs/ux'
-		,'Ext.ux.grid': 'grid'
-		//'Ext.ux.grid.plugin': '../../ux/grid/plugin'
-	}
+    ,paths: {
+        'Ext.ux': 'extjs/ux'
+        ,'Ext.ux.grid': 'grid'
+        //'Ext.ux.grid.plugin': '../../ux/grid/plugin'
+    }
 })
 Ext.require([
      'Ext.ux.TabReorderer'
-	,'Ext.ux.TabScrollerMenu'
-	,'Ext.ux.RowExpander'
+    ,'Ext.ux.TabScrollerMenu'
+    ,'Ext.ux.RowExpander'
 ])
 //Ext.require(['*']);
 Ext.Loader.onReady(function() {
@@ -99,179 +99,179 @@ Ext.override(Ext.selection.CellModel, {
     ,onEditorEnter:function(ep ,e){
         var me = this
             //,view = me.view
-			,column = ep.getActiveColumn()
-			//,grid = view.up('gridpanel')
+            ,column = ep.getActiveColumn()
+            //,grid = view.up('gridpanel')
             ,position = me.view.getPosition(ep.getActiveRecord(), column)
             ,direction = e.shiftKey ? 'up' : 'down'
             ,newPosition
-			column = me.view.getEl(column)
-		do {
-			if(e.shiftKey) {
-				if (1 == position.row)
-					break
-			} else if (me.view.all.elements.length == (1 + position.row))
-				break
-			newPosition = me.view.walkCells(position, direction, e, false)
-			me.lastId = newPosition.row
-			ep.grid.scrollByDeltaY(ep.context.row.clientHeight * (e.shiftKey ? -1 : 1))
-		} while(false)
-		Ext.defer(function(){// queue start edit
-			if (newPosition) return ep.startEditByPosition(newPosition)
-			ep.completeEdit()
-			me.setCurrentPosition(me.getCurrentPosition())// select by cursor
-			column.focus()// activate cell
-		}, 111)
+            column = me.view.getEl(column)
+        do {
+            if(e.shiftKey) {
+                if (1 == position.row)
+                    break
+            } else if (me.view.all.elements.length == (1 + position.row))
+                break
+            newPosition = me.view.walkCells(position, direction, e, false)
+            me.lastId = newPosition.row
+            ep.grid.scrollByDeltaY(ep.context.row.clientHeight * (e.shiftKey ? -1 : 1))
+        } while(false)
+        Ext.defer(function(){// queue start edit
+            if (newPosition) return ep.startEditByPosition(newPosition)
+            ep.completeEdit()
+            me.setCurrentPosition(me.getCurrentPosition())// select by cursor
+            column.focus()// activate cell
+        }, 111)
     }
 })
 */
 // данные для sms grid
     Ext.define('taq',{
         extend: 'Ext.data.Model'
-		,idProperty:'_id'
-		,fields: [
+        ,idProperty:'_id'
+        ,fields: [
             {name: 'dateQ', type: 'date', dateFormat: 'c'}
             ,{name: 'm'}
             ,{name: 'num'}
             ,{name: 'module'}
-			,{name: 'n'}
-			,{name: 'dateT', type: 'date', dateFormat: 'c'}
-			,{name: 'sid'}
+            ,{name: 'n'}
+            ,{name: 'dateT', type: 'date', dateFormat: 'c'}
+            ,{name: 'sid'}
         ]
     })
 
     Ext.define('taout',{
         extend: 'Ext.data.Model'
-		,idProperty:'_id'
-		,fields: [
+        ,idProperty:'_id'
+        ,fields: [
             {name: 'm'}
             ,{name: 'num'}
             ,{name: 'sid'}
             ,{name: 'dateQ', type: 'date', dateFormat: 'c'}
             ,{name: 'dateS', type: 'date', dateFormat: 'c'}
-			,{name: 'dateR', type: 'date', dateFormat: 'c'}
+            ,{name: 'dateR', type: 'date', dateFormat: 'c'}
             ,{name: 'module'}
          ]
     })
 
     Ext.define('tain',{
         extend: 'Ext.data.Model'
-		,idProperty:'_id'
-		,fields: [
+        ,idProperty:'_id'
+        ,fields: [
             {name: 'b'}
             ,{name: 'num'}
             ,{name: 'sid'}
-			,{name: 'm'}
+            ,{name: 'm'}
             ,{name: 'd', type: 'date', dateFormat: 'c'}
-			,{name: 'module'}
+            ,{name: 'module'}
          ]
     })
 //config
 var pageSize = 20 ,north = !false
-	,editt = 'data-qtip="Редактор - 1 клик, выход - CTRL или SHIFT + ENTER"'
-	Ext.smsuimsg = !false
+    ,editt = 'data-qtip="Редактор - 1 клик, выход - CTRL или SHIFT + ENTER"'
+    Ext.smsuimsg = !false
 
 var ussdC = Ext.create('Ext.data.Store',{
-		fields: ['n', 'd'],
-		data : [
-		 {n: '', d: '*#'}
+        fields: ['n', 'd'],
+        data : [
+         {n: '', d: '*#'}
         ,{n:"*100#", d:'Баланс "*100#"'}
         ,{n:"*147#", d:'Показать номер ("Velcom", "MTS") "*147#"'}
         ,{n:"*111*10#", d:'Показать номер ("MTS") "*111*10#"'}
-		]
-	})
-	,phonesC = Ext.create('Ext.data.Store',{//TODO phone book
-		fields: ['n', 'd'],
-		data : [
-		 {n: '', d: 'Пустота'}
+        ]
+    })
+    ,phonesC = Ext.create('Ext.data.Store',{//TODO phone book
+        fields: ['n', 'd'],
+        data : [
+         {n: '', d: 'Пустота'}
         ,{n:"+375296100356", d:'Master Telecom +375(29)61-00-356'}
-		]
-	})
-	,modulesC = Ext.create('Ext.data.Store',{
-		storeId: 'modules'
-		,fields: ['d']
-		,proxy: { type: 'ajax' ,url: '/mods.json' ,reader: { type: 'json' } }
-		,autoLoad: { callback: function (rec, op, success) {//true
-			if(!success) return
-			var v = modulesC.data.get(0)
-			Ext.getCmp('smsModule').setValue(v)
-			Ext.getCmp('ussdModule').setValue(v)
-		}}
-		/*,data : [
+        ]
+    })
+    ,modulesC = Ext.create('Ext.data.Store',{
+        storeId: 'modules'
+        ,fields: ['d']
+        ,proxy: { type: 'ajax' ,url: '/mods.json' ,reader: { type: 'json' } }
+        ,autoLoad: { callback: function (rec, op, success) {//true
+            if(!success) return
+            var v = modulesC.data.get(0)
+            Ext.getCmp('smsModule').setValue(v)
+            Ext.getCmp('ussdModule').setValue(v)
+        }}
+        /*,data : [
          {d:'module1 "+375297776677"'}
         ,{d:'module2 "+375291234567"'}
-		]*/
-	})
+        ]*/
+    })
 //++ MongoDB collections
-	,tain = Ext.create('Ext.data.Store',{
-		storeId: 'tain'
-		,pageSize:pageSize
-		,idProperty:'_id'
-		,model: 'tain'
-		,proxy: { type: 'ajax' ,url: '/tain.json'
-			,reader: { type:'json' ,root:'data'}
-		}
-		,autoSync: !true ,autoLoad: !true /*{ callback: function (rec, op, success) {//true
-			/*if(!success) return
-			var v = modulesC.data.get(0)
-			Ext.getCmp('smsModule').setValue(v)
-			Ext.getCmp('ussdModule').setValue(v)* /
-			Ext._log('tain load: ' + success)
-		}}*/
-	})
-	,taout = Ext.create('Ext.data.Store',{
-		storeId: 'taout'
-		,pageSize:pageSize
-		//out: dateQ ,dateS ,sid ,dateR ,num ,m ,moduleN(fact) ,qid(trace back) ,_id
-		/*,idProperty:'_id'*/
-		,model: 'taout'
-		,proxy: { type: 'ajax' ,url: '/taout.json'
-			,reader: { type:'json' ,root:'data'}
-		}
-		,autoSync: !true ,autoLoad: !true
-	})
-	,taq = Ext.create('Ext.data.Store',{
-		storeId: 'taq'
-		,pageSize:pageSize
-		//q: dateQ ,m ,num ,moduleN(proposed) ,_id
-		/*,fields: ['dateQ' ,'m' ,'num' ,'module' ,'_id']
-		,idProperty:'_id'*/
-		,model: 'taq'
-		,proxy: { type: 'rest' ,url: '/taq.json'
-			,reader: { type:'json' ,root:'data'}
-		}
-		,autoSync: !true ,autoLoad: true
-	})
-	Ext.ui_reloadcb = { callback: function(records, operation, success){
-		if(!success) Ext.Msg.show({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-		,title:"БД получение" ,msg:"Ошибка при загрузке полученных сообщений."})
-	}}
+    ,tain = Ext.create('Ext.data.Store',{
+        storeId: 'tain'
+        ,pageSize:pageSize
+        ,idProperty:'_id'
+        ,model: 'tain'
+        ,proxy: { type: 'ajax' ,url: '/tain.json'
+            ,reader: { type:'json' ,root:'data'}
+        }
+        ,autoSync: !true ,autoLoad: !true /*{ callback: function (rec, op, success) {//true
+            /*if(!success) return
+            var v = modulesC.data.get(0)
+            Ext.getCmp('smsModule').setValue(v)
+            Ext.getCmp('ussdModule').setValue(v)* /
+            Ext._log('tain load: ' + success)
+        }}*/
+    })
+    ,taout = Ext.create('Ext.data.Store',{
+        storeId: 'taout'
+        ,pageSize:pageSize
+        //out: dateQ ,dateS ,sid ,dateR ,num ,m ,moduleN(fact) ,qid(trace back) ,_id
+        /*,idProperty:'_id'*/
+        ,model: 'taout'
+        ,proxy: { type: 'ajax' ,url: '/taout.json'
+            ,reader: { type:'json' ,root:'data'}
+        }
+        ,autoSync: !true ,autoLoad: !true
+    })
+    ,taq = Ext.create('Ext.data.Store',{
+        storeId: 'taq'
+        ,pageSize:pageSize
+        //q: dateQ ,m ,num ,moduleN(proposed) ,_id
+        /*,fields: ['dateQ' ,'m' ,'num' ,'module' ,'_id']
+        ,idProperty:'_id'*/
+        ,model: 'taq'
+        ,proxy: { type: 'rest' ,url: '/taq.json'
+            ,reader: { type:'json' ,root:'data'}
+        }
+        ,autoSync: !true ,autoLoad: true
+    })
+    Ext.ui_reloadcb = { callback: function(records, operation, success){
+        if(!success) Ext.Msg.show({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+        ,title:"БД получение" ,msg:"Ошибка при загрузке полученных сообщений."})
+    }}
 //++ Global store refs can be Ext.getStore()
-	Ext.smspasteS = Ext.create('Ext.data.Store',{
-		storeId: 'smspaste'
-		//smspaste: send pasted data into `taq` collection
-		,fields: ['rcp' ,'txt' /*,'module'*/]
-		,proxy: { type: 'rest' ,url: '/smsq.json' ,batchActions: true
-			,reader: { type:'json' ,idProperty:'_id' ,root:'data'}
-			,writer: { type:'json' ,allowSingle: false}
-		}
-		,autoSync: !true ,autoLoad: !true
-	})
+    Ext.smspasteS = Ext.create('Ext.data.Store',{
+        storeId: 'smspaste'
+        //smspaste: send pasted data into `taq` collection
+        ,fields: ['rcp' ,'txt' /*,'module'*/]
+        ,proxy: { type: 'rest' ,url: '/smsq.json' ,batchActions: true
+            ,reader: { type:'json' ,idProperty:'_id' ,root:'data'}
+            ,writer: { type:'json' ,allowSingle: false}
+        }
+        ,autoSync: !true ,autoLoad: !true
+    })
 
-	/*Ext.smspasteS = Ext.create('Ext.data.ArrayStore', {
-		storeId: 'pasteSMS'
-		,fields: ['rcp' ,'sms']
-		,data: []
+    /*Ext.smspasteS = Ext.create('Ext.data.ArrayStore', {
+        storeId: 'pasteSMS'
+        ,fields: ['rcp' ,'sms']
+        ,data: []
     })*/
 
     /*Ext.grid.dummyData = [
         ['Ivan, nasha mmm trydydy bla blu bla!!!','+375(29)777-80-90','sent','2012-04-09T02:19:59','2012-04-09T04:19:59']
         ,['Petr, nasha mmm trydydy bla blu bla!!!','+375(29)555-80-90','cnfd','2012-04-09T02:19:59','2012-04-09T05:44:00']
-		,['1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111. А вот я!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
-		,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
-		,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
-		,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
-		,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
-		,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+        ,['1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111. А вот я!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+        ,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+        ,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+        ,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+        ,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
+        ,['Sidor, nasha mmm trydydy bla blu bla!!!','+375(29)444-80-90','unst','2012-04-09T02:19:59','']
     ]
 
     Ext.define('modelSMS',{
@@ -298,72 +298,72 @@ var ussdC = Ext.create('Ext.data.Store',{
         } else if ('unst' == o) {
             return '<b class="r">В ОЧЕРЕДИ</b>'
         } else if ('sent' == o) {
-			return '<b style="color:orange;">ОТОСЛАНО</b>'
+            return '<b style="color:orange;">ОТОСЛАНО</b>'
         }
         return o;
     }
-	*/
+    */
 
-	//ISO date format
-	Ext.Date.defaultFormat = 'c'
+    //ISO date format
+    Ext.Date.defaultFormat = 'c'
 
-	function _ti(){ //ISO time String
-		function pad(n){return n<10 ? '0'+n : n}
-		var d = new Date()
-		return '@[T<b>'
-		+ pad(d.getUTCHours())+'<blink style="color:orange">:</blink>'
-		+ pad(d.getUTCMinutes())+'<blink style="color:orange">:</blink>'
-		+ pad(d.getUTCSeconds())+'</b>Z] '
-	}
-	Ext._ti = _ti
+    function _ti(){ //ISO time String
+        function pad(n){return n<10 ? '0'+n : n}
+        var d = new Date()
+        return '@[T<b>'
+        + pad(d.getUTCHours())+'<blink style="color:orange">:</blink>'
+        + pad(d.getUTCMinutes())+'<blink style="color:orange">:</blink>'
+        + pad(d.getUTCSeconds())+'</b>Z] '
+    }
+    Ext._ti = _ti
 
-	function _date(){ //ISODateString
-		function pad(n){return n<10 ? '0'+n : n}
-		var d = new Date()
-		return d.getUTCFullYear()+'-'
-		+ pad(d.getUTCMonth()+1)+'-'
-		+ pad(d.getUTCDate())+'T'
-		+ pad(d.getUTCHours())+':'
-		+ pad(d.getUTCMinutes())+':'
-		+ pad(d.getUTCSeconds())+'Z'
-	}
+    function _date(){ //ISODateString
+        function pad(n){return n<10 ? '0'+n : n}
+        var d = new Date()
+        return d.getUTCFullYear()+'-'
+        + pad(d.getUTCMonth()+1)+'-'
+        + pad(d.getUTCDate())+'T'
+        + pad(d.getUTCHours())+':'
+        + pad(d.getUTCMinutes())+':'
+        + pad(d.getUTCSeconds())+'Z'
+    }
 
-	Ext.taqRndr = function (v){
-	return '<b style="color:blue">'+dateRndr(v.dateT)+'</b>' + (
-		v.dateT ? '<br/>Результат: <b class="r">'+v.sid+'</b>&nbsp;Модуль: <b class="r">'+v.module+'</b></p>':''
-	  )
-	}
+    Ext.taqRndr = function (v){
+    return '<b style="color:blue">'+dateRndr(v.dateT)+'</b>' + (
+        v.dateT ? '<br/>Результат: <b class="r">'+v.sid+'</b>&nbsp;Модуль: <b class="r">'+v.module+'</b></p>':''
+      )
+    }
 
-	function smodRndr(v){
-		return v ? v : '<b style="color:green;">Любой модуль</b>'
-	}
+    function smodRndr(v){
+        return v ? v : '<b style="color:green;">Любой модуль</b>'
+    }
 
     function dateRndr(v){
 /*		var val = parseFloat(v)
-	if (Ext.isNumber(v)) {
+    if (Ext.isNumber(v)) {
         if (val > 0) {
             return '<span class="g">' + val + '</span>';
         } else if (val <= 0) {
             return '<span class="r">' + val + '</span>';
         }
         return val
-	}
-	return v
-		Ext._log (val)
-		var val = v ? String(v) : ''
-*/
-		if(v) {
-			return Ext.util.Format.dateRenderer()(v) //.call(this, v)
-		} else {
-			return '<b class="r">???</b>'
-		}
     }
-	Ext.dateRndr = dateRndr
+    return v
+        Ext._log (val)
+        var val = v ? String(v) : ''
+*/
+        if(v) {
+            return Ext.util.Format.dateRenderer()(v) //.call(this, v)
+        } else {
+            return '<b class="r">???</b>'
+        }
+    }
+    Ext.dateRndr = dateRndr
 
 function calc_sms_len(smsText) { // based on to_ascii() from uglify-js by Mihai Bazon
     var smsA = 140, smsU = smsA / 2
         ,smsC = 0
-		,a = true ,aa = true ,c = 0 ,tc = 0 ,ws
+        ,a = true ,aa = true ,c = 0 ,tc = 0 ,ws
 
     smsText.replace(/[\u0000-\uffff]/g, function(ch) {
         var co = ch.charCodeAt(0)
@@ -384,247 +384,247 @@ function calc_sms_len(smsText) { // based on to_ascii() from uglify-js by Mihai 
             if(smsU == c) {
 /*                if (ws) { ++smsC ; tc -= ws ; c -= ws ; ws = 0 }
                    else { ++smsC ; tc -= c ; c = 0 }*/
-				++smsC ; tc -= c ; c = 0
+                ++smsC ; tc -= c ; c = 0
                 if(aa) aa = !true
                 a = true
             }
         }
     })
     if(tc) ++smsC
-	return smsC
+    return smsC
 }
-	Ext.calc_sms_len = calc_sms_len
+    Ext.calc_sms_len = calc_sms_len
 // отображние
     Ext.QuickTips.init();
 
 // event handlers
 var ussdH = function(){
     var form = this.up('form').getForm()
-		,t = this, ussdnum = Ext.ComponentManager.get('ussdNumber')
-		,v = ussdnum.getRawValue()
+        ,t = this, ussdnum = Ext.ComponentManager.get('ussdNumber')
+        ,v = ussdnum.getRawValue()
 
-		if(/^Отп/.test(t.text)) {
-			if (!v) {
-				Ext.Msg.alert("USSD: форма", "Значение номера не определено!")
-				return
-			}
-			Ext._log(v)
-			if (!String(v).replace(/^\s+$/g,'')) {
-				Ext._ussd('<b class="r">Пустой номер не посылается.</b>')
-				return
-			}
-		} else if(/^Пол/.test(t.text)) {
-			ussdnum.setRawValue('*100#')
-		} else return Ext._log('err USSD: Кнопка не распознана!')
+        if(/^Отп/.test(t.text)) {
+            if (!v) {
+                Ext.Msg.alert("USSD: форма", "Значение номера не определено!")
+                return
+            }
+            Ext._log(v)
+            if (!String(v).replace(/^\s+$/g,'')) {
+                Ext._ussd('<b class="r">Пустой номер не посылается.</b>')
+                return
+            }
+        } else if(/^Пол/.test(t.text)) {
+            ussdnum.setRawValue('*100#')
+        } else return Ext._log('err USSD: Кнопка не распознана!')
         form.submit({
             success: function(form, conn){
-				Ext._ussd(t.text+': OK.<br/>'
-				+'<b style="color:blue">' + conn.result.msg
-				+'</b>')
-				tain.loadPage(1, Ext.ui_reloadcb)
+                Ext._ussd(t.text+': OK.<br/>'
+                +'<b style="color:blue">' + conn.result.msg
+                +'</b>')
+                tain.loadPage(1, Ext.ui_reloadcb)
             }
             ,failure: function(form, conn){
-				var r, es = t.text+': <b class="r">Ошибка.</b><br/>'
-				if (conn.result && conn.result.msg) { // application error
-					es += conn.result.msg
-				} else { // http server error
-					es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
-						+ (conn.response.responseText
-						? conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: conn.response.statusText)
-				}
-				Ext._ussd(es)
+                var r, es = t.text+': <b class="r">Ошибка.</b><br/>'
+                if (conn.result && conn.result.msg) { // application error
+                    es += conn.result.msg
+                } else { // http server error
+                    es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
+                        + (conn.response.responseText
+                        ? conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : conn.response.statusText)
+                }
+                Ext._ussd(es)
             }
         })
-	}
-	,smsTextLenH = function (self ,e ,eOpts) {
-		if(e) {// delay calc for better UI
-			clearTimeout(Ext.__to)
-			Ext.__to = setTimeout(smsTextLenH, 777)
-			return
-		}
-		var l = Ext._smsb.getRawValue() ,n = calc_sms_len(l) ; l = l.length
-		with (Ext._smsbtn) {
-			if(l){
-				l = '<b class="wg">Отправить</b> немедленно: '+n+' SMS (символов: '+l+')'
-				if(disabled) disabled = !true
-			} else {
-				l = 'Нельзя отправить: '+n+' SMS (символов: '+l+')'
-				disabled = true
-			}
-			setText(l)
-		}
-		return n
-	}
-	,smsFormH = function(){
+    }
+    ,smsTextLenH = function (self ,e ,eOpts) {
+        if(e) {// delay calc for better UI
+            clearTimeout(Ext.__to)
+            Ext.__to = setTimeout(smsTextLenH, 777)
+            return
+        }
+        var l = Ext._smsb.getRawValue() ,n = calc_sms_len(l) ; l = l.length
+        with (Ext._smsbtn) {
+            if(l){
+                l = '<b class="wg">Отправить</b> немедленно: '+n+' SMS (символов: '+l+')'
+                if(disabled) disabled = !true
+            } else {
+                l = 'Нельзя отправить: '+n+' SMS (символов: '+l+')'
+                disabled = true
+            }
+            setText(l)
+        }
+        return n
+    }
+    ,smsFormH = function(){
     var form = this.up('form').getForm()
-		,t = this
-		,m
-		,em = 'Нельзя отправить: ? SMS (символов: 0)'
+        ,t = this
+        ,m
+        ,em = 'Нельзя отправить: ? SMS (символов: 0)'
 
-		if(/Отчист/.test(t.text)) {
-			Ext._smsb.setRawValue('')
-			return Ext._smsbtn.setText(em)
-		} else if(/Отп/.test(t.text)) {
-			if(!form.getValues().smsNumber) {
-				m = 'Номер пуст.'
-				if(Ext._smsb.getRawValue().length <= 0)
-					m += ' SMS тоже...'
-			} else if(Ext._smsb.getRawValue().length <= 0)
-				m = 'Зачем отправлять пустую SMS?'
-			if(m) return Ext.Msg.alert('SMS' ,m)
-		} else return Ext._log('err SMS форма: Кнопка не распознана!')
-		t.setText('Ушло в очередь')
-		t.disabled = true
+        if(/Отчист/.test(t.text)) {
+            Ext._smsb.setRawValue('')
+            return Ext._smsbtn.setText(em)
+        } else if(/Отп/.test(t.text)) {
+            if(!form.getValues().smsNumber) {
+                m = 'Номер пуст.'
+                if(Ext._smsb.getRawValue().length <= 0)
+                    m += ' SMS тоже...'
+            } else if(Ext._smsb.getRawValue().length <= 0)
+                m = 'Зачем отправлять пустую SMS?'
+            if(m) return Ext.Msg.alert('SMS' ,m)
+        } else return Ext._log('err SMS форма: Кнопка не распознана!')
+        t.setText('Ушло в очередь')
+        t.disabled = true
 
         form.submit({
             success: function(form, conn){
-				Ext._log('SMS q: OK.<br/>'
-				+'<b style="color:blue">' + conn.result.msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
-				+'</b>')
-				t.setText(em)
-				t.disabled = !true
-				smsTextLenH(1,1)
+                Ext._log('SMS q: OK.<br/>'
+                +'<b style="color:blue">' + conn.result.msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+                +'</b>')
+                t.setText(em)
+                t.disabled = !true
+                smsTextLenH(1,1)
 
-				//Ext._smsb.setRawValue('')
-				//Ext._log(t)
+                //Ext._smsb.setRawValue('')
+                //Ext._log(t)
             }
             ,failure: function(form, conn){
-				var r, es = 'SMS q: <b class="r">Ошибка.</b><br/>'
-				if (conn.result && conn.result.msg) { // application error
-					es += conn.result.msg
-				} else { // http server error
-					es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
-						+ (conn.response.responseText
-						? conn.response.status + ' '
-						+ conn.response.statusText + '<br/>'
-						+ conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: conn.response.statusText)
-				}
-				Ext._log(es)
-				Ext.Msg.show({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-				,title:"Ошибка SMS" ,msg:"Не возможно послать SMS. Технические детали: " + es})
-				t.setText(em)
-				t.disabled = !true
-				smsTextLenH(1,1)
+                var r, es = 'SMS q: <b class="r">Ошибка.</b><br/>'
+                if (conn.result && conn.result.msg) { // application error
+                    es += conn.result.msg
+                } else { // http server error
+                    es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
+                        + (conn.response.responseText
+                        ? conn.response.status + ' '
+                        + conn.response.statusText + '<br/>'
+                        + conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : conn.response.statusText)
+                }
+                Ext._log(es)
+                Ext.Msg.show({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                ,title:"Ошибка SMS" ,msg:"Не возможно послать SMS. Технические детали: " + es})
+                t.setText(em)
+                t.disabled = !true
+                smsTextLenH(1,1)
             }
         })
-	}
-	,read_gsm_mem = function(){
+    }
+    ,read_gsm_mem = function(){
     //var t = this //	Ext.Msg.alert('button: ' ,t.text)
-		Ext.Ajax.request({
-			url: '/gsmemr.json'
-			//,params: { unread: 1 }
-			,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
-				tain.loadPage(1, Ext.ui_reloadcb)
-				taq.loadPage(1, Ext.ui_reloadcb)
-			}
-			,failure: function(res, opts) {
-				Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-				,title:"Чтение памяти модулей" ,msg:"Ошибка чтения."})
-				Ext._log("read_gsm_mem ajax err:" +
-					 (res.responseText
-						? res.status + ' '
-						+ res.statusText + '<br/>'
-						+ res.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: res.statusText)
-				)
-			}
-		})
-	}
-	,delt_gsm_mem = function(){
-		Ext.Ajax.request({
-			url: '/gsmemd.json'
-			,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
-				//TODO: disable read button
-				Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
-				,title:"Удаление памяти модулей" ,msg:"Память отчищена."})
-			}
-			,failure: function(res, opts) {
-				Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-				,title:"Удаление памяти модулей" ,msg:"Ошибка отчистки."})
-				Ext._log("read_gsm_mem ajax err:" +
-					 (res.responseText
-						? res.status + ' '
-						+ res.statusText + '<br/>'
-						+ res.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: res.statusText)
-				)
-			}
-		})
-	}
-	,start_sendq = function(){
-		Ext.Ajax.request({
-			url: '/shedm.json'
-			,success: function(res, opts) {
-			}
-			,failure: function(res, opts) {
-				Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-						,title:"Старт работы shedm" ,msg:"Ошибка запроса к ядру."})
-				Ext._log("shedm ajax err:" +
-					 (res.responseText
-					    ? res.status+' '+res.statusText+'<br/>'+res.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: res.statusText)
-				)
-			}
-		})
-	}
+        Ext.Ajax.request({
+            url: '/gsmemr.json'
+            //,params: { unread: 1 }
+            ,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
+                tain.loadPage(1, Ext.ui_reloadcb)
+                taq.loadPage(1, Ext.ui_reloadcb)
+            }
+            ,failure: function(res, opts) {
+                Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                ,title:"Чтение памяти модулей" ,msg:"Ошибка чтения."})
+                Ext._log("read_gsm_mem ajax err:" +
+                     (res.responseText
+                        ? res.status + ' '
+                        + res.statusText + '<br/>'
+                        + res.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : res.statusText)
+                )
+            }
+        })
+    }
+    ,delt_gsm_mem = function(){
+        Ext.Ajax.request({
+            url: '/gsmemd.json'
+            ,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
+                //TODO: disable read button
+                Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
+                ,title:"Удаление памяти модулей" ,msg:"Память отчищена."})
+            }
+            ,failure: function(res, opts) {
+                Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                ,title:"Удаление памяти модулей" ,msg:"Ошибка отчистки."})
+                Ext._log("read_gsm_mem ajax err:" +
+                     (res.responseText
+                        ? res.status + ' '
+                        + res.statusText + '<br/>'
+                        + res.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : res.statusText)
+                )
+            }
+        })
+    }
+    ,start_sendq = function(){
+        Ext.Ajax.request({
+            url: '/shedm.json'
+            ,success: function(res, opts) {
+            }
+            ,failure: function(res, opts) {
+                Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                        ,title:"Старт работы shedm" ,msg:"Ошибка запроса к ядру."})
+                Ext._log("shedm ajax err:" +
+                     (res.responseText
+                        ? res.status+' '+res.statusText+'<br/>'+res.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : res.statusText)
+                )
+            }
+        })
+    }
 
 /*.submit({
             success: function(form, conn){
-				Ext._log('SMS q: OK.<br/>'
-				+'<b style="color:blue">' + conn.result.msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
-				+'</b>')
-				t.setText(em)
-				t.disabled = !true
-				smsTextLenH(1,1)
+                Ext._log('SMS q: OK.<br/>'
+                +'<b style="color:blue">' + conn.result.msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+                +'</b>')
+                t.setText(em)
+                t.disabled = !true
+                smsTextLenH(1,1)
 
-				//Ext._smsb.setRawValue('')
-				//Ext._log(t)
+                //Ext._smsb.setRawValue('')
+                //Ext._log(t)
             }
             ,failure: function(form, conn){
-				var r, es = 'SMS q: <b class="r">Ошибка.</b><br/>'
-				console.log(conn)
-				if (conn.result && conn.result.msg) { // application error
-					es += conn.result.msg
-				} else { // http server error
-					es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
-						+ (conn.response.responseText
-						? conn.response.status + ' '
-						+ conn.response.statusText + '<br/>'
-						+ conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: conn.response.statusText)
-				}
-				Ext._log(es)
-				t.setText(em)
-				t.disabled = !true
-				smsTextLenH(1,1)
+                var r, es = 'SMS q: <b class="r">Ошибка.</b><br/>'
+                console.log(conn)
+                if (conn.result && conn.result.msg) { // application error
+                    es += conn.result.msg
+                } else { // http server error
+                    es += 'Тип глюка: ' + conn.failureType + '<br/>Описалово:<br/>'
+                        + (conn.response.responseText
+                        ? conn.response.status + ' '
+                        + conn.response.statusText + '<br/>'
+                        + conn.response.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : conn.response.statusText)
+                }
+                Ext._log(es)
+                t.setText(em)
+                t.disabled = !true
+                smsTextLenH(1,1)
             }
         })*/
 
-	Ext.smspasteH = function(txt) {
-		var i ,j = 0 ,darr = [] ,larr = txt.split('\n')
-		if (!larr) return
-		for(i in larr) {
-			j = larr[i].split('\t')
-			if(j && j.length > 0)
-				if (j[0] && j[1] && /^[+]/.test(j[0]))
-					darr.push([j[0], j[1]])
-		}
-		if(darr.length > 0) {
-			Ext.smspasteS.loadData(darr)
-			i = Ext.getCmp('pasteSMS')
-			i.update()
-			i = i.down('toolbar')
-			i.getComponent('addsmsq').enable()
-			i.getComponent('rmsmsq').enable()
-		}
-	}
+    Ext.smspasteH = function(txt) {
+        var i ,j = 0 ,darr = [] ,larr = txt.split('\n')
+        if (!larr) return
+        for(i in larr) {
+            j = larr[i].split('\t')
+            if(j && j.length > 0)
+                if (j[0] && j[1] && /^[+]/.test(j[0]))
+                    darr.push([j[0], j[1]])
+        }
+        if(darr.length > 0) {
+            Ext.smspasteS.loadData(darr)
+            i = Ext.getCmp('pasteSMS')
+            i.update()
+            i = i.down('toolbar')
+            i.getComponent('addsmsq').enable()
+            i.getComponent('rmsmsq').enable()
+        }
+    }
 
 //++ patches
 Ext.override(Ext.view.AbstractView, {
-	loadMask: {
-		msg: 'загрузка...'
+    loadMask: {
+        msg: 'загрузка...'
     }
     ,onRender: function()
     {//Rovak: http://www.sencha.com/forum/showthread.php?198341-4.1-Loading-mask
@@ -638,101 +638,101 @@ Ext.override(Ext.view.AbstractView, {
     }
 })
 
-	Ext.fly('startup').remove()
+    Ext.fly('startup').remove()
 var app_tabs
     ,vp = Ext.create('Ext.Viewport', {
         layout: { type: 'border', padding: 5 }
         ,defaults: { split: true }
-		//без 'xtype' берётся как 'panel'
+        //без 'xtype' берётся как 'panel'
         ,items: [{ 			region: 'north'//, xtype:'container'
 ///////////////////////////
-			,header: !true
-			,collapseMode: 'mini'
+            ,header: !true
+            ,collapseMode: 'mini'
             ,collapsible: true, collapsed: !north //, split: true
-			,minHeight: 170
-			,maxHeight:333
-			,layout: 'fit'
-			,items: [ Ext.createWidget('tabpanel', {
-				activeTab: 1
-				,defaults :{
-					bodyPadding: 2
-				},
+            ,minHeight: 170
+            ,maxHeight:333
+            ,layout: 'fit'
+            ,items: [ Ext.createWidget('tabpanel', {
+                activeTab: 1
+                ,defaults :{
+                    bodyPadding: 2
+                },
         items: [
-		{ title: 'Подготовка одинаковых SMS'
-			,layout:'fit'
-			,items: [
+        { title: 'Подготовка одинаковых SMS'
+            ,layout:'fit'
+            ,items: [
 
-				 Ext.create('Ext.form.Panel', {
+                 Ext.create('Ext.form.Panel', {
         url: 'sms.json'
-		,layout: { type: 'hbox'
+        ,layout: { type: 'hbox'
             ,padding: '5'
-		}
-		//,layout:'anchor'
-		,items: [
-	{ xtype: 'fieldset'
+        }
+        //,layout:'anchor'
+        ,items: [
+    { xtype: 'fieldset'
         ,title: 'Форма отправки одинаковых SMS'
         ,defaultType: 'textfield'
-		,padding:2
-		//,height:111
-		//,width:377
-		//,flex:1
-		,items:[
-		{   xtype: 'combobox'
-			,width:355
-			,fieldLabel:'Номер(а) получателя(ей разделители [ ,.;|/] )'
-			,labelAlign:'top'
-			//,labelWidth:200
-			,id: 'smsNumber'
+        ,padding:2
+        //,height:111
+        //,width:377
+        //,flex:1
+        ,items:[
+        {   xtype: 'combobox'
+            ,width:355
+            ,fieldLabel:'Номер(а) получателя(ей разделители [ ,.;|/] )'
+            ,labelAlign:'top'
+            //,labelWidth:200
+            ,id: 'smsNumber'
             ,name: 'smsNumber'
-			,store: phonesC
-			,queryMode: 'local'
-			,displayField: 'd'
-			,valueField: 'n'
-		}
-		,{  xtype: 'textarea'
+            ,store: phonesC
+            ,queryMode: 'local'
+            ,displayField: 'd'
+            ,valueField: 'n'
+        }
+        ,{  xtype: 'textarea'
             ,style: 'margin:0', hideLabel: true
-			,height:70, width:355
-			,name: 'smsBody'
-			,id: 'smsBody'
-			,enableKeyEvents: true
-			,listeners: {
-				//keyUp: smsTextLenH
-				change: smsTextLenH
-			}
-		}
-		,{   xtype: 'combobox'
-			,width:355 //, anchor: '-5 -5'
-			,fieldLabel:'Модуль (SIM) для отправки'
-			,labelAlign:'top'
-			//,labelWidth:200
-			,id: 'smsModule'
+            ,height:70, width:355
+            ,name: 'smsBody'
+            ,id: 'smsBody'
+            ,enableKeyEvents: true
+            ,listeners: {
+                //keyUp: smsTextLenH
+                change: smsTextLenH
+            }
+        }
+        ,{   xtype: 'combobox'
+            ,width:355 //, anchor: '-5 -5'
+            ,fieldLabel:'Модуль (SIM) для отправки'
+            ,labelAlign:'top'
+            //,labelWidth:200
+            ,id: 'smsModule'
             ,name: 'smsModule'
-			,store: modulesC
-			,editable:!true
-			//,queryMode: 'local'//ComboBox : default is 'remote' for autocomplete
-			,displayField: 'd'
-			,valueField: 'd'
-			,value: modulesC.data.get(0)
-		}
-		,{	xtype:'container'
-			,layout: { type:'hbox', pack: 'center' }
-				,width:355
+            ,store: modulesC
+            ,editable:!true
+            //,queryMode: 'local'//ComboBox : default is 'remote' for autocomplete
+            ,displayField: 'd'
+            ,valueField: 'd'
+            ,value: modulesC.data.get(0)
+        }
+        ,{	xtype:'container'
+            ,layout: { type:'hbox', pack: 'center' }
+                ,width:355
                 ,items: [
-				{  xtype: 'button'
-				,text: 'Нельзя отправить: ? SMS (символов: 0)'
-				,id: 'smsQueueBtn'
+                {  xtype: 'button'
+                ,text: 'Нельзя отправить: ? SMS (символов: 0)'
+                ,id: 'smsQueueBtn'
                 ,handler: smsFormH
-				,width: (355-81)
-				}
-				,{  xtype: 'button'
-				,text: '<b class="r">Отчистить</b>'
-				,width:81
+                ,width: (355-81)
+                }
+                ,{  xtype: 'button'
+                ,text: '<b class="r">Отчистить</b>'
+                ,width:81
                 ,handler: smsFormH
-				}
-			]
-		}
+                }
+            ]
+        }
 
-		/*,dockedItems: [{
+        /*,dockedItems: [{
             xtype: 'toolbar',
             dock: 'bottom',
             ui: 'footer',
@@ -749,210 +749,210 @@ var app_tabs
         }]*/
 
         ]
-	}
-	,{ xtype: 'fieldset'
-		,title: 'Описание и помощь в работе.'
-		,layout:'anchor'
-		,height: 207
-		,width:577
-		,style: 'margin:0 0 0 4;padding:2'
-		,html: '<p>&nbsp;&nbsp;&nbsp;&nbsp;Поле "Номера" может содержать один или несколько номеров, предствленных в международном формате +375 ZX YYYYYYY.</p><p>&nbsp;&nbsp;&nbsp;&nbsp;Один можно выбрать из списка или набрать вручную. Список номеров лучше подготовить в ячейках <b style="color:green">Excel</b>, таблицах или простой строке <b style="color:blue">Word</b> и скопировав область там, вставить её здесь.</p><img src="images/ccxlscv.png"/><p>&nbsp;&nbsp;&nbsp;&nbsp;Содержание сообщения может быть как из латинских (ASCII) так и прочих (UNICODE) символов. При этом максимальный размер первых SMS будет <b>140</b> символов, вторых <b>70</b> (на половину меньше).</p>&nbsp;&nbsp;&nbsp;&nbsp;Сколько SMS получается из содержимого расчитывается и указывается на кнопке <b class="wg">Отправки</b>. При нажатии на неё, SMS (одно или продолжение из нескольких) отправляются. В случае успеха они появляются в во второй вкладке - "Отправленные SMS"'
+    }
+    ,{ xtype: 'fieldset'
+        ,title: 'Описание и помощь в работе.'
+        ,layout:'anchor'
+        ,height: 207
+        ,width:577
+        ,style: 'margin:0 0 0 4;padding:2'
+        ,html: '<p>&nbsp;&nbsp;&nbsp;&nbsp;Поле "Номера" может содержать один или несколько номеров, предствленных в международном формате +375 ZX YYYYYYY.</p><p>&nbsp;&nbsp;&nbsp;&nbsp;Один можно выбрать из списка или набрать вручную. Список номеров лучше подготовить в ячейках <b style="color:green">Excel</b>, таблицах или простой строке <b style="color:blue">Word</b> и скопировав область там, вставить её здесь.</p><img src="images/ccxlscv.png"/><p>&nbsp;&nbsp;&nbsp;&nbsp;Содержание сообщения может быть как из латинских (ASCII) так и прочих (UNICODE) символов. При этом максимальный размер первых SMS будет <b>140</b> символов, вторых <b>70</b> (на половину меньше).</p>&nbsp;&nbsp;&nbsp;&nbsp;Сколько SMS получается из содержимого расчитывается и указывается на кнопке <b class="wg">Отправки</b>. При нажатии на неё, SMS (одно или продолжение из нескольких) отправляются. В случае успеха они появляются в во второй вкладке - "Отправленные SMS"'
     }
   ]
     })
-			]
-		}
-		,{ title: 'Подготовка различных SMS из таблиц (MS Excel, текстовые файлы)'
-			,layout:'fit'
-			,items: [
+            ]
+        }
+        ,{ title: 'Подготовка различных SMS из таблиц (MS Excel, текстовые файлы)'
+            ,layout:'fit'
+            ,items: [
 
-	 Ext.create('Ext.form.Panel', {
+     Ext.create('Ext.form.Panel', {
         url: 'sms.json'
-		,layout:'fit'
+        ,layout:'fit'
 
-		//,margin: 4
-		//,layout: { type: 'vbox'
+        //,margin: 4
+        //,layout: { type: 'vbox'
         //    ,padding: '5'
-		//}
-		,items: [
-	/*{ xtype: 'fieldset'
+        //}
+        ,items: [
+    /*{ xtype: 'fieldset'
         ,title: 'Описание работы. Помощь.'
         ,defaultType: 'textfield'
-		,padding:2
-		,height:57
-		//,width:377
-		//,flex:1
-		,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать область SMS<br/>из <b style="color:green">XLS</b>, вставить сюда:</div><textarea  style="background-color:#CBE5C5;border:1px dashed;margin:0 11px 0 0;padding:0;height:30px;width:222px;float:left;" oninput="' + "Ext._log(this.value);setAttribute('value','')" + '"></textarea><b style="font-family:monospace;color:orange"><b style="color:blue"><b style="color:green">XLS</b>: CTRL+C</b><br/>:тут CTRL+V</b>'
-	}
-	,*/{ 	xtype:'grid' ,id:'pasteSMS'
-		//,anchor: '0 -31'
-		,header:!true
-		,layout:'fit'
+        ,padding:2
+        ,height:57
+        //,width:377
+        //,flex:1
+        ,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать область SMS<br/>из <b style="color:green">XLS</b>, вставить сюда:</div><textarea  style="background-color:#CBE5C5;border:1px dashed;margin:0 11px 0 0;padding:0;height:30px;width:222px;float:left;" oninput="' + "Ext._log(this.value);setAttribute('value','')" + '"></textarea><b style="font-family:monospace;color:orange"><b style="color:blue"><b style="color:green">XLS</b>: CTRL+C</b><br/>:тут CTRL+V</b>'
+    }
+    ,*/{ 	xtype:'grid' ,id:'pasteSMS'
+        //,anchor: '0 -31'
+        ,header:!true
+        ,layout:'fit'
         ,store: Ext.smspasteS
-		,viewConfig: { loadMask: !true
-		}
-		//,selType: 'rowmodel'
-		,selType: 'cellmodel'
-		,selModel: {mode: 'SIMPLE'}
+        ,viewConfig: { loadMask: !true
+        }
+        //,selType: 'rowmodel'
+        ,selType: 'cellmodel'
+        ,selModel: {mode: 'SIMPLE'}
         ,columns: [
-			Ext.create('Ext.grid.RowNumberer')
-			,{
+            Ext.create('Ext.grid.RowNumberer')
+            ,{
                 xtype:'actioncolumn',
                 width:22,
                 items: [{
                     icon: 'images/delete.png'
                     ,tooltip: 'Удалить'
                     ,handler: function(grid, rowIndex, colIndex) {
-						Ext.smspasteS.removeAt(rowIndex)
-						Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
-						// var rec = grid.getStore().getAt(rowIndex);
+                        Ext.smspasteS.removeAt(rowIndex)
+                        Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
+                        // var rec = grid.getStore().getAt(rowIndex);
                     }
                 }]
-			}
+            }
             ,{text: 'Получатель', width: 177, dataIndex: 'rcp'
-				,editor: {	xtype:"combobox"
-				,typeAhead: true
+                ,editor: {	xtype:"combobox"
+                ,typeAhead: true
                 //,triggerAction: 'all'
                 ,selectOnTab: true
                 ,store: phonesC
-				,queryMode: 'local'
-				,displayField: 'd'
-				,valueField: 'n'
+                ,queryMode: 'local'
+                ,displayField: 'd'
+                ,valueField: 'n'
                 //listClass: 'x-combo-list-small'
-				}
-				,renderer: function(value, metadata, record, rowIndex, colIndex, store){
-				  return metadata.tdAttr = editt, value
-					//metadata.tdAttr = 'data-qtip="' + value + '"'
-				}
-			}
-			,{text: 'Сообщение', flex: 1, dataIndex: 'txt' ,tdCls: 'wrap'
-				,editor: { xtype:"textarea"
-					,resizable: true ,height: 111 ,width: 444
-				}
-				,renderer: function(value, metadata, record, rowIndex, colIndex, store){
-				  return metadata.tdAttr = editt, value
-				}
-			}
+                }
+                ,renderer: function(value, metadata, record, rowIndex, colIndex, store){
+                  return metadata.tdAttr = editt, value
+                    //metadata.tdAttr = 'data-qtip="' + value + '"'
+                }
+            }
+            ,{text: 'Сообщение', flex: 1, dataIndex: 'txt' ,tdCls: 'wrap'
+                ,editor: { xtype:"textarea"
+                    ,resizable: true ,height: 111 ,width: 444
+                }
+                ,renderer: function(value, metadata, record, rowIndex, colIndex, store){
+                  return metadata.tdAttr = editt, value
+                }
+            }
         ]
         ,plugins: [{ ptype: 'rowexpander'
-			,expandOnDblClick: false ,expandOnEnter: false
+            ,expandOnDblClick: false ,expandOnEnter: false
             ,rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{txt}</p>'
 +'<p>Символов: <b style="color:blue;padding-right:11"> {[values.txt.length]}</b>'
 +'Количество SMS: '
 +'<b style="color:blue;">{[values.txt.length > 0 ? Ext.calc_sms_len(values.txt): "??"]}</b>'
 +'</p>'
         }
-		//,Ext.create('Ext.ux.grid.plugin.DragSelector', {})
-		,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1
-			,listeners: {
-				edit: function(editor ,event){
-					with (event.grid.getView()){
-						onCellSelect({ row: event.rowIdx ,column: event.colIdx })
-						getEl().focus()
-					}
-				}
-			}
-		})
-		]
+        //,Ext.create('Ext.ux.grid.plugin.DragSelector', {})
+        ,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1
+            ,listeners: {
+                edit: function(editor ,event){
+                    with (event.grid.getView()){
+                        onCellSelect({ row: event.rowIdx ,column: event.colIdx })
+                        getEl().focus()
+                    }
+                }
+            }
+        })
+        ]
         ,collapsible: true
         ,animCollapse: false
         ,dockedItems: [{
             xtype: 'toolbar',
             items: [
-			{ text:'Добавить строку'
+            { text:'Добавить строку'
                 ,iconCls:'addrow'
-				,handler: function(b, e) {
-					Ext.smspasteS.add({})
-				}
-			},{
-				itemId: 'addsmsq'
+                ,handler: function(b, e) {
+                    Ext.smspasteS.add({})
+                }
+            },{
+                itemId: 'addsmsq'
                 ,text:'Добавить в очередь отправки'
                 ,iconCls:'add'
-				,disabled: !true
-				,handler: function(b, s, v){
-		s = b.up('gridpanel')
-		v = s.getView()
-		lm.show()
-		s = s.getStore()
-		if(!s.sync({
+                ,disabled: !true
+                ,handler: function(b, s, v){
+        s = b.up('gridpanel')
+        v = s.getView()
+        lm.show()
+        s = s.getStore()
+        if(!s.sync({
             success: function(batch, opts){
-				opts = s.getProxy().getReader().rawData
+                opts = s.getProxy().getReader().rawData
 Ext._log('smsq add OK data.length: ' + opts.data.length)
-				opts = opts.total / pageSize
-				v.onCellSelect({ row:0 ,column:0 })
-				v.onCellDeselect({ row:0 ,column:0 })
-				s.removeAll()
+                opts = opts.total / pageSize
+                v.onCellSelect({ row:0 ,column:0 })
+                v.onCellDeselect({ row:0 ,column:0 })
+                s.removeAll()
 
-				s = Math.floor(opts) //load last page
-				taq.loadPage(opts - s ? s + 1 : s,{
-					callback: function(records, operation, success) {
-						if(!success) Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-						,title:"БД очередь" ,msg:"Ошибка при получении очереди сообщений."})
-					}
-				})
-				//b.disable()
-				b.up('toolbar').getComponent('rmsmsq').disable()
-				lm.hide()
-			}
+                s = Math.floor(opts) //load last page
+                taq.loadPage(opts - s ? s + 1 : s,{
+                    callback: function(records, operation, success) {
+                        if(!success) Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                        ,title:"БД очередь" ,msg:"Ошибка при получении очереди сообщений."})
+                    }
+                })
+                //b.disable()
+                b.up('toolbar').getComponent('rmsmsq').disable()
+                lm.hide()
+            }
             ,failure: function(batch, opts){
-				lm.hide()
-				Ext.Msg.alert({ title:"БД очередь" ,icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-					,msg:"Серьёзная ошибка при записи в очередь сообщений."})
+                lm.hide()
+                Ext.Msg.alert({ title:"БД очередь" ,icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                    ,msg:"Серьёзная ошибка при записи в очередь сообщений."})
             }
         })) { //sync
-			lm.hide()
-			Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
-			,title:"БД очередь" ,msg:"Нечего переносить в очередь!"})
-		}
-				}
+            lm.hide()
+            Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
+            ,title:"БД очередь" ,msg:"Нечего переносить в очередь!"})
+        }
+                }
             }, '-'
-			,{
+            ,{
                 itemId: 'rmsmsq'
                 ,text:'Удалить все'
                 ,iconCls:'remove'
-				,disabled:true
-				,handler: function(b, e) {
-					Ext.smspasteS.removeAll()
-					b.up('toolbar').getComponent('addsmsq').disable()
-					b.disable()
-				}
+                ,disabled:true
+                ,handler: function(b, e) {
+                    Ext.smspasteS.removeAll()
+                    b.up('toolbar').getComponent('addsmsq').disable()
+                    b.disable()
+                }
             }, '-'
-			,{ xtype: 'container'
-		//,height:57
-		,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать <b style="color:brown">CTRL+C</b> таблицу SMS<br/>из <b style="color:green">XLS</b> или <b style="color:blue">DOC</b>, вставить сюда <b style="color:orange">CTRL+V</b>:</div><textarea class="cpta" oninput="Ext.smspasteH(this.value)" onmouseover="this.focus();this.select()" onfocus="this.select()"></textarea>'
-	}
-			]
+            ,{ xtype: 'container'
+        //,height:57
+        ,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать <b style="color:brown">CTRL+C</b> таблицу SMS<br/>из <b style="color:green">XLS</b> или <b style="color:blue">DOC</b>, вставить сюда <b style="color:orange">CTRL+V</b>:</div><textarea class="cpta" oninput="Ext.smspasteH(this.value)" onmouseover="this.focus();this.select()" onfocus="this.select()"></textarea>'
+    }
+            ]
         }]
   }
   ]
     })
-			]
-		}
-		]})
-			]
+            ]
+        }
+        ]})
+            ]
           },{				region: 'west'
 ///////////////////////////
 //            ,collapsible: true, split: true, minWidth: 100, minHeight: 140
-			,layout: 'border', title: 'ЦУП'
+            ,layout: 'border', title: 'ЦУП'
             ,collapsible: true, collapsed: false, collapseMode: 'mini'
-			,floatable: true
-			,width: '14%'
+            ,floatable: true
+            ,width: '14%'
             ,items: [{
                 region: 'north', title: 'софт и железо / software and hardware'
-				,collapsible: true, autoScroll: true, split: true
-				,height: '65%'
+                ,collapsible: true, autoScroll: true, split: true
+                ,height: '65%'
                 ,minHeight: 111
-				//html: 'center center',
+                //html: 'center center',
                 ,items: [{
             xtype: 'dataview'
-			,itemId: 'id_swhw_stat'
+            ,itemId: 'id_swhw_stat'
             ,tpl: '<tpl for="."><div class="item">' +
 'os: <b>{os}</b><br/>'+
 'server: <b>{server}</b><br/>'+
 'db: <b>{db}</b><br/>'+
 'uptime: <b>{uptime}</b></div></tpl>'
             ,itemSelector: 'div.item'
-			,loadMask: false
+            ,loadMask: false
             ,store: Ext.create('Ext.data.Store', {
 //bugfix 001: autoLoad is false. log widgets, created later in Ext.onReady()
 //            and they must have first nodeJS logs there otherwise this early load will eat them
@@ -960,67 +960,67 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                 ,proxy: { type: 'ajax', url : '/swhw_stat.json', reader: { type: 'json', root: 'stats' } }
                 ,fields: ['os', 'server', 'db', 'uptime' ]
               }
-			)
-				  }
-				  , Ext.create('Ext.ProgressBar', {
-						text:'качество сигнала'
-						,itemId:'id_sigq1'
-						,value: 1
-						}
-					)
-				  , Ext.create('Ext.ProgressBar', {
-						text:'качество сигнала'
-						,itemId:'id_sigq2'
-						,hidden: true
-						,margin: '2 0 0 0'
-						,value: 1
-						}
-					)
-				  , { xtype:'container'
-						,html:'<b id="gsmid"></b>'
-				  }
-				],
+            )
+                  }
+                  , Ext.create('Ext.ProgressBar', {
+                        text:'качество сигнала'
+                        ,itemId:'id_sigq1'
+                        ,value: 1
+                        }
+                    )
+                  , Ext.create('Ext.ProgressBar', {
+                        text:'качество сигнала'
+                        ,itemId:'id_sigq2'
+                        ,hidden: true
+                        ,margin: '2 0 0 0'
+                        ,value: 1
+                        }
+                    )
+                  , { xtype:'container'
+                        ,html:'<b id="gsmid"></b>'
+                  }
+                ],
                 dockedItems: [{
-					xtype: 'toolbar', dock: 'bottom'
+                    xtype: 'toolbar', dock: 'bottom'
                     ,items:['управление:', ' ', { text: 'syncUI'
                         ,handler: function() {
-							Ext.defer(Ext.sync_extjs_nodejs, 0)
-						}
-					  },{ text: 'renodeJS'
+                            Ext.defer(Ext.sync_extjs_nodejs, 0)
+                        }
+                      },{ text: 'renodeJS'
                         ,handler: function() {
-		Ext.Ajax.request({
-			url: '/reload.json'
-			,success: function(res, opts) {}
-			,failure: function(res, opts) {
-				Ext._log("reload ajax err:" +
-					 (res.responseText
-						? res.status + ' '
-						+ res.statusText + '<br/>'
-						+ res.responseText.replace(/(\r*\n)+/g, '<br/>')
-						: res.statusText)
-				)
-			}
-		})
-						}
+        Ext.Ajax.request({
+            url: '/reload.json'
+            ,success: function(res, opts) {}
+            ,failure: function(res, opts) {
+                Ext._log("reload ajax err:" +
+                     (res.responseText
+                        ? res.status + ' '
+                        + res.statusText + '<br/>'
+                        + res.responseText.replace(/(\r*\n)+/g, '<br/>')
+                        : res.statusText)
+                )
+            }
+        })
+                        }
                       }
-					]
+                    ]
                 }
-				]
+                ]
               },{
                 region: 'center', title: 'ExtJS ' +	Ext.getVersion('extjs')+' info'
                 ,height: '45%'
-				,split: true, collapsible: true, autoScroll: true
-				,html: '<a id="id_extjslog_head" href="extjs/docs/index.html" target="_blank"><b>_ExtJS_</b></a>'
+                ,split: true, collapsible: true, autoScroll: true
+                ,html: '<a id="id_extjslog_head" href="extjs/docs/index.html" target="_blank"><b>_ExtJS_</b></a>'
               }
-			]
+            ]
         },{                  region: 'center'
 ////////////////////////////
-			,id: 'smspanel'
-			//,layout: 'border', border: false
-			,title: ''
+            ,id: 'smspanel'
+            //,layout: 'border', border: false
+            ,title: ''
             ,width: '77%'
-			,layout: 'fit'
-			,items: [ app_tabs = Ext.createWidget('tabpanel', {
+            ,layout: 'fit'
+            ,items: [ app_tabs = Ext.createWidget('tabpanel', {
         //width: 450
         activeTab: 0
         ,defaults :{
@@ -1029,62 +1029,62 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
 
         items: [{
             title: 'Очередь отправки'
-			,layout:'fit'
-			,iconCls: 'icon-grid'
-			,items: [
-	{ 	xtype:'grid'
-		,layout:'fit'
+            ,layout:'fit'
+            ,iconCls: 'icon-grid'
+            ,items: [
+    { 	xtype:'grid'
+        ,layout:'fit'
         ,store: taq
-		,selType: 'cellmodel'
-		,viewConfig: { loadMask: true
-			,stripeRows: false// with this `true`, bellow stripes too
-			,getRowClass: function(record, rowIndex, rowParams, store){
-				var n = record.get("n")
-				return n ? 'E' == n ? "row-err" : "row-new" : '';
-			}
-		}
+        ,selType: 'cellmodel'
+        ,viewConfig: { loadMask: true
+            ,stripeRows: false// with this `true`, bellow stripes too
+            ,getRowClass: function(record, rowIndex, rowParams, store){
+                var n = record.get("n")
+                return n ? 'E' == n ? "row-err" : "row-new" : '';
+            }
+        }
         ,columns: [
-			Ext.create('Ext.grid.RowNumberer')
-			,{  xtype:'actioncolumn'
+            Ext.create('Ext.grid.RowNumberer')
+            ,{  xtype:'actioncolumn'
                 ,width:22
                 ,items: [{
                     icon: 'images/delete.png',
                     tooltip: 'Удалить',
                     handler: function(view, rowIndex, colIndex) {
-						taq.removeAt(rowIndex)
-						taq.sync({
-							success: function(batch, opts){
-								taq.totalCount--//rFactor@http://stackoverflow.com/questions/4912426/
-								view.up('tabpanel').down('pagingtoolbar').onLoad()
-							}
-							,failure: function(batch, opts){
-								taq.rejectChanges()
-								Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-								,title:"БД очередь" ,msg:"Ошибка при удалении сообщения (восстановлено)."})
-							}
-						})
+                        taq.removeAt(rowIndex)
+                        taq.sync({
+                            success: function(batch, opts){
+                                taq.totalCount--//rFactor@http://stackoverflow.com/questions/4912426/
+                                view.up('tabpanel').down('pagingtoolbar').onLoad()
+                            }
+                            ,failure: function(batch, opts){
+                                taq.rejectChanges()
+                                Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
+                                ,title:"БД очередь" ,msg:"Ошибка при удалении сообщения (восстановлено)."})
+                            }
+                        })
                     }
                 }]
-			}
+            }
             ,{text: 'Текст' ,flex: 1 ,dataIndex: 'm' ,editor: { xtype:"textarea"
-				,resizable: true ,height: 111 ,width: 444 }
-			}
+                ,resizable: true ,height: 111 ,width: 444 }
+            }
             ,{text: 'Получатель', width: 111 ,dataIndex: 'num' ,editor: { xtype:"textarea"} }
             ,{text: 'Добавлено в', width: 177,renderer: dateRndr, dataIndex: 'dateQ'}
-			,{text: 'Предварительный канал', width: 177,renderer: smodRndr, dataIndex: 'pmodule'}
+            ,{text: 'Предварительный канал', width: 177,renderer: smodRndr, dataIndex: 'pmodule'}
             //,{text: 'Статус', dataIndex: 'status', renderer : objStatus}
             //,{text: 'Время отправки/доставки', width: 177,renderer: dateRndr, dataIndex: 'endDate'}
         ]
         ,plugins: [{       ptype: 'rowexpander'
-			,expandOnEnter: false
-			,expandOnDblClick: false
+            ,expandOnEnter: false
+            ,expandOnDblClick: false
             ,rowBodyTpl: '<p style="border-bottom: blue solid 1px"><b>Текст: </b>{m}</p>'
 +'<p>Символов: [<b style="color:blue">{[values.m.length]}</b>]&nbsp;'
 +'Последняя попытка: {[Ext.taqRndr(values)]}'
         }
-		,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 2})
-		//,Ext.create('Ext.ux.grid.plugin.DragSelector', {})
-		],
+        ,Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 2})
+        //,Ext.create('Ext.ux.grid.plugin.DragSelector', {})
+        ],
         //collapsible: true
         //,animCollapse: false
         title: '' //'Таблица: активные SMS',
@@ -1095,42 +1095,42 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             items: [{
                 text:'Отправить очередь SMS' //,tooltip:''
                 ,iconCls:'add'
-				,handler: start_sendq
+                ,handler: start_sendq
             }, '-'
-			/*, { text:'Настройки',tooltip:'',iconCls:'option'
+            /*, { text:'Настройки',tooltip:'',iconCls:'option'
             },'-'*/
-			,{
+            ,{
                 itemId: 'removeButton'
                 ,text:'Остановить отправку SMS' //,tooltip:''
                 ,iconCls:'remove'
                 ,disabled: true
             }
-			,{	xtype: 'pagingtoolbar'
-				,store: taq
-				,dock: 'top'
-				,beforePageText: 'страница'
-				,afterPageText: 'из {0}'
-				,displayInfo: true
-	            ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
-				,emptyMsg: "Ничего не загружено"
-			}
-			]
+            ,{	xtype: 'pagingtoolbar'
+                ,store: taq
+                ,dock: 'top'
+                ,beforePageText: 'страница'
+                ,afterPageText: 'из {0}'
+                ,displayInfo: true
+                ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
+                ,emptyMsg: "Ничего не загружено"
+            }
+            ]
         }
-		]
+        ]
     }
-	//)
-			]
+    //)
+            ]
         },{
             title: 'Отправленные SMS'
             ,closable: !true
-			,layout:'fit'
-			,iconCls: 'icon-grid'
-			,items:[
-	{ 	xtype:'grid'
-		,layout:'fit'
+            ,layout:'fit'
+            ,iconCls: 'icon-grid'
+            ,items:[
+    { 	xtype:'grid'
+        ,layout:'fit'
         ,store: taout
         ,columns: [
-			{xtype: 'rownumberer' ,width: 30}
+            {xtype: 'rownumberer' ,width: 30}
             ,{text: 'Текст' ,flex: 1, dataIndex: 'm' ,editor: {xtype:"textfield"}}
             ,{text: 'Номер' ,width: 111 ,dataIndex: 'num'}
             ,{text: 'Статус',width: 30 ,dataIndex: 'sid'}
@@ -1144,48 +1144,48 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
 +'доставленно: <b style="color:green;">{[Ext.dateRndr(values.dateR)]}</b> (время GSM сети)<br/>'
 +'через: <b style="color:brown;">{module}</b>'
         }
-			,Ext.create('Ext.grid.plugin.CellEditing' ,{ clicksToEdit: 2 })
-		]
+            ,Ext.create('Ext.grid.plugin.CellEditing' ,{ clicksToEdit: 2 })
+        ]
         ,header: !true
-		,dockedItems: [{
+        ,dockedItems: [{
             xtype: 'toolbar',
             items: [
-			/*{
+            /*{
                 text:'Прочитать из GSM'
                 //,tooltip:'Добавить новый торговый объект для регистрации',
                 ,iconCls:'add'
-				,,handler: Ext.smspasteS.removeAll
+                ,,handler: Ext.smspasteS.removeAll
             }, '-'
-			,{
+            ,{
                 itemId: 'removeButton'
                 ,text:'Удалить из GSM'
                 //,tooltip:'Принудительно деактивировать торговый объект'
                 ,iconCls:'remove'
                 ,disabled: !true
             }
-			,*/{	xtype: 'pagingtoolbar'
-				,store: taout
-				,dock: 'top'
-				,beforePageText: 'страница'
-				,afterPageText: 'из {0}'
-				,displayInfo: true
-	            ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
-				,emptyMsg: "Ничего не загружено"
-			}]
+            ,*/{	xtype: 'pagingtoolbar'
+                ,store: taout
+                ,dock: 'top'
+                ,beforePageText: 'страница'
+                ,afterPageText: 'из {0}'
+                ,displayInfo: true
+                ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
+                ,emptyMsg: "Ничего не загружено"
+            }]
         }]
     }// grid
-			]// tab items
+            ]// tab items
         },{
             title: 'Принятые SMS'
             ,closable: !true
-			,layout:'fit'
-			,iconCls: 'icon-grid'
-			,items:[
-	{ 	xtype:'grid'
-		,layout:'fit'
+            ,layout:'fit'
+            ,iconCls: 'icon-grid'
+            ,items:[
+    { 	xtype:'grid'
+        ,layout:'fit'
         ,store: tain
         ,columns: [
-			{xtype: 'rownumberer' ,width: 30}
+            {xtype: 'rownumberer' ,width: 30}
             ,{text: 'Текст' ,flex: 1, dataIndex: 'b'}
             ,{text: 'Номер' ,width: 111 ,dataIndex: 'num'}
             ,{text: 'Статус',width: 30 ,dataIndex: 'sid'}
@@ -1198,287 +1198,287 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
 +'<p style="border-bottom: blue solid 1px"><b>Raw text: </b>{m}</p>'
         }]
         ,header: !true
-		,dockedItems: [{
+        ,dockedItems: [{
             xtype: 'toolbar',
             items: [
-			{
-				itemId: 'gsmemR'
+            {
+                itemId: 'gsmemR'
                 ,text:'Прочитать SIM'
                 ,tooltip:'Чтение памяти SMS всех модулей'
                 ,iconCls:'add'
-				,handler: read_gsm_mem
-				,disabled: !true
+                ,handler: read_gsm_mem
+                ,disabled: !true
             }, '-'
-			,{
+            ,{
                 itemId: 'gsmemD'
                 ,text:'Отчистить SIM'
                 ,tooltip:'Отчистка памяти SMS всех модулей'
                 ,iconCls:'remove'
-				,handler: delt_gsm_mem
+                ,handler: delt_gsm_mem
                 ,disabled: !true
             }
-			,{	xtype: 'pagingtoolbar'
-				,store: tain
-				,dock: 'top'
-				,beforePageText: 'страница'
-				,afterPageText: 'из {0}'
-				,displayInfo: true
-	            ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
-				,emptyMsg: "Ничего не загружено"
-			}]
+            ,{	xtype: 'pagingtoolbar'
+                ,store: tain
+                ,dock: 'top'
+                ,beforePageText: 'страница'
+                ,afterPageText: 'из {0}'
+                ,displayInfo: true
+                ,displayMsg: 'Записи с {0}-й по {1}-ю. Всего: {2}'
+                ,emptyMsg: "Ничего не загружено"
+            }]
         }]
     }// grid
-			]// tab items
+            ]// tab items
         }]
-		,plugins: [{
+        ,plugins: [{
                 ptype: 'tabscrollermenu'
                 ,maxText  : 15
                 ,pageSize : 5
             }
-			,Ext.create('Ext.ux.TabReorderer')
-		]
-				})
-			]
+            ,Ext.create('Ext.ux.TabReorderer')
+        ]
+                })
+            ]
           },{             region: 'east'
 //////////////////////////
-			,title: 'USSD', collapseMode: 'mini'
+            ,title: 'USSD', collapseMode: 'mini'
             ,collapsible: true, collapsed: !true, floatable: true, split: true
             ,minWidth: 120, minHeight: 140, width: 200
             ,layout: { type: 'vbox', align: 'stretch', padding: 5 }
-			,layout: 'border'
+            ,layout: 'border'
             ,items: [
-				{	region: 'north'
-				,items: [
-	Ext.create('Ext.form.Panel', { title: 'Отправка USSD'
-		,layout: { type: 'vbox', align: 'stretch', padding: 5 }
+                {	region: 'north'
+                ,items: [
+    Ext.create('Ext.form.Panel', { title: 'Отправка USSD'
+        ,layout: { type: 'vbox', align: 'stretch', padding: 5 }
         ,height: 177
         ,url: 'ussd.json'
         ,items: [
             {   xtype: 'combobox'
-				,fieldLabel: 'Ручной USSD'
-				,labelAlign:'top'
-				,id: 'ussdNumber'
+                ,fieldLabel: 'Ручной USSD'
+                ,labelAlign:'top'
+                ,id: 'ussdNumber'
                 ,name: 'ussdNumber'
-				,store: ussdC
-				,queryMode: 'local'
-				,displayField: 'd'
-				,valueField: 'n'
+                ,store: ussdC
+                ,queryMode: 'local'
+                ,displayField: 'd'
+                ,valueField: 'n'
             }
-			,{   xtype: 'combobox'
-				,width:377 //, anchor: '-5 -5'
-				,fieldLabel:'Модуль (SIM) для отправки'
-				,labelAlign:'top'
-				//,labelWidth:200
-				,id: 'ussdModule'
-				,name: 'module'
-				,store: modulesC
-				,editable:!true
-				//,queryMode: 'local'
-				,displayField: 'd'
-				,valueField: 'd'
-				,value: modulesC.data.get(0)
-			}
-			,{  xtype: 'button'
-				,text: 'Отправить запрос'
+            ,{   xtype: 'combobox'
+                ,width:377 //, anchor: '-5 -5'
+                ,fieldLabel:'Модуль (SIM) для отправки'
+                ,labelAlign:'top'
+                //,labelWidth:200
+                ,id: 'ussdModule'
+                ,name: 'module'
+                ,store: modulesC
+                ,editable:!true
+                //,queryMode: 'local'
+                ,displayField: 'd'
+                ,valueField: 'd'
+                ,value: modulesC.data.get(0)
+            }
+            ,{  xtype: 'button'
+                ,text: 'Отправить запрос'
                 ,handler: ussdH
             }
-			,{  xtype: 'button'
-				,text: 'Получить баланс'
+            ,{  xtype: 'button'
+                ,text: 'Получить баланс'
                 ,handler: ussdH
             }
         ]
     })
-			]}
-			,{	region: 'center'
-				,autoScroll: true
-				,items: [
-				{	xtype: 'component'
-					,html: '<div style="color:green"><b id="id_ussdlog_head">_USSD_</b></div>'
-				}
-				]
-			}
-			]
+            ]}
+            ,{	region: 'center'
+                ,autoScroll: true
+                ,items: [
+                {	xtype: 'component'
+                    ,html: '<div style="color:green"><b id="id_ussdlog_head">_USSD_</b></div>'
+                }
+                ]
+            }
+            ]
           },{              region: 'south', title: 'Сообщения / Logs and info | Разработано специально для Master Telecom (C) 2012 <olecom@gmail.com>'
 ///////////////////////////
             ,collapsed: true ,collapsible: true, split: true, height: 200, minHeight: 120
             ,layout: { type: 'border', padding: 5 }
             ,items: [{
-				region: 'center', title: 'GSM/SMS инфо'
-				,autoScroll: true, minWidth: 80
-				,html: '<div style="color:green"><b id="id_gsmlog_head">_gsm_</b></div>'
+                region: 'center', title: 'GSM/SMS инфо'
+                ,autoScroll: true, minWidth: 80
+                ,html: '<div style="color:green"><b id="id_gsmlog_head">_gsm_</b></div>'
               }, {
                 region: 'east', title: 'Логи приложения / nodeJS app logs '
-				,autoScroll: true, flex: 1, minWidth: 80, split: true, collapsible: true
-				,html: '<b id="id_srvlog_head">_srv_</b>'
+                ,autoScroll: true, flex: 1, minWidth: 80, split: true, collapsible: true
+                ,html: '<b id="id_srvlog_head">_srv_</b>'
               }, {
                 region: 'west', title: 'Ошибки приложения / nodeJS app errors '
                 ,autoScroll: true, flex: 1, minWidth: 80, split: true, collapsible: true, collapseMode: 'mini'
-				,html: '<div class="r"><b id="id_errlog_head">_err_</b></div>'
+                ,html: '<div class="r"><b id="id_errlog_head">_err_</b></div>'
               }
-			]
+            ]
           }
-		]
+        ]
     })
-	Ext._vp = vp
-	Ext._op = ''
-	Ext._log = function(msg, log) {
-		if (!log) log = Ext._logview
-		if (/^err/.test(msg)) {
-			msg = '<div class="r">'+msg+'</div>'
-		}
-		Ext.DomHelper.insertBefore(log, msg + "<br/>")
-		log.scrollIntoView(false)
-		if(console) console.log(msg)
-	}
+    Ext._vp = vp
+    Ext._op = ''
+    Ext._log = function(msg, log) {
+        if (!log) log = Ext._logview
+        if (/^err/.test(msg)) {
+            msg = '<div class="r">'+msg+'</div>'
+        }
+        Ext.DomHelper.insertBefore(log, msg + "<br/>")
+        log.scrollIntoView(false)
+        if(console) console.log(msg)
+    }
 
-	Ext.Error.handle = function(err) {
-		Ext._log(err)
-		//if (err.someProperty == 'NotReallyAnError') {
-			// maybe log something to the application here if applicable
-		//	return true;
-		//}
-		// any non-true return value (including none) will cause the error to be thrown
-	}
+    Ext.Error.handle = function(err) {
+        Ext._log(err)
+        //if (err.someProperty == 'NotReallyAnError') {
+            // maybe log something to the application here if applicable
+        //	return true;
+        //}
+        // any non-true return value (including none) will cause the error to be thrown
+    }
 
-	Ext._ussd = function(msg) {
-		Ext._log(msg, Ext._ussdlogview)
-	}
-	Ext.smsTextLenH = smsTextLenH
+    Ext._ussd = function(msg) {
+        Ext._log(msg, Ext._ussdlogview)
+    }
+    Ext.smsTextLenH = smsTextLenH
 
-	var lm = new Ext.LoadMask(Ext.getCmp('pasteSMS'), {msg:'добавление...'});
+    var lm = new Ext.LoadMask(Ext.getCmp('pasteSMS'), {msg:'добавление...'});
 }, true)
 
 Ext.onReady(function() {
 
-	//Ext._smsp = Ext.ComponentManager.get('smspanel')
-	Ext._smsb = Ext.ComponentManager.get('smsBody')
-	Ext._smsbtn = Ext.ComponentManager.get('smsQueueBtn')
-	Ext._logview = document.getElementById('id_extjslog_head')
-	Ext._ussdlogview = document.getElementById('id_ussdlog_head')
+    //Ext._smsp = Ext.ComponentManager.get('smspanel')
+    Ext._smsb = Ext.ComponentManager.get('smsBody')
+    Ext._smsbtn = Ext.ComponentManager.get('smsQueueBtn')
+    Ext._logview = document.getElementById('id_extjslog_head')
+    Ext._ussdlogview = document.getElementById('id_ussdlog_head')
 
-	/* /Ext fix: have event from mouse paste data (mouse cut doesn't work too
-	Ext.get('smsBody').down('textarea', true).onpaste = Ext.smsTextLenH*/
+    /* /Ext fix: have event from mouse paste data (mouse cut doesn't work too
+    Ext.get('smsBody').down('textarea', true).onpaste = Ext.smsTextLenH*/
 
-	var sync_info = Ext._vp.down('#id_swhw_stat').store
-		,srvlog = document.getElementById('id_srvlog_head')
-		,gsmlog = document.getElementById('id_gsmlog_head')
-		,errlog = document.getElementById('id_errlog_head')
-		,sigq1 = Ext._vp.down('#id_sigq1')
-		,sigq2 = Ext._vp.down('#id_sigq2')
-		,sync_extjs_nodejs = function() {
-			Ext.defer(sync_extjs_nodejs, 7777)
-			sync_info.load(function(recs, op, noerr) {
-			var sd = sync_info.getProxy().getReader().rawData
-				,d = Ext._ti()
-				,sigqv1	,sigqv2
+    var sync_info = Ext._vp.down('#id_swhw_stat').store
+        ,srvlog = document.getElementById('id_srvlog_head')
+        ,gsmlog = document.getElementById('id_gsmlog_head')
+        ,errlog = document.getElementById('id_errlog_head')
+        ,sigq1 = Ext._vp.down('#id_sigq1')
+        ,sigq2 = Ext._vp.down('#id_sigq2')
+        ,sync_extjs_nodejs = function() {
+            Ext.defer(sync_extjs_nodejs, 7777)
+            sync_info.load(function(recs, op, noerr) {
+            var sd = sync_info.getProxy().getReader().rawData
+                ,d = Ext._ti()
+                ,sigqv1	,sigqv2
 
-			function inste(eid, m) { Ext.DomHelper.insertBefore(eid, m ? m : d) }
-			if (!noerr) {
-				Ext._log(d + 'err: sync_info store [' + noerr +']')
-				Ext.Msg.show({ title:'Фатальная ошибка'
+            function inste(eid, m) { Ext.DomHelper.insertBefore(eid, m ? m : d) }
+            if (!noerr) {
+                Ext._log(d + 'err: sync_info store [' + noerr +']')
+                Ext.Msg.show({ title:'Фатальная ошибка'
 ,msg:'<b>Ядро программы не отвечает.</b><br/><br/>sync_info.load():' + noerr
-					,buttons: Ext.Msg.OK ,icon: Ext.Msg.ERROR
-				})
-				//Ext.defer(sync_extjs_nodejs, 7777)
-				return
-			}
-		  if(sd.modules.length > 0) {
-			if (sd.errs.length > 0) {
+                    ,buttons: Ext.Msg.OK ,icon: Ext.Msg.ERROR
+                })
+                //Ext.defer(sync_extjs_nodejs, 7777)
+                return
+            }
+          if(sd.modules.length > 0) {
+            if (sd.errs.length > 0) {
 
-			  inste(errlog)
-			  for (var i in sd.errs) {
-				var em = sd.errs[i]
-				inste(errlog, em + "<br/>")
-				if(console) console.error(em)
-			   do {
-				var m = { title:'Фатальная ошибка'
-						,buttons: Ext.Msg.OK//CANCEL
-						,icon: Ext.Msg.ERROR
-						,fn: function(bId, txt, opt){
-							Ext._log('bId: ' + bId+' txt: ' + txt + ' opt: ' + opt)
-						}
-					}
-				if(/FATAL ERROR/.test(em)) {
+              inste(errlog)
+              for (var i in sd.errs) {
+                var em = sd.errs[i]
+                inste(errlog, em + "<br/>")
+                if(console) console.error(em)
+               do {
+                var m = { title:'Фатальная ошибка'
+                        ,buttons: Ext.Msg.OK//CANCEL
+                        ,icon: Ext.Msg.ERROR
+                        ,fn: function(bId, txt, opt){
+                            Ext._log('bId: ' + bId+' txt: ' + txt + ' opt: ' + opt)
+                        }
+                    }
+                if(/FATAL ERROR/.test(em)) {
 m.msg = '<b>Что-то не то с конфигурацией.</b><br/><br/>' + em
-				} else if(/timeout AT/.test(em)) {
+                } else if(/timeout AT/.test(em)) {
 m.msg = '<b>Модемом не отвечает на команды.</b><br/><br/>'+
-		'Таймаут AT команды модема.<br/><br/>' + em
+        'Таймаут AT команды модема.<br/><br/>' + em
 //m.buttonText = { ok: 'OK', cancel: 'Прекратить попытки (освободить очередь)' }
-				} else if (/ECONNREFUSED/.test(em)){
+                } else if (/ECONNREFUSED/.test(em)){
 m.msg = '<b>Невозможно подключиться к GSM модулю.</b><br/><br/>' + em
-				} else if (/FATAL GSMNET/.test(em)){
-				Ext.StoreManager.get('taq').loadPage(1, Ext.ui_reloadcb)
+                } else if (/FATAL GSMNET/.test(em)){
+                Ext.StoreManager.get('taq').loadPage(1, Ext.ui_reloadcb)
 m.msg = '<b>GSM сеть отказывается работать.</b><br/><br/>' + em
-				} else if (/TELNET ERR/.test(em)){
+                } else if (/TELNET ERR/.test(em)){
 m.title = 'Telnet связсь с устройством'
 m.msg = '<b>Ошибка комуникации ядра с устройством через telnet.</b><br/><br/>' + em
-				} else if (/TIMEOUT SMS/.test(em)){
-				Ext.StoreManager.get('taq').loadPage(1, Ext.ui_reloadcb)
+                } else if (/TIMEOUT SMS/.test(em)){
+                Ext.StoreManager.get('taq').loadPage(1, Ext.ui_reloadcb)
 m.title = 'Обработка SMS'
 m.msg = '<b>Вышло время команды обработки SMS.</b><br/><br/>' + em
-				} else if (/NOLINK/.test(em)){
+                } else if (/NOLINK/.test(em)){
 m.title = 'Ядро'
 m.msg = '<b>Отказ в работе TELNET или GSM.</b><br/><br/>' + em
-				} else if (/ATERR/.test(em)){
+                } else if (/ATERR/.test(em)){
 m.title = 'Команды модему'
 m.msg = '<b>Команда модему возвратила ошибку.<br/>Возможно проблемы в SIM карте или GSM сети.</b><br/><br/>' + em
-				} else break
-				if (Ext.smsuimsg) Ext.Msg.show(m)
-			   } while(!true)
-			  }
-			  errlog.scrollIntoView(false)
-			}
-			if (sd.gsms.length > 0) {
-			  inste(gsmlog)
-			  for (var i in sd.gsms) {
-				inste(gsmlog, sd.gsms[i] + "<br/>")
-			  }
-			  gsmlog.scrollIntoView(false)
-			}
-			if (sd.logs.length > 0) {
-			  inste(srvlog)
-			  for (var i in sd.logs) {
-				inste(srvlog, sd.logs[i] + "<br/>")
-			  }
-			  srvlog.scrollIntoView(false)
-			}
-		  }
-		  try {
-		  	sigqv1 = eval(sd.modules[0].sigq)
-			sigqv2 = sd.modules[1] ? eval(sd.modules[1].sigq) : 0
-			if(sigqv1 != sigq1.value || '?' == sigq1.text[0])
-				sigq1.updateProgress(sigqv1, sd.modules[0].op + ': ' + Math.ceil(sigqv1*100) + '%')
+                } else break
+                if (Ext.smsuimsg) Ext.Msg.show(m)
+               } while(!true)
+              }
+              errlog.scrollIntoView(false)
+            }
+            if (sd.gsms.length > 0) {
+              inste(gsmlog)
+              for (var i in sd.gsms) {
+                inste(gsmlog, sd.gsms[i] + "<br/>")
+              }
+              gsmlog.scrollIntoView(false)
+            }
+            if (sd.logs.length > 0) {
+              inste(srvlog)
+              for (var i in sd.logs) {
+                inste(srvlog, sd.logs[i] + "<br/>")
+              }
+              srvlog.scrollIntoView(false)
+            }
+          }
+          try {
+          	sigqv1 = eval(sd.modules[0].sigq)
+            sigqv2 = sd.modules[1] ? eval(sd.modules[1].sigq) : 0
+            if(sigqv1 != sigq1.value || '?' == sigq1.text[0])
+                sigq1.updateProgress(sigqv1, sd.modules[0].op + ': ' + Math.ceil(sigqv1*100) + '%')
 
-			if(sigqv2) {
-				if(!sigq2.isVisible())
-					sigq2.setVisible(true)
-				if(sigqv2 != sigq2.value || '?' == sigq2.text[0])
-					sigq2.updateProgress(sigqv2, sd.modules[1].op + ': ' + Math.ceil(sigqv2*100) + '%' )
-			} else if(sigq2.isVisible())
-				sigq2.updateProgress(0, '??: 0%' )
+            if(sigqv2) {
+                if(!sigq2.isVisible())
+                    sigq2.setVisible(true)
+                if(sigqv2 != sigq2.value || '?' == sigq2.text[0])
+                    sigq2.updateProgress(sigqv2, sd.modules[1].op + ': ' + Math.ceil(sigqv2*100) + '%' )
+            } else if(sigq2.isVisible())
+                sigq2.updateProgress(0, '??: 0%' )
 
-			if(sd.stats[0].gsm) {
-				document.getElementById('gsmid').innerHTML = sd.stats[0].gsm
-				if(!/^conn/.test(sd.stats[0].gsm)) {
-					Ext.getStore('modules').load()// if TA link is up
-				}
-			}
-			if(sd.refresh){
-				Ext.getStore('taout').loadPage(1)
-				Ext.getStore('taq').loadPage(1)
-			}
-		   } catch (e) {}
-		  }
-		  )
-		}
-	if (!sync_info)
-		Ext._log("sync_info is null (too fast!)")
-	Ext.defer(sync_extjs_nodejs, 7777)
-	Ext.sync_extjs_nodejs = sync_extjs_nodejs
-	Ext.smspasteS.add({}),Ext.getCmp('pasteSMS').getView().onCellSelect({row:0,column:0})
+            if(sd.stats[0].gsm) {
+                document.getElementById('gsmid').innerHTML = sd.stats[0].gsm
+                if(!/^conn/.test(sd.stats[0].gsm)) {
+                    Ext.getStore('modules').load()// if TA link is up
+                }
+            }
+            if(sd.refresh){
+                Ext.getStore('taout').loadPage(1)
+                Ext.getStore('taq').loadPage(1)
+            }
+           } catch (e) {}
+          }
+          )
+        }
+    if (!sync_info)
+        Ext._log("sync_info is null (too fast!)")
+    Ext.defer(sync_extjs_nodejs, 7777)
+    Ext.sync_extjs_nodejs = sync_extjs_nodejs
+    Ext.smspasteS.add({}),Ext.getCmp('pasteSMS').getView().onCellSelect({row:0,column:0})
 
-	Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
-				,title:"Сообщение" ,msg:"Вставить приветствие клиенту."})
+    Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
+                ,title:"Сообщение" ,msg:"Вставить приветствие клиенту."})
 })
 })(Ext)
 </script>
