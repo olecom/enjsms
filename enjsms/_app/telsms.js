@@ -1,4 +1,4 @@
-﻿/*====---- APP: self process management ----====*/
+/*====---- APP: self process management ----====*/
 (function(require ,process ,log ,cerr ,eval ,setTimeout ,clearTimeout ,RegExp ,Math ,String) {
 	var http = require('http'), net = require('net'), inspect = require('util').inspect
 	,ctl_runs = null, app_runs = null, db_runs = null
@@ -87,7 +87,7 @@ Leaving hardware flow control unconsidered the Customer Application (TE) is coup
 with the XT55 (ME) via a receive and a transmit line.
 Since both lines are driven by independent devices collisions may (and will) happen,
 i.e. while the TE issues an AT command the XT55 starts sending an URC. This probably
-will lead to the TE’s misinterpretation of the URC being part of the AT command’s
+will lead to the TEвЂ™s misinterpretation of the URC being part of the AT commandвЂ™s
 response.
 To avoid this conflict the following measures must be taken:
 = If an AT command is finished (with "OK" or "ERROR") the TE shall always wait at
@@ -178,6 +178,7 @@ _gsm("get: noop")
 	,this.do_release = function(){
 _gsm('gsm do release')
 		ta._handle = ta.__handle ; TE_ME_mode = null// std handler && its mode
+		if(ta._appcb) ta._appcb = null// multimodule cmds can't clear this
 		process.nextTick(_do_TELNET2MODULES_cmd_loop)
 	}
 	,this._cmd_get = 'get'
@@ -222,7 +223,7 @@ _gsm('OK we in smsmem ta.curm.cmdq: ' + ta.curm.cmdq)
 
 +CMGL: 0,"REC READ","+375297656850",,"08/12/01,10:16:24+08"
 0414043E04310440043E04350020044304420440043E002100200421043E043B043D04350447043D
-[…]
+[вЂ¦]
 +CMGL: 21,"REC READ",6,233,"+375298022483",145,"12/05/15,03:16:34+12","12/05/15,03:16:39+12",0
 +CMGL: 23,"REC READ",6,252,"+375298022483",145,"12/05/24,08:29:48+12","12/05/24,08:29:54+12",0
 +CMGL: 11,"REC UNREAD",6,229,"+375298022483",145,"12/05/15,03:00:37+12","12/05/15,03:00:42+12",0
@@ -270,7 +271,7 @@ _gsm('sms 2 read: ' + m)
 				} else {// tail sync + read exactly m "shall be records": /^[+]CMGL: /
 					if((ta._sync_ok == l) && (ta._yes_next == gsmtel_runs)){
 						clearTimeout(ta._cmdTimeoutH)
-		db_read_mem((ta.rcvd_sms.join('\n') + '\n').split('+CMGL'), 'ALL')
+			db_read_gsm_mem((ta.rcvd_sms.join('\n') + '\n').split('+CMGL'))
 						ta.rcvd_sms.splice(0)
 						return ta._yes_next// obviously it will be OK or timeout
 					}
@@ -295,8 +296,8 @@ _gsm('sms 2 read: ' + m)
 	//167 = 1 day = 24 hours sms validity period:> 12+(167-143)*30/60
 	//0 = 0 (higher protocol)
 	//8 = UCS2, 0 = GSM codepages
-	,this._sms_smp_ucs2 = 'ate0+csmp=49,167,0,8'
-	,this._sms_smp_asci = 'ate0+csmp=49,167,0,0'
+	,this._sms_smp_ucs2 = 'ate0;+csmp=49,167,0,8'
+	,this._sms_smp_asci = 'ate0;+csmp=49,167,0,0'
 	,this._timeoutSendSMS = 1024 << 2
 	,this._smst = this._timeoutSendSMS
 	,this.sms2send = []//+CMGS: 152     at cmd got sms id
@@ -324,8 +325,6 @@ _gsm('sms write ESC + at')
 NOTE: 'release' will end this cmdq
 */
 
-//!!		ta.curm.cmdq.shift()// `sms`
-//!!		ta._cmd = ta.curm.cmdq[0]
 		ta._cmd = ta.sms2send[0].atcmd
 		gsmtel_runs = ta._cmd// setup timeout flag
 
@@ -335,7 +334,6 @@ NOTE: 'release' will end this cmdq
 		ta._sync_ok = /^>/
 _gsm('sms: ' + ta._cmd)
 		sock.write(ta._cmd+ta._cmdle)
-//!!		ta.sent_sms.push(ta._cmd)// next element will follow with error or id
 		ta._handle = function(ta_lines_arr, samode){
 			var m ,i
 			for (i in ta._async_handlers) {//async handlers
@@ -354,7 +352,6 @@ OK        |
 			if(gsmtel_runs == ta._cmd){
 				if(/ERROR/.test(ta_lines_arr[0])){
 					ta.sms2send[0].mid = ta_lines_arr[0]
-//!!					ta.sent_sms.push(ta_lines_arr[0])
 					return ta.do_smsTimeout(true)
 				}
 				gsmtel_runs = ta._smsle
@@ -367,28 +364,20 @@ _gsm('smH sms sync not err')
 			do {
 _gsm('smH i = ' + i + 'line: ' + ta_lines_arr[i] + 'ta._sync_ok: ' + ta._sync_ok)
 				if(/ERROR/.test(ta_lines_arr[i])){
-//!!					ta.sent_sms.push(ta_lines_arr[i])
 					ta.sms2send[0].mid = ta_lines_arr[i]
 					return ta.do_smsTimeout(true)
 				}
-				m = ta_lines_arr[i].match(/^[+]CMGS:(.*)$/)//ta._sync_ok
+				m = ta_lines_arr[i].match(/^[+]CMGS:(.*)$/)
 				if(m){// id of sms + time
-/*					m = m[1] + ' ' + (new Date().toISOString())
-_gsm('smsH sms id: ' + m)
-					ta.sent_sms.push(m)*/
 					ta.sms2send[0].dateS = new Date()
 					ta.sms2send[0].mid = parseInt(m[1])
 				}
 				m = null
 _gsm('smH atok test i = ' + i + 'line: ' + ta_lines_arr[i])
 				if(ta._atok.test(ta_lines_arr[i])){// sms sent, goto next sms
-//!!					ta.curm.cmdq.shift()// sms body
-//!!					m = ta.curm.cmdq[0]
-//!!					if(ta._cmd_release != m){
-//_gsm('more sms ta.curm.cmdq[0]: ' + m)
-//					ta.sms2send.shift()
 _gsm('sent sms: ' + inspect(ta.sms2send[0]))
-					delete ta.sms2send[0].atcmd
+					delete ta.sms2send[0].atcmd// no need in tech info in db
+					ta.sms2send[0].module = ta.curm.ownum + ' ' + ta.curm.modid
 					taout.save(ta.sms2send[0] ,function(e, rec){
 						if(e) {
 							_err('db err save sent sms: ' + e)
@@ -401,9 +390,6 @@ _gsm('db saved: ' + inspect(rec))
 						ta._cmd = ta.sms2send[0].atcmd
 						sock.write(ta._cmd + ta._cmdle)
 						gsmtel_runs = ta._cmd
-//!!						ta.sent_sms.push(ta._cmd)
-//!!						m = null
-//!!						ta.curm.cmdq.shift()
 						return ta._hsync// next sms
 					}
 					clearTimeout(ta._cmdTimeoutH)
@@ -918,25 +904,10 @@ _gsm("MV37X release. send CTRL+X CAN 0x18, after: " + ta._cmd_releaseTimeout)
 		ta._end_ch = /\]$/ // restore telnet from ATs
 		ta._err = ta.__nop
 		ta._handle = ta.releaseH
+		if(ta._appcb) ta._appcb = null
 		ta._cmd_releaseTimeout = 0// allow schedule modules
 		//process.nextTick(_do_TELNET2MODULES_cmd_loop)
 	}
-	/*,release: function() {
-//`release` gives back AT control on module, but any AT data is queued by module for next `get`
-//`release` does not clear modules's cmd queue. only errors by timeout do this and call scheduler
-		ta._cmd = ta._cmd_release
-		gsmtel_runs = ta._cmd
-		if(ta._in_releaseTimeout){// pending `release` called directly
-			clearTimeout(ta._in_releaseTimeout)
-			ta._cmd_releaseTimeout = 0
-			ta._in_releaseTimeout = null
-		}
-		if(ta._cmd_releaseTimeout > 0){
-_gsm("MV37X release timeout: " + ta._cmd_releaseTimeout)
-			ta._in_releaseTimeout = setTimeout(ta.do_release, ta._cmd_releaseTimeout)
-		} else ta.do_release()
-//returns nothing
-	}*/
 }
 
 var modring = 0
@@ -1055,9 +1026,7 @@ var gsmtel_addr = { //GSM_TELNET="localhost:8023"
 		 port: process.env.GSM_TELNET.replace(/[^:]*:/,'')
 		,fqdn: process.env.GSM_TELNET.replace(/:[^:]*/,'')
 	}
-	,gsmtel /*= net.connect(gsmtel_addr.port, gsmtel_addr.fqdn, gsmtel_ok)
-
-gsmtel.setTimeout(1024) //see NOTE below*/
+	,gsmtel
 
 function gsmtel_init() {
 	modring = 0
@@ -1176,9 +1145,11 @@ _gsm('db collection prefix: ' + tain)
 	taout = db.collection(tain+'_taout')
 	tain  = db.collection(tain+'_tain' )
 	tain.stats(function(e, stats){
-		if(stats.count <= 0)// if db income is empty, fill it from SIM
+		if(stats.count <= 0){// if db income is empty, fill it from SIM
 			for (var i in ta.modules)
 				ta.qcmds(ta.sms_mem_setup ,ta.modules[i].modid)
+			db_runs = 'init'
+		}
 	})
 
 gsmtel.on('connect', function(){
@@ -1400,7 +1371,7 @@ _gsm('smsbods: ' + inspect(smsbods))
 		else {
 			k = 0
 			for(j in smsbods) {
-				m = { dateQ: new Date() ,dateS: null ,mid: null}
+				m = { num: smsnums[i] ,dateQ: new Date() ,dateS: null ,mid: null ,module: null }
 				if(smsbods[j].ascii) {
 					m.atcmd   = ta._sms_smp_asci + ';+CMGS="'+smsnums[i]+'"'
 					m.m = smsbody.substr(k, k + smsbods[j].count)
@@ -1417,7 +1388,6 @@ _gsm('smsbods: ' + inspect(smsbods))
 
 	if(ta.sms2send.length > 0){
 _gsm('sms2send: ' + inspect(ta.sms2send))
-
 		ta.qcmds([ ta._sms_setup, 'sms' ], module)
 		process.nextTick(_do_TELNET2MODULES_cmd_loop)
 		return { success: true ,msg: 'SMS `AT` executed'}
@@ -1470,6 +1440,19 @@ app.post('/ussd.json', function (req, res) {
   }
 )
 
+app.get('/gsmemr.json', function (req, res) {
+//ExtJS table load: USSD and SMS from DB: start=80&limit=20
+	db_runs = ''
+	for (var i in ta.modules){
+		ta.qcmds(ta.sms_mem_setup ,ta.modules[i].modid)
+		db_runs += '>'
+	}
+	db_runs += 'E'
+	process.nextTick(_do_TELNET2MODULES_cmd_loop)
+	res.json({ success: true })
+  }
+)
+
 app.get('/tain.json', function (req, res) {
 //ExtJS table load: USSD and SMS from DB: start=80&limit=20
 	var r = {}
@@ -1478,6 +1461,21 @@ app.get('/tain.json', function (req, res) {
 				.limit(parseInt(req.query.limit), function(e, recin) {
 		r.data = recin
 		tain.stats(function(e, stats){
+			r.total = stats.count
+			res.json(r)
+		})
+	})
+  }
+)
+
+app.get('/taout.json', function (req, res) {
+//ExtJS table load: sent SMS
+	var r = {}
+	taout.find().sort({$natural: -1})
+				.skip(parseInt(req.query.start))
+				.limit(parseInt(req.query.limit), function(e, recout) {
+		r.data = recout
+		taout.stats(function(e, stats){
 			r.total = stats.count
 			res.json(r)
 		})
@@ -1623,13 +1621,13 @@ process.on('exit' ,function(){
 
 /*====---- APP: memory = data base ----====*/
 
-function db_read_mem(arr, mode){
+function db_read_gsm_mem(arr){
 /*
  == SMS-STATUS-REPORT ==:
 15: ": 21,"REC READ",6,233,"+375298022483",145,"12/05/15,03:16:34+12","12/05/15,03:16:39+12",0"
 smsas RE:      ^^^^^^^^+++^            das RE: ^++++++++++++++++++++^^^++++++++++++++++++++^
  == SMS-DELIVER ==:
-14: ": 20,"REC READ","+375297253059",,"10/04/21,15:11:51+12"\n003700390033003100350031003904210430…."
+14: ": 20,"REC READ","+375297253059",,"10/04/21,15:11:51+12"\n003700390033003100350031003904210430вЂ¦."
 smsd RE:       ^^^^^^^+++++++++++++^  ^++++++++++++++++++++^^ = dad
 */
 	var  smss = /READ",6,([^,]+),/
@@ -1639,12 +1637,9 @@ smsd RE:       ^^^^^^^+++++++++++++^  ^++++++++++++++++++++^^ = dad
 		,dad = /"([^"]+)"\n([\s\S]+)\n$/
 		,csms5 = /^050003/
 		,csms6 = /^060804/
+		,reports = []
 		,ucs2body
 		,m ,r ,i ,d
-
-	if (mode != 'ALL'){
-		// read unread sms status reports and check of mid
-	}
 
 	arr.shift()// remove empty first `split`
 _gsm('sms arr len: ' + arr.length)
@@ -1674,14 +1669,48 @@ _gsm('sms arr len: ' + arr.length)
 				r.p = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
 				d = m[2].match(gsmd)// dostavlen Date()
 				r.d = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
+				//if (status){// sms status reports and check of mid
+				//no deletes
+				reports.push(r)
+				//}
 			}
 		}
+		if(/^>/.test(db_runs))
+			if (!/,"REC UNREAD",/.test(r.m))
+				continue
+
 		tain.save(r ,function(e){
-			if(e) _err('db SIM save err: ' + e)
+			if(e) _err('db GSM save err: ' + e)
 		})
-		// we will look for every sent sms if there is delivery report
-		tain.ensureIndex({mid : 1} ,{sparse : true})
 	}
+	tain.ensureIndex({mid: 1} ,{sparse: true})
+	db_runs = db_runs.replace(/>/,'')// for every module
+	if(reports.length > 0){
+		for(i in reports){
+		// arg is send by value, not by ref, thus update is safe in loop
+			fix_mid_date_update(reports[i])
+		}
+	}
+}
+
+function fix_mid_date_update(d){
+var dl ,dh = (15*60*1000)// 15 minutes
+	// local send date +- possible delta with GSM time, can be in config
+	dl = new Date(d.p.getTime() - dh)
+	dh = new Date(d.p.getTime() + dh)
+	taout.find({mid: d.mid, dateS: {$gt: dl ,$lt: dh }} ,function(e ,r){
+		if(e) {
+			_err('db.taout mid err: ' + e)
+			return
+		}
+		if (r.length == 1){
+_log('4updater found: ' + inspect(r))
+			//real i.e. GSM send and receive time
+			taout.update({ _id: r[0]._id }, {
+				$set: { mid: -d.mid, dateS: d.p, dateR: d.d }
+			})
+		}
+	})
 }
 
 // init
@@ -1707,9 +1736,9 @@ function(aerr, a) {
 		setTimeout(db_run_check ,4096)
 		return
 	}
-	a.command({buildInfo: 1}, function(e, d) {
+	a.command({buildInfo: 1}, function(e ,d) {
 		if(e){
-			setTimeout(db_run_check,4096)
+			setTimeout(db_run_check ,4096)
 			_err('db.admin.command():' + e)
 			return
 		}
