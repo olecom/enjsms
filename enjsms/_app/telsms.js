@@ -17,7 +17,7 @@ function _chklen(logs) {
 }
 function _gsm(msg) { log (msg) ; _chklen(gsm_inf) ; gsm_inf.push(msg) ; return msg }
 function _log(msg) { log (msg) ; _chklen(srv_log) ; srv_log.push(msg) }
-function _err(msg) { cerr(msg) ; _chklen(err_log) ; err_log.push(msg) }
+function _err(msg) { cerr(msg) ; _chklen(err_log) ; err_log.push(msg) ; return msg }
 function _date(){ //ISODateString
     function pad(n){return n<10 ? '0'+n : n}
     var d = new Date()
@@ -178,7 +178,7 @@ _gsm("login: GSM via Terminal Telnet server")
             app_runs = 'SMSQ'// `get` is ok, sending sms from the db.taq
         return this._yes_next
     }
-    //,this.prototype.get = this.get
+    //,this.prototype.get = this.get - nice try, but incorrect. "prototype" is class not object property!
     ,this._in_releaseTimeout = null
     ,this._cmd_releaseTimeout = 0
     ,this.releaseH = this.__nop
@@ -386,6 +386,8 @@ _gsm('read done, call db_read_gsm_mem()')
     //8 = UCS2, 0 = GSM codepages
     ,this._sms_smp_ucs2 = 'ate0+csmp=49,167,0,8'
     ,this._sms_smp_asci = 'ate0+csmp=49,167,0,0'
+    //+(64:concatinated sms)
+    ,this._csms_smp_ucs2 = 'ate0+csmp=113,167,0,8'
     ,this._timeoutSendSMS = 1024 << 2
     ,this._smst = this._timeoutSendSMS
     ,this.sms2send = []//+CMGS: 152     at cmd got sms id
@@ -485,9 +487,11 @@ MV sends OK before actual send and +CMGS
 !!_gsm('smH wait for prompt "> "')
                     if('>' != ta_lines_arr[i].substr(0,1))
                         continue
-                    if(sms.atcmd.substr(0,20) == ta._sms_smp_ucs2){
-                        m = UCS2(sms.m)
-                    } else m = sms.m
+                    if(sms.udh){//Concatenated SMS
+                        m = '050003' + sms.csmsid + sms.udh + UCS2(sms.m)
+                    } else if(sms.atcmd.substr(0,20) == ta._sms_smp_ucs2){
+                        m = UCS2(sms.m)// single UNICODE
+                    } else m = sms.m//    and ASCII ones
 !!_gsm('sms write: ' + m + ta._smsle)
                     sock.write(m)
                     sock.write(ta._smsle)
@@ -521,7 +525,7 @@ MV sends OK before actual send and +CMGS
                         }
                         taq.remove({_id: sid} ,function(e, rec){
 !!_gsm('taq removed: ' + inspect(rec))
-                            if(e) {
+                            if(e){
                                 app_runs = 'SMBe'// taq.remove error when send is OK
                                 return _err('taq.remove error: ' + e)
                             }
@@ -560,7 +564,7 @@ MV sends OK before actual send and +CMGS
         }
         if(ta) {
             if(ta._appcb) {
-                ta._appcb('ussd timeout ' + ta._atdata.join('<br/>'))
+                ta._appcb(ta._atdata.join('<br/>'), 'ussd timeout')
                 ta._appcb = null
             }
             ta.release()
@@ -758,20 +762,27 @@ _gsm('at write: `' + atcmd + '`')
     }
     ,this._in_ussd = null
     ,this.CUSDht = function(atdata) {// ussd multiline tail async
+        var m
         if(ta._in_ussd) for(var i in atdata) {
             ta._atdata.push(atdata[i])// push multiline data
             //full reply or ussd error responses
-            if (/",[^,]*$/.test(atdata[i]) ||
+            if(m = atdata[i].match(/",([^,]*)$/) ||
                 /^[+]CUSD: .$/.test(atdata[i])) {// async RE: str start
-_gsm('USSD tail: ' + atdata[i] + ' ta._in_ussd: ' + ta._in_ussd)
+_gsm('USSD tail: ' + atdata[i] + ' ta._in_ussd: ' + ta._in_ussd + ' DCS:' + m[1])
                 if(ta._appcb) {
-                    ta._appcb(ta._atdata.join('<br/>'))
+                    var txt ,msg = ta._atdata.join('<br/>')
+                    if ('10' == ((parseInt(m[1]) >> 2) & 3).toString(2)){
+                    //   10 UCS2 (16bit)
+//test msg = "0412043004480020043D043E043C043504400020002B0033003700350032003900370036003400380035003200360020000A041F044004380020043E043F043B04300442043500200443043A04300437044B043204300439044204350020041C042204210020003200390037003600340038003500320036002E"
+                        txt = unUCS2(msg)
+                    } else txt = msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+                    ta._appcb(msg ,txt)
                     ta._appcb = null
                     ta._atdata.splice(0)
                 }
                 if('cancel' == 	ta._in_ussd) {
                     gsmtel.write('\u001b')// bad useing global var, but
-                    gsmtel.write('AT+CUSD=2')// don't care of result
+                    gsmtel.write('AT+CUSD=2'+ta._cmdle)// don't care of result
                 }
                 ta._in_ussd = null
                 ta.do_ussd_timeout()
@@ -942,7 +953,7 @@ _gsm('mcmdq in "'+modid+'": '+inspect(mcmdq))
 
 //NOTE: function() objects aren't simple {}, ME['GSM']._dscr is undefined via fun() {this._dscr}
 //      RegExp(undefined) matches everything /*if (!/^GSM$/.test(i)) */
-ME.GSM._dscr =          "GSM modem via Telnet interface"
+ME.GSM._dscr = "GSM modem via Telnet interface"
 ME.E220      = { _dscr: "HUAWEI_E220" }
 ME.MV37X     = { _dscr: "MV-374"
     ,logout: function(){
@@ -1251,21 +1262,25 @@ _gsm('tick out TE_ME_mode:' + TE_ME_mode)
 var gsmtel ,gsmtel_addr
 
 if(!/^[/C]/.test(process.env.GSM_ADDR)) {//tcp/ip or [/]dev/ or [C]OM#
-    gsmtel_addr= { //GSM_ADDR="localhost:8023"
+    gsmtel_addr = { //GSM_ADDR="localhost:8023"
          port: process.env.GSM_ADDR.replace(/[^:]*:/,'')
         ,fqdn: process.env.GSM_ADDR.replace(/:[^:]*/,'')
     }
 }// or files "/dev/tty" || "\\\\.\\COM16"
 
-function gsmtel_init() {
+function gsmtel_init(){
     modring = 0
     gsmtel_runs = null
     TE_ME_mode = 'login-mode'
     app.gsm = 'connecting....' //reloads modules store in extjs
+    for(var mod in ta.modules) ta.modules[mod].sigq = 0, ta.modules[mod].op = '??'
 }
 
-function gsmtel_configure() {
+function gsmtel_configure(){
     var model = process.env.GSM_MODEL, i, j
+
+if(!model) return _err('FATAL ERROR: GSM_MODEL is undefuned')
+
 //v0:,"_atok": /^0$/
 //NOTE: JSON.parse() doen't do REs, so it must be implemented in conf load
     ta = new ME.GSM
@@ -1325,9 +1340,9 @@ function gsmtel_configure() {
         for (i in ta.modules)
             ta.qcmds(j ,ta.modules[i].modid)
     } catch(e) {
-        _err('model JSON config err: ' + e + e.stack)
-        _gsm('JSON cfg err, using default module config')
-        ta = new ME.GSM
+        _err('fatal model JSON config err: ' + e + e.stack)
+        //_gsm('JSON cfg err, using default module config')
+        //ta = new ME.GSM
     }
     } else {
 //simple GSM_MODEL='HUAWEI_E220 HSDPA USB modem'
@@ -1343,7 +1358,7 @@ function gsmtel_configure() {
         ta._dscr = model
         ta.qcmds(ta.initcmds())
     }
-    if(!ta) return gsmtel.end() && _err('fatal `ta` is null')
+    if(!ta) return gsmtel.end(), _err('fatal `ta` is null')
     if(!ta._sms_schedule)// sms queue timing
         _err('fatal ta ||`ta._sms_schedule` is null')
     //db setup
@@ -1391,10 +1406,10 @@ or `node` will say:
     }
   }
 
+    if(gsmtel_configure()) return // initcmds are in cmdq, or error && exit
+
     gsmtel = net.connect(gsmtel_addr.port, gsmtel_addr.fqdn, gsmtel_ok)
     gsmtel.setTimeout(1024)//see NOTE in gsmtel_ok() above
-
-    gsmtel_configure()// initcmds are in cmdq
 
 gsmtel.on('connect', function(){
     gsmtel.setEncoding('ascii')
@@ -1450,7 +1465,7 @@ _gsm('gsmtel `end` event')
 gsmtel.on('error', function(e){
 //NOTE: net error handler must not be inside init callback!!!
     if (e) {
-         _err('gsm telnet {addr:'+process.env.GSM_ADDR+'} err : ' + e)
+         _err('FATAL ERROR gsm telnet {addr:'+process.env.GSM_ADDR+'} err : ' + e)
         gsmtel_init()
         setTimeout(gsmtel_ok, 4096)
         return
@@ -1462,7 +1477,7 @@ var buf ,startRead
 
 function gsmtel_setup_file(){
     if(!buf)
-        buf = new Buffer(128)
+        buf = new Buffer(160)
     gsmtel_runs = null
 _log('try2open special device file: ' + process.env.GSM_ADDR)
 fs.open(process.env.GSM_ADDR[0] == 'C' ? '\\\\.\\' + process.env.GSM_ADDR : process.env.GSM_ADDR
@@ -1623,8 +1638,9 @@ OK
  smsModule: module1 "+375297XXYY677"
 */
 
-function mk_sms_body(smsText) { // based on to_ascii() from uglify-js by Mihai Bazon
-    const smsA = 140, smsU = smsA / 2
+const smsA = 140 ,smsU = smsA / 2 ,csmsU = smsU - 3
+
+function mk_sms_body(smsText) { // based on idea in to_ascii() from uglify-js by Mihai Bazon
     var a = true, aa = true, ws, c = 0, tc = 0, s = []
 
     smsText.replace(/[\u0000-\uffff]/g, function(ch) {
@@ -1750,10 +1766,10 @@ app.post('/ussd.json', function (req, res){
         ,['AT+CUSD=1,"'+req.body.ussdNumber+'",15']
 //ExtJS ussd form reply format: { "success": true, "msg": "A command was done" }
 //http error reply is plain text (hacked connect's errorhandler middleware)
-        ,function(msg) {
-            msg = msg
+        ,function(msg, txt) {
+            //msg = msg
             tain.insert({ m: msg
-                ,b: msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+                ,b: txt //
                 ,num: req.body.ussdNumber
                 ,module: req.body.module
                 ,d: new Date()
@@ -1806,7 +1822,7 @@ app.get('/gsmemr.json', function (req, res){
 app.get('/tain.json', function (req, res) {
 //ExtJS table load: USSD and SMS from DB: start=80&limit=20
     var r = { success: false }
-    tain.find().sort({$natural: -1})
+    tain.find().sort({_id: -1})
                 .skip(parseInt(req.query.start))
                 .limit(parseInt(req.query.limit), function(e, recin) {
         if(e){ res.json(r) ; _err(e) ; return }
@@ -1824,7 +1840,7 @@ app.get('/tain.json', function (req, res) {
 app.get('/taout.json', function (req, res) {
 //ExtJS table load: sent SMS
     var r = { success: false }
-    taout.find().sort({$natural: -1})
+    taout.find().sort({_id: -1})
                 .skip(parseInt(req.query.start))
                 .limit(parseInt(req.query.limit), function(e, recout) {
         if(e){ res.json(r) ; _err(e) ; return }
@@ -1841,7 +1857,7 @@ app.get('/taout.json', function (req, res) {
 //'rest' proxy: `put` (no edit) and `post`(no add by store) are not needed
 app.get('/taq.json', function (req, res) {
     var r = { success: false }
-    taq.find().sort({$natural: 1})
+    taq.find().sort({_id: 1})
                 .skip(parseInt(req.query.start))
                 .limit(parseInt(req.query.limit), function(e, recout) {
         if(e){ res.json(r) ; _err(e) ; return }
@@ -2099,23 +2115,24 @@ var dl ,dh = (15*60*1000)// 15 minutes
     dl = new Date(d.p.getTime() - dh)
     dh = new Date(d.p.getTime() + dh)
 _gsm('update find sid: ' + d.sid)
-    taout.find({sid: d.sid, dateS: {$gt: dl ,$lt: dh } ,module: ta.curm.ownum}
+    taout.find({sid: d.sid ,dateS: {$gt: dl ,$lt: dh } ,module: ta.curm.ownum}
          ,function(e ,r){
+         _gsm('taout.find')
             if(e) {
                 _err('db.taout sid err: ' + e)
                 return
             }
             if (r.length == 1){
-_log('status report OK for: ' + inspect(r))
+_gsm('status report OK for: ' + inspect(r))
             //real i.e. GSM send and receive time
                 taout.update({ _id: r[0]._id }, {
                     $set: { sid: -d.sid, dateS: d.p, dateR: d.d }
                 })
-            }
+            } else _err('STATUS cannot find msg: sid='+d.sid+' dl='+dl+' dh='+dh)
         }
     )
 }
-
+var csmsid = 0
 function db_add_smsq(arr ,res){
     var r = { success: false }
     do {// check for null, array or one non array @arr element
@@ -2134,38 +2151,58 @@ function db_add_smsq(arr ,res){
         ,dbarr = []// processed data to be stored in the db
     for (i in arr){
         if (!arr[i].rcp) { _err((1+parseInt(i)) + 'й номер пуст.') ; continue }
-        i = arr[i]
-        b = mk_sms_body(i.txt) // and `i.rcp` elements
-        if(b ? !b.length : true) continue //skip empty
-        k = i.txt.length // txt offset
-        do { //for (j in b){ top to bottom, now: bottom to top (sms in phone are bottom to top)
-            j = b.pop()//[j] // ['dateQ' ,'m' ,'num' ,'module' , /*temp items:* / 'atcmd', 'pNum' , 'n']
-            m = { n:'n' ,dateQ: new Date()
-                 ,num: i.rcp.replace(/[^+]*([+][^+ ,;/|]*)/g,'$1').replace(/[-() ]/g,'')
-                /*.replace(/ *+/g,' ')
-                .replace(/ *[(]/g,' +375') .replace(/ *[+]375 *([+]375)/g,'$1')
-                .replace(/(-)|([)] *)/g,'').replace(/ +(\d\d) +/g,'$1').replace(/\s* /g,'')*/
-            }
-//TODO: propose module to sent, using module.numre configured RE
+        i = arr[i] ,k = i.txt.length // txt offset
+        i.rcp = i.rcp.replace(/[^+]*([+][^+ ,;/|]*)/g,'$1').replace(/[-() ]/g,'')
 
+        if(k > smsU && ta._csms){
+        var udh = Math.ceil(k/csmsU) ,seqn = 0
+            if (udh > 255) return _err('CSMS is too long') ,res.json(r)
+            csmsid = ++csmsid & 0xFF
+          do {
+            m = { n:'n' ,dateQ: new Date() ,num: i.rcp	}
+            if(!j){// first at cmd with smp, others are not
+                m.atcmd = ta._csms_smp_ucs2 + ';+CMGS="' + m.num + '"'
+                j = csmsU ,b = 0
+            } else {
+                m.atcmd = 'at'
+                b += j
+                j = (k > csmsU) ? csmsU : k
+                m.atcmd = 'at+CMGS="' + m.num + '"'
+            }
+            k -= j
+            seqn = ++seqn & 0xFF
+            m.udh = ((udh < 16) ? '0' : '') + udh.toString(16) + (seqn < 16 ? '0' : '') + seqn.toString(16)
+            m.csmsid = ((csmsid < 16) ? '0' : '') + csmsid.toString(16) // TODO get it from the phone book
+            m.m = i.txt.substr(b, j)// TODO UCS2() text before send
+//!!_gsm('csms m: ' + inspect(m))
+            dbarr.push(m)
+          } while(k)
+        } else {
+            b = mk_sms_body(i.txt) // and `i.rcp` elements
+            if(b ? !b.length : true) continue //skip empty
+          do { //for (j in b){ top to bottom, now: bottom to top (sms in phone are bottom to top)
+            j = b.pop()//[j] // ['dateQ' ,'m' ,'num' ,'module' , /*temp items:* / 'atcmd', 'pNum' , 'n']
+            m = { n:'n' ,dateQ: new Date() ,num: i.rcp	}
+//TODO: propose module to sent, using module.numre configured RE
             if(j.ascii) {
                 m.atcmd = ta._sms_smp_asci
             } else {
                 m.atcmd = ta._sms_smp_ucs2
             }
             m.atcmd += ';+CMGS="' + m.num + '"'
-_err('j,count: ' + j.count + ' k: ' + k)
+!!_gsm('j,count: ' + j.count + ' k: ' + k)
             k -= j.count ,m.m = i.txt.substr(k, k + j.count)
-_err(' k: ' + k + 'msg: ' + m.m)
+!!_gsm(' k: ' + k + 'msg: ' + m.m)
             dbarr.push(m)
-        } while(b.length)
+          } while(b.length)
+        }
     }
     if(!dbarr.length) res.json(r)
     else taq.update({ n:'n' } ,{ $unset:{ n:1 }} ,{ multi:1 } ,function(e){
       if(e){ return _err('taq.update new 2 old err: ' + e) }
       taq.insert(dbarr ,function(e, data){ // partial or full insert
-        if(!data || e) { _err('taq.save err: ' + e) } else r.success = true
-        if(data) data.forEach(function(i){ // clean interface for external users
+        if(!data.length || e){ _err('taq.insert err: ' + e) } else r.success = true
+        data.forEach(function(i){ // clean interface for external users
             delete i.n ; delete i.atcmd ; i.mid = i._id ; delete i._id
         })//like: { "dateQ": "2012-06-17T21:34:48.322Z", "m": "9++SMS 6", "mid": "4fde4d78989d06ec07000013" }...
         r.data = data // items for back referencing for external programms
