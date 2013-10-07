@@ -1,7 +1,7 @@
 /*====---- APP: self process management ----====*/
 (function(require ,process ,log ,cerr ,eval ,setTimeout ,clearTimeout ,RegExp ,Math ,String) {
 var http =require('http') ,net = require('net') ,inspect = require('util').inspect ,fs = require('fs')
-    ,ctl_runs = null, app_runs = null, db_runs = null
+    ,ctl_runs = null, app_runs = null, db_runs = null ,ui_event_sync_res = null
     ,err_log = [], gsm_inf = [], srv_log = [ 'Log start @[' + _date() + ']']
     ,smstr = 'sms' ,le ,u = '_' ,__nop = function(e) {}
     ,chartable = '\u0020\u001f\u001e\u001d\u001c\u001b\u001a\u0010'
@@ -17,8 +17,8 @@ function _chklen(logs) {
 }
 function _gsm(msg) { log (msg) ; _chklen(gsm_inf) ; gsm_inf.push(msg) ; return msg }
 function _log(msg) { log (msg) ; _chklen(srv_log) ; srv_log.push(msg) }
-function _err(msg) { cerr(msg) ; _chklen(err_log) ; err_log.push(msg) ; return msg }
-function _date(){ //ISODateString
+function _err(msg) { cerr(msg) ; _chklen(err_log) ; err_log.push(msg) ; ui_event('err') ; return msg }
+function _date(){ //ISODateString // TODO: there is Date.toISOString() thing
     function pad(n){return n<10 ? '0'+n : n}
     var d = new Date()
     return d.getUTCFullYear()+'-'
@@ -342,7 +342,7 @@ OK
                     }
                     m = l.match(/^[+]CPMS: "..",(\d+),/)
                     if(m){// +CPMS: "SM",24,30,"SM",24,30,"SM",24,30
-                        m = parseInt(m[1])
+                        m = parseInt(m[1] ,10)
                         if (m > 0){
                             gsmtel_runs = m// recs to read
 _gsm('sms 2 read: ' + m)
@@ -361,6 +361,7 @@ _gsm('read done, call db_read_gsm_mem()')
             db_read_gsm_mem((ta.rcvd_sms.join('\n') + '\n').split('+CMGL'))
                             ta.delete_sim_sms()
                         }
+                        ta.curm.mclr = null
                         return ta._yes_next// obviously it will be OK or timeout
                     }
                     ta.rcvd_sms.push(l)
@@ -441,6 +442,7 @@ NOTE: 'release' will end this cmdq
         ta._cmd = ta.sms2send[0].atcmd
         gsmtel_runs = ta._cmd// setup timeout flag
         ta._cmdTimeoutH = setTimeout(ta.do_smsTimeout, ta._smst)
+_gsm('setTimeout(ta.do_smsTimeout, ta._smst): ' + ta._smst)
         ta._end_ch = /[ \n]$/
         ta._atdata_handler = null
 //_gsm('sms: ' + ta._cmd)
@@ -471,9 +473,9 @@ MV sends OK before actual send and +CMGS
                 //sms.module = ta.curm.modid
                 if(/ERROR/.test(ta_lines_arr[0])){
                     sms.sid = ta_lines_arr[0]
+                    app_runs = 'SMSE'
                     return ta.do_smsTimeout(true)
                 }
-
             }
             i = 0
 !!_gsm('smH sms sync err && prompt check')
@@ -481,6 +483,7 @@ MV sends OK before actual send and +CMGS
 !!_gsm('smHerr i = ' + i + 'line: ' + ta_lines_arr[i])
                 if(/ERROR/.test(ta_lines_arr[i])){
                     sms.sid = ta_lines_arr[i]
+                    app_runs = 'SMSE'
                     return ta.do_smsTimeout(true)
                 }
                 if(gsmtel_runs != ta._smsle){
@@ -506,7 +509,7 @@ MV sends OK before actual send and +CMGS
                 m = ta_lines_arr[i].match(/^[+]CMGS:(.*)$/)
                 if(m){// id of sms + time
                     sms.dateS = new Date()
-                    sms.sid = parseInt(m[1])
+                    sms.sid = parseInt(m[1] ,10)
                     app_runs = 'WSMS'
                 }
                 m = null
@@ -523,6 +526,7 @@ MV sends OK before actual send and +CMGS
                             app_runs = 'SMBE'// taout.insert error when send is OK
                             return _err('taout.insert error: ' + e)
                         }
+                        _log('taout.update')//NOTE: this is UI cmd to update view
                         taq.remove({_id: sid} ,function(e, rec){
 !!_gsm('taq removed: ' + inspect(rec))
                             if(e){
@@ -536,6 +540,7 @@ MV sends OK before actual send and +CMGS
                     })// async race with shift???, seems like no
                     taql--
                     ta.sms2send.shift()// next sms in q
+!!_gsm('ta.sms2send: ' + inspect(ta.sms2send))
                     if(ta.sms2send.length > 0){
                         ta._cmd = sms.atcmd
                         sock.write(ta._cmd + ta._cmdle)
@@ -567,7 +572,8 @@ MV sends OK before actual send and +CMGS
                 ta._appcb(ta._atdata.join('<br/>'), 'ussd timeout')
                 ta._appcb = null
             }
-            ta.release()
+            if(0 == ta.curm.cmdq.length)
+                ta.release()
         }
 _gsm('ta.do_ussd_timeout, call release')
     }
@@ -757,8 +763,8 @@ _gsm('at write: `' + atcmd + '`')
                 break
             }
         }
-        if (d)
-            ta.curm.sigq = d.replace(/[^:]*:([^,]+).*/,'$1') +'/31'
+        if(d)
+            ta.curm.sigq = d.replace(/[^:]*:([^,]+).*/,'$1') +'/31', ui_event('csq ' + ta.curm.ownum)
     }
     ,this._in_ussd = null
     ,this.CUSDht = function(atdata) {// ussd multiline tail async
@@ -771,7 +777,7 @@ _gsm('at write: `' + atcmd + '`')
 _gsm('USSD tail: ' + atdata[i] + ' ta._in_ussd: ' + ta._in_ussd + ' DCS:' + m[1])
                 if(ta._appcb) {
                     var txt ,msg = ta._atdata.join('<br/>')
-                    if ('10' == ((parseInt(m[1]) >> 2) & 3).toString(2)){
+                    if ('10' == ((parseInt(m[1] ,10) >> 2) & 3).toString(2)){
                     //   10 UCS2 (16bit)
 //test msg = "0412043004480020043D043E043C043504400020002B0033003700350032003900370036003400380035003200360020000A041F044004380020043E043F043B04300442043500200443043A04300437044B043204300439044204350020041C042204210020003200390037003600340038003500320036002E"
                         txt = unUCS2(msg)
@@ -780,7 +786,8 @@ _gsm('USSD tail: ' + atdata[i] + ' ta._in_ussd: ' + ta._in_ussd + ' DCS:' + m[1]
                     ta._appcb = null
                     ta._atdata.splice(0)
                 }
-                if('cancel' == 	ta._in_ussd) {
+                if('cancel' == 	ta._in_ussd){
+_gsm('cancel ussd channel')
                     gsmtel.write('\u001b')// bad useing global var, but
                     gsmtel.write('AT+CUSD=2'+ta._cmdle)// don't care of result
                 }
@@ -1197,6 +1204,9 @@ _gsm('sch: ta.modqlenTotal: '+ta.modqlenTotal+' modring: '+modring)
         while (ta.curm.cmdq.length <= 0)
             _ring_modueles()// find and make current any module with cmds
     }
+    /*if(!chst)
+        check_sms_statuses()*/
+
     TE_ME_mode = ta._yes_next
     process.nextTick(_do_TE2ME_cmd_loop)
 _gsm('sch tick: selected "' + ta.curm.modid + '" modring: ' + modring)
@@ -1698,7 +1708,6 @@ app_sms = function(smsnum, smsbody, module) {
     return { success: !true ,msg: 'ME is undefined. Unexpected.'}
     }
     var i ,j ,k ,m
-//ascii and ucs2 body parts, ta._sms_smp
         ,smsbods = mk_sms_body(smsbody)
 //normalize numbers: +375 29 8077782 +375 (29) 8077782 (29) 80-777-82 +37529234234
 /*		,smsnums = smsnum.replace(/ +/g,' ')
@@ -1708,12 +1717,44 @@ app_sms = function(smsnum, smsbody, module) {
 //olecom +375(29)80-777-82, вася +345298077733; pedro +234 (34) 9009899
         ,smsnums = smsnum.replace(/[^+]*([+][^+ ,;/|]*)/g,'|$1').replace(/[-() ]/g,'').split('|')
     smsnums.shift()// first empty number after split
+    k = smsbody.length
+    ta._smst = ta._timeoutSendSMS
+    //if(k > smsU && ta._csms){
+    if((smsbods.length > 1) && ta._csms){
+    var udh = Math.ceil(k/csmsU) ,seqn = 0
+        if (udh > 255) return { success: !true ,msg: _err('CSMS is too long') }
+            csmsid = ++csmsid & 0xFF
+      for(i in smsnums) {
+        if(!smsnums[i])
+            _err((1+parseInt(i ,10)) + 'й номер пуст.')
+        else do {
+            m = { n:'n' ,dateQ: new Date() ,num: smsnums[i] }
+            if(!j){// first at cmd with smp, others are not
+                m.atcmd = ta._csms_smp_ucs2 + ';+CMGS="' + m.num + '"'
+                j = csmsU ,b = 0
+            } else {
+                m.atcmd = 'at'
+                b += j
+                j = (k > csmsU) ? csmsU : k
+                m.atcmd = 'at+CMGS="' + m.num + '"'
+            }
+            k -= j
+            seqn = ++seqn & 0xFF
+            m.udh = ((udh < 16) ? '0' : '') + udh.toString(16) + (seqn < 16 ? '0' : '') + seqn.toString(16)
+            m.csmsid = ((csmsid < 16) ? '0' : '') + csmsid.toString(16) // TODO get it from the phone book
+            m.m = smsbody.substr(b, j)// TODO UCS2() text before send
+!!_gsm('csms m: ' + inspect(m))
+            ta.sms2send.push(m)
+            ta._smst += ta._timeoutSendSMS// sms times timeout
+          } while(k)// if
+      }// for
+    } else {
+    //ascii and ucs2 body parts, ta._sms_smp
 _gsm("sms 2 " + smsnums)
 _gsm('smsbods: ' + inspect(smsbods))
-    ta._smst = ta._timeoutSendSMS
-    for(i in smsnums) {
+      for(i in smsnums) {
         if(!smsnums[i])
-            _err((1+parseInt(i)) + 'й номер пуст.')
+            _err((1+parseInt(i ,10)) + 'й номер пуст.')
         else {
             k = 0
             for(j in smsbods) {
@@ -1730,6 +1771,7 @@ _gsm('smsbods: ' + inspect(smsbods))
                 ta._smst += ta._timeoutSendSMS// sms times timeout
             }
         }
+      }
     }
 
     if(ta.sms2send.length > 0){
@@ -1823,8 +1865,8 @@ app.get('/tain.json', function (req, res) {
 //ExtJS table load: USSD and SMS from DB: start=80&limit=20
     var r = { success: false }
     tain.find().sort({_id: -1})
-                .skip(parseInt(req.query.start))
-                .limit(parseInt(req.query.limit), function(e, recin) {
+                .skip(parseInt(req.query.start ,10))
+                .limit(parseInt(req.query.limit ,10), function(e, recin) {
         if(e){ res.json(r) ; _err(e) ; return }
         r.data = recin
         tain.stats(function(e, stats){
@@ -1841,8 +1883,8 @@ app.get('/taout.json', function (req, res) {
 //ExtJS table load: sent SMS
     var r = { success: false }
     taout.find().sort({_id: -1})
-                .skip(parseInt(req.query.start))
-                .limit(parseInt(req.query.limit), function(e, recout) {
+                .skip(parseInt(req.query.start ,10))
+                .limit(parseInt(req.query.limit ,10), function(e, recout) {
         if(e){ res.json(r) ; _err(e) ; return }
         r.data = recout
         taout.stats(function(e, stats){
@@ -1858,8 +1900,8 @@ app.get('/taout.json', function (req, res) {
 app.get('/taq.json', function (req, res) {
     var r = { success: false }
     taq.find().sort({_id: 1})
-                .skip(parseInt(req.query.start))
-                .limit(parseInt(req.query.limit), function(e, recout) {
+                .skip(parseInt(req.query.start ,10))
+                .limit(parseInt(req.query.limit ,10), function(e, recout) {
         if(e){ res.json(r) ; _err(e) ; return }
         r.data = recout
         taq.stats(function(e, stats){
@@ -1885,8 +1927,35 @@ app.del('/taq.json/:id', function (req, res) {
   }
 )
 
+app.get('/wait_event.json', function (req, res){
+//instant notification of UI, which then loads 'swhw_stat.json' with actual info
+    if(ui_event_sync_res)
+        ui_event_sync_res.json({ ret: 'reload' })
+    ui_event_sync_res = res
+  }
+)
+
+function ui_event(ev){
+    if(ui_event_sync_res)
+        ui_event_sync_res.json({ ret: ev }) ,ui_event_sync_res = null
+//test: setTimeout(ui_event,7777)
+}
+//test: ui_event()
+
+/*var chst
+function check_sms_statuses(){
+    if(gsmtel_runs && ta && !ta.sms2send.length && !ta.curm.mclr && (!TE_ME_mode || /^yes/.test(TE_ME_mode))){
+        ta.qcmds(ta._cmd_smsmemr)
+        ta.curm.mclr = 'set'
+        TE_ME_mode = ta._yes_next
+        process.nextTick(_do_TE2ME_cmd_loop)
+    }
+    chst = setTimeout(check_sms_statuses ,7210)
+}*/
+
 app.get('/swhw_stat.json', function (req, res) {
-//ExtJS will load this once in a while into Ext Store for dataview
+//OLD: ExtJS will load this once in a while into Ext Store for dataview
+//NEW: see 'wait_event.json'
     var i, logs = [], gsms = [], errs = []
     if (srv_log.length > 0) {
         for (i in srv_log) { logs.push(app._htmlf(srv_log[i])) }
@@ -1916,7 +1985,7 @@ app.get('/swhw_stat.json', function (req, res) {
         ,modules: modules
         ,logs: logs, gsms: gsms, errs: errs
       }
-    if(app.gsm) app.gsm = null
+    //if(app.gsm) app.gsm = null
     if(app.refresh) { i.refresh = app.refresh , app.refresh = null }
     res.json(i)
   }
@@ -2033,14 +2102,17 @@ process.on('exit' ,function(){
 
 function db_read_gsm_mem(arr){
 /*
- == SMS-STATUS-REPORT ==:
+== SMS-STATUS-REPORT ==:
+For SMS-STATUS-REPORTs
++CMGL: <index>, <stat>, <fo>, <mr>, [<ra>], [<tora>], <scts>, <dt>, <st>
+
 15: ": 21,"REC READ",6,233,"+375298022483",145,"12/05/15,03:16:34+12","12/05/15,03:16:39+12",0"
 smsas RE:      ^^^^^^^^+++^            das RE: ^++++++++++++++++++++^^^++++++++++++++++++++^
  == SMS-DELIVER ==:
 14: ": 20,"REC READ","+375297253059",,"10/04/21,15:11:51+12"\n003700390033003100350031003904210430вЂ¦."
 smsd RE:       ^^^^^^^+++++++++++++^  ^++++++++++++++++++++^^ = dad
 */
-    var  smss = /READ",6,([^,]+),/
+    var  smss = /READ",\d,([^,]+),/
         ,smssidx = /^: (\d+)/
         ,smsd = /READ","([^"]+)"/
         ,gsmd = /(\d\d)[/](\d\d)[/](\d\d),(\d\d):(\d\d):(\d\d)/
@@ -2060,10 +2132,18 @@ _gsm('sms arr len: ' + arr.length)
 //d - date, number sent2 or msgid status, m -- raw message, b -- decoded body
         r = { module: ta.curm.ownum ? ta.curm.ownum : ta.curm.modid ,m: arr[i] }// default
         if(m = r.m.match(smsd)){
+            d = r.m.match(smssidx)
+if(d) ta.curm.cmdq.unshift('at+cmgd='+d[1])//schedule removing of msgs from TA's ME
             r.num = m[1]
             if(m = r.m.match(dad)){
+
                 d = m[1].match(gsmd)
-                r.d = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
+                /* js fuck:
+                > parseInt('08')
+                0
+                > parseInt('08',10)
+                8                    */
+                r.d = new Date('20'+d[1],parseInt(d[2] ,10)-1,d[3],d[4],d[5],d[6])
                 d = m[2]
                 if(csms5.test(d)){// multipart concatenated SMS
                     d = 12 // skip header, decode body. TODO join of bodies in one SMS
@@ -2079,21 +2159,22 @@ _gsm('sms arr len: ' + arr.length)
             if(actnums(r.m)) continue //activation sms number check
         } else if(m = r.m.match(smss)){
             d = r.m.match(smssidx)
-//dist if(d) ta.curm.cmdq.unshift('at+cmgd='+d[1])//remove status msgs from TA's ME
+if(d) ta.curm.cmdq.unshift('at+cmgd='+d[1])//remove status msgs from TA's ME
             r.sid = parseInt(m[1] ,10)
             if(m = r.m.match(das)){
                 d = m[1].match(gsmd)// poslan    Date()
-                r.p = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
+                r.p = new Date('20'+d[1],parseInt(d[2] ,10)-1,d[3],d[4],d[5],d[6])
                 d = m[2].match(gsmd)// dostavlen Date()
-                r.d = new Date('20'+d[1],parseInt(d[2])-1,d[3],d[4],d[5],d[6])
+                r.d = new Date('20'+d[1],parseInt(d[2] ,10)-1,d[3],d[4],d[5],d[6])
                 reports.push(r)
+_gsm('report: ' + inspect(r))
             }
         }
         if(/^>/.test(db_runs))
             if (!/,"REC UNREAD",/.test(r.m))
                 continue
         tain.insert(r ,function(e){
-            if(e) _err('tain.save err: ' + e)
+            if(e) _err('tain.insert err: ' + e)
         })
       }
       tain.ensureIndex({sid: 1} ,{sparse: true} ,function(e){
@@ -2114,12 +2195,12 @@ var dl ,dh = (15*60*1000)// 15 minutes
     // local send date +- possible delta with GSM time, can be in config
     dl = new Date(d.p.getTime() - dh)
     dh = new Date(d.p.getTime() + dh)
-_gsm('update find sid: ' + d.sid)
+_gsm('update find msg: ' + inspect(d))
     taout.find({sid: d.sid ,dateS: {$gt: dl ,$lt: dh } ,module: ta.curm.ownum}
          ,function(e ,r){
          _gsm('taout.find')
             if(e) {
-                _err('db.taout sid err: ' + e)
+                _err('db.taout sid find err: ' + e)
                 return
             }
             if (r.length == 1){
@@ -2127,6 +2208,11 @@ _gsm('status report OK for: ' + inspect(r))
             //real i.e. GSM send and receive time
                 taout.update({ _id: r[0]._id }, {
                     $set: { sid: -d.sid, dateS: d.p, dateR: d.d }
+                }
+                ,function(e ,r){
+                    _log('taout.update')//NOTE: this is UI cmd to update view
+                    if(e) return _err('db.taout sid update err: ' + e)
+                    ui_event('sms status update')
                 })
             } else _err('STATUS cannot find msg: sid='+d.sid+' dl='+dl+' dh='+dh)
         }
@@ -2150,11 +2236,14 @@ function db_add_smsq(arr ,res){
     var i ,j ,b ,k, m
         ,dbarr = []// processed data to be stored in the db
     for (i in arr){
-        if (!arr[i].rcp) { _err((1+parseInt(i)) + 'й номер пуст.') ; continue }
-        i = arr[i] ,k = i.txt.length // txt offset
+        if (!arr[i].rcp) { _err((1+parseInt(i ,10)) + 'й номер пуст.') ; continue }
+        i = arr[i] ,j = 0 ,k = i.txt.length // txt offset
         i.rcp = i.rcp.replace(/[^+]*([+][^+ ,;/|]*)/g,'$1').replace(/[-() ]/g,'')
 
-        if(k > smsU && ta._csms){
+        b = mk_sms_body(i.txt) // and `i.rcp` elements
+        if(b ? !b.length : true) continue //skip empty
+        //if(k > smsU && ta._csms){
+        if(b.length > 1 && ta._csms){
         var udh = Math.ceil(k/csmsU) ,seqn = 0
             if (udh > 255) return _err('CSMS is too long') ,res.json(r)
             csmsid = ++csmsid & 0xFF
@@ -2174,12 +2263,12 @@ function db_add_smsq(arr ,res){
             m.udh = ((udh < 16) ? '0' : '') + udh.toString(16) + (seqn < 16 ? '0' : '') + seqn.toString(16)
             m.csmsid = ((csmsid < 16) ? '0' : '') + csmsid.toString(16) // TODO get it from the phone book
             m.m = i.txt.substr(b, j)// TODO UCS2() text before send
-//!!_gsm('csms m: ' + inspect(m))
+!!_gsm('csms m: ' + inspect(m))
             dbarr.push(m)
           } while(k)
         } else {
-            b = mk_sms_body(i.txt) // and `i.rcp` elements
-            if(b ? !b.length : true) continue //skip empty
+            //b = mk_sms_body(i.txt) // and `i.rcp` elements
+            //if(b ? !b.length : true) continue //skip empty
           do { //for (j in b){ top to bottom, now: bottom to top (sms in phone are bottom to top)
             j = b.pop()//[j] // ['dateQ' ,'m' ,'num' ,'module' , /*temp items:* / 'atcmd', 'pNum' , 'n']
             m = { n:'n' ,dateQ: new Date() ,num: i.rcp	}
