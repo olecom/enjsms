@@ -1,5 +1,5 @@
 /*====---- APP: self process management ----====*/
-(function(require ,process ,log ,cerr ,eval ,setTimeout ,clearTimeout ,RegExp ,Math ,String) {
+(function(require ,process ,log ,cerr ,eval ,setTimeout ,clearTimeout ,RegExp ,Math ,String, Array) {
 var http =require('http') ,net = require('net') ,inspect = require('util').inspect ,fs = require('fs')
     ,ctl_runs = null ,app_runs = null ,db_runs = null //,ui_event_sync_res = null
     ,srv_log = [ 'Log start @[' + _date() + ']']
@@ -3141,5 +3141,5 @@ _err('ESC no SUB')
     res.end()
 })*/
 })(require ,process ,console.log ,console.error ,eval
-   ,setTimeout ,clearTimeout ,RegExp ,Math ,String)
+   ,setTimeout ,clearTimeout ,RegExp ,Math ,String, Array)
 //telsms.js ends here

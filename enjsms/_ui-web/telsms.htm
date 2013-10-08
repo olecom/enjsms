@@ -1,7 +1,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>SMS Master Telecom v0.12.01.2013 &copy; 2012</title>
+    <title>SMS Master Telecom v019.30.01.2013 &copy; 2012-2013</title>
     <link rel="shortcut icon" type="image/ico" href="/favicon.ico" />
     <link rel="stylesheet" href="extjs/resources/css/ext-all.css">
     <style>.r{color:red}.g{color:green}.wg{color:#34C421}.b{color:blue}
@@ -172,6 +172,7 @@ Ext.override(Ext.selection.CellModel, {
             ,{name: 'm'}
             ,{name: 'num'}
             ,{name: 'got'}
+            ,{name: 'mod'}
             ,{name: 'n'}
             ,{name: 'dateT', type: 'date', dateFormat: 'c'}
             ,{name: 'sid'}
@@ -231,13 +232,13 @@ var ussdC = Ext.create('Ext.data.Store',{
     })
     ,modulesC = Ext.create('Ext.data.Store',{
         storeId: 'modules'
-        ,fields: ['d']
+        ,fields: ['ownum' , 'd']
         ,proxy: { type: 'ajax' ,url: '/mods.json' ,reader: { type: 'json' } }
         ,autoLoad: { callback: function (rec, op, success) {//true
             if(!success) return
             var v = modulesC.data.get(0)
             Ext.getCmp('smsModule').setValue(v)
-            Ext.getCmp('ussdModule').setValue(v)
+            //Ext.getCmp('ussdModule').setValue(v)
         }}
         /*,data : [
          {d:'module1 "+375297776677"'}
@@ -292,7 +293,7 @@ var ussdC = Ext.create('Ext.data.Store',{
     Ext.smspasteS = Ext.create('Ext.data.Store',{
         storeId: 'smspaste'
         //smspaste: send pasted data into `taq` collection
-        ,fields: ['rcp' ,'txt' /*,'module'*/]
+        ,fields: ['rcp' ,'txt' ,'mod']
         ,proxy: { type: 'rest' ,url: '/smsq.json' ,batchActions: true
             ,reader: { type:'json' ,idProperty:'_id' ,root:'data'}
             ,writer: { type:'json' ,allowSingle: false}
@@ -627,11 +628,12 @@ var ussdP ,ussdH = function(){
         } else larr = txt.split('\n')
       do {
         if (!larr) break
+        var mod = Ext.getCmp('ussdModule').getValue()
         for(i in larr) {
             j = larr[i].split('\t')
             if(j && j.length > 0)
                 if (j[0] && j[1] && /^[+]/.test(j[0]))
-                    darr.push([j[0], j[1]])
+                    darr.push([j[0] ,j[1] ,j[2] ? j[2] : mod ])
         }
         if(darr.length > 0) {
             Ext.smspasteS.loadData(darr)
@@ -687,7 +689,7 @@ var app_tabs ,prep_tabs
             ,maxHeight:333
             ,layout: 'fit'
             ,items: [ prep_tabs = Ext.createWidget('tabpanel', {
-                activeTab: 0
+                activeTab: 1
                 ,defaults :{
                     bodyPadding: 2
                 },
@@ -744,7 +746,7 @@ var app_tabs ,prep_tabs
             ,editable:!true
             //,queryMode: 'local'//ComboBox : default is 'remote' for autocomplete
             ,displayField: 'd'
-            ,valueField: 'd'
+            ,valueField: 'ownum'
             ,value: modulesC.data.get(0)
         }
         ,{	xtype:'container'
@@ -876,6 +878,23 @@ Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
                   return metadata.tdAttr = editt, value
                 }
             }
+            ,{text: 'Номер модуля отправки', width: 177, dataIndex: 'mod'
+                ,editor: {	xtype:"combobox"
+                ,typeAhead: true
+                //,triggerAction: 'all'
+                ,selectOnTab: true
+                ,store: modulesC
+                ,queryMode: 'remote'
+                ,displayField: 'd'
+                ,valueField: 'ownum'
+                //listClass: 'x-combo-list-small'
+                }
+                ,renderer: function(value, metadata, record, rowIndex, colIndex, store){
+                  return metadata.tdAttr = editt, value
+                    //metadata.tdAttr = 'data-qtip="' + value + '"'
+                }
+            }
+
         ]
         ,plugins: [{ ptype: 'rowexpander'
             ,expandOnDblClick: false ,expandOnEnter: false
@@ -956,6 +975,20 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
         }
                 }
             }, '-'
+            ,{   xtype: 'combobox'
+                ,width:255 //, anchor: '-5 -5'
+                ,fieldLabel:'Через номер'
+                ,labelAlign:'left'
+                ,labelWidth:75
+                ,id: 'ussdModule'
+                ,name: 'module'
+                ,store: modulesC
+                ,editable:!true
+                //,queryMode: 'local'
+                ,displayField: 'd'
+                ,valueField: 'ownum'
+                //,value: modulesC.data.get(0)
+            }, '-'
             ,{
                 itemId: 'rmsmsq'
                 ,text: 'Удалить все'
@@ -1034,7 +1067,8 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                     xtype: 'toolbar', dock: 'bottom'
                     ,items:['управление:', ' ', { text: 'syncUI'
                         ,handler: function() {
-                            Ext.defer(Ext.wait_event, 0)
+                            //Ext.defer(Ext.wait_event, 0)
+                            Ext.defer(Ext.sync_extjs_nodejs, 0)
                         }
                       },{ text: 'renodeJS'
                         ,handler: function() {
@@ -1128,7 +1162,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             }
             ,{text: 'Получатель', width: 111 ,dataIndex: 'num' ,editor: { xtype:"textarea"} }
             ,{text: 'Добавлено в', width: 177,renderer: dateRndr, dataIndex: 'dateQ'}
-            ,{text: 'В модуле', width: 177,renderer: smodRndr, dataIndex: 'got'}
+            ,{text: 'Через модуль / номер SIM', width: 177,renderer: smodRndr, dataIndex: 'mod'}
             //,{text: 'Статус', dataIndex: 'status', renderer : objStatus}
             //,{text: 'Время отправки/доставки', width: 177,renderer: dateRndr, dataIndex: 'endDate'}
         ]
@@ -1458,7 +1492,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
         ,align: 'stretch', padding: 5 }
         ,border: false
         //,title: 'Отправка USSD'
-        ,height: 177
+        ,height: 100
         ,url: 'ussd.json'
         ,items: [
             {   xtype: 'combobox'
@@ -1471,7 +1505,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                 ,displayField: 'd'
                 ,valueField: 'n'
             }
-            ,{   xtype: 'combobox'
+/*			,{   xtype: 'combobox'
                 ,width:377 //, anchor: '-5 -5'
                 ,fieldLabel:'Модуль (SIM) для отправки'
                 ,labelAlign:'top'
@@ -1482,9 +1516,9 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                 ,editable:!true
                 //,queryMode: 'local'
                 ,displayField: 'd'
-                ,valueField: 'd'
+                ,valueField: 'ownum'
                 ,value: modulesC.data.get(0)
-            }
+            }*/
             ,{  xtype: 'button'
                 ,text: 'Отправить запрос'
                 ,handler: ussdH
@@ -1500,7 +1534,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                 ,autoScroll: true
                 ,items: [
                 {	xtype: 'component'
-                    ,html: '<div style="color:green"><b id="id_ussdlog_head">_USSD_</b></div>'
+                    ,html: '<b id="id_ussdnum"></b><div style="color:green"><b id="id_ussdlog_head">_USSD_</b></div>'
                 }
                 ]
             }
@@ -1628,6 +1662,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
     Ext._smsbtn = Ext.ComponentManager.get('smsQueueBtn')
     Ext._logview = document.getElementById('id_extjslog_head')
     Ext._ussdlogview = document.getElementById('id_ussdlog_head')
+    Ext._ussdnum = document.getElementById('id_ussdnum')
 
     /* /Ext fix: have event from mouse paste data (mouse cut doesn't work too
     Ext.get('smsBody').down('textarea', true).onpaste = Ext.smsTextLenH*/
@@ -1639,19 +1674,21 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
         ,sigq1 = Ext._vp.down('#id_sigq1')
         ,sigq2 = Ext._vp.down('#id_sigq2')
         ,sync_extjs_nodejs = function(){
+            Ext.defer(sync_extjs_nodejs, 7777)
             sync_info.load(function(recs, op, noerr) {
             var sd = sync_info.getProxy().getReader().rawData
                 ,d = Ext._ti()
                 ,sigqv1	,sigqv2
+                ,t
 
             //UI ctrl
             if(sd.csms)
                 Ext.csms = true
 
             if(sd.taq_run){
-
                 with(Ext.getCmp('swtaqrun')){
-                    if(getText[0] != "О"){
+                    t = getText()
+                    if(!t || getText()[0] != "О"){
                         setText('Остановить отправку SMS')
                         setIconCls('remove')
                         taq_load()
@@ -1659,7 +1696,8 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                 }
             } else {
                 with(Ext.getCmp('swtaqrun')){
-                    if(getText[0] != "Н"){
+                    t = getText()
+                    if(!t || getText()[0] != "Н"){
                         setText('Начать отправку SMS из очереди')
                         setIconCls('add')
                         taq_load()
@@ -1668,6 +1706,10 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             }
 
             function inste(eid, m) { Ext.DomHelper.insertBefore(eid, m ? m : d) }
+
+            if(Ext._ussdnum && sd.ussdnum)
+                inste(Ext._ussdnum, 'Номер SIM: ' + sd.ussdnum), delete Ext._ussdnum
+
             if (!noerr) {
                 Ext._log(d + 'err: sync_info store [' + noerr +']')
                 Ext.Msg.show({ title:'Фатальная ошибка'
@@ -1798,7 +1840,7 @@ m.msg = '<b>Фатальный сбой Базы Данных. Что-то сл�
         Ext._log("sync_info is null (too fast!)")
     Ext.sync_extjs_nodejs = sync_extjs_nodejs
     //UI brain sync by waiting for event or timeout and re-waiting
-    Ext.wait_event_request = null
+    /*Ext.wait_event_request = null
     Ext.wait_event_request_opts = {
         url: 'wait_event.json'
         ,timeout: 777777 //TODO config opt
@@ -1815,7 +1857,7 @@ Ext._log(Ext.decode(response.responseText))
             Ext.Ajax.abort(Ext.wait_event_request) ,Ext.wait_event_request = null
         Ext.wait_event_request = Ext.Ajax.request(Ext.wait_event_request_opts)
     }
-    Ext.defer(Ext.wait_event, 4321)
+    Ext.defer(Ext.wait_event, 4321)*/
 
     Ext.smspasteS.add({})
     Ext.sheets.pasteSMS.getView().onCellSelect({row:0,column:0})
