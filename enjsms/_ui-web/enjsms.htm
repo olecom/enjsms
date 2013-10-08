@@ -1,8 +1,8 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>SMS Partner v022.04.02.2013 &copy; 2012-2013</title>
-    <link rel="shortcut icon" type="image/ico" href="/favicon.ico" />
+    <title>ENJSMS v025.23.02.2013 &copy; 2012-2013</title>
+    <link rel="shortcut icon" type="image/ico" href="favicon.ico" />
     <link rel="stylesheet" href="extjs/resources/css/ext-all.css">
     <style>body{background-color:white}
     .r{color:red}.g{color:green}.wg{color:#34C421}.b{color:blue}
@@ -65,7 +65,7 @@ depends on: extjs-4.1\examples\ux\RowExpander.js
 <img width="1" height="1" src="/extjs/resources/themes/images/default/shared/icon-error.gif"/>
 <noscript><br/><h2 style="color:red;background-color:white">Без включенного Java Script ждать нечего!</h2></noscript>
 <script type="text/javascript">setTimeout(function(){
-if(!window.hasOwnProperty("Ext"))
+if(!window["Ext"])
 alert('Долго грузиться или не найден (см. консоль) EXTJS.\n'+'Нужно проверить конфигурацию "enjsms" и наличе директории "ExtJS".') }
 ,1024<<6)
 </script></center></body>
@@ -132,6 +132,7 @@ Ext.override(Ext.selection.CellModel, {
     }
     ,onEditorEnter:function(ep ,e){
         var me = this
+            //,view = me.view
             //,view = me.view
             ,column = ep.getActiveColumn()
             //,grid = view.up('gridpanel')
@@ -478,7 +479,7 @@ var ussdP ,ussdH = function(){
         ,m
         ,em = 'Нельзя отправить: ? SMS (символов: 0)'
 
-        if(/Отчист/.test(t.text)) {
+        if(/Очист/.test(t.text)) {
             Ext._smsb.setRawValue('')
             return Ext._smsbtn.setText(em)
         } else if(/Отп/.test(t.text)) {
@@ -553,11 +554,11 @@ var ussdP ,ussdH = function(){
             ,success: function(res, opts) {	//console.dir(Ext.decode(res.responseText))
                 //TODO: disable read button
                 Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
-                ,title:"Удаление памяти модулей" ,msg:"Память отчищена."})
+                ,title:"Удаление памяти модулей" ,msg:"Память очищена."})
             }
             ,failure: function(res, opts) {
                 Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-                ,title:"Удаление памяти модулей" ,msg:"Ошибка отчистки."})
+                ,title:"Удаление памяти модулей" ,msg:"Ошибка очистки."})
                 Ext._log("read_gsm_mem ajax err:" +
                      (res.responseText
                         ? res.status + ' '
@@ -598,7 +599,7 @@ var ussdP ,ussdH = function(){
             ,success: taq_load
             ,failure: function(res, opts) {
                 Ext.Msg.alert({icon: Ext.Msg.ERROR ,buttons: Ext.Msg.OK
-                        ,title:"Отчистка очереди taq" ,msg:"Ошибка запроса к ядру."})
+                        ,title:"Очистка очереди taq" ,msg:"Ошибка запроса к ядру."})
                 Ext._log("http err:" +
                      (res.responseText
                         ? res.status+' '+res.statusText+'<br/>'+res.responseText.replace(/(\r*\n)+/g, '<br/>')
@@ -642,25 +643,26 @@ var ussdP ,ussdH = function(){
 
     Ext.smspasteH = function(txt) {
         var i ,j = 0 ,darr = [] ,larr
+        txt = txt.replace(/\r/g,"")
 
         if (/\t"/.test(txt) && /"\n/.test(txt)){
             larr = txt.replace(/\t"/g,'\t').replace(/"\n/g ,'\u0001').replace('""' ,'"').split('\u0001')
         } else larr = txt.split('\n')
       do {
-        if (!larr) break
+        if(!larr) break
+        if(!larr.length) break
         var mod = Ext.getCmp('ussdModule').getValue()
-        for(i in larr) {
+        for(i in larr){
             j = larr[i].split('\t')
             if(j && j.length > 0)
                 if (j[0] && j[1] && /^[+]/.test(j[0]))
                     darr.push([j[0] ,j[1] ,j[2] ? j[2] : mod ])
         }
+
         if(darr.length > 0) {
             Ext.smspasteS.loadData(darr)
             cvlm.hide()
-            i = Ext.getCmp('pasteSMS')
-            i.update()
-            i = i.down('toolbar')
+            i = Ext.getCmp('pasteSMS').down('toolbar')
             i.getComponent('addsmsq').enable()
             i.getComponent('rmsmsq').enable()
             prep_tabs.up('panel').expand()
@@ -675,7 +677,7 @@ var ussdP ,ussdH = function(){
             ,title:"CTRL+V: Вставка"
             ,msg:"Содержимое буфера обмена не может быть распознано как строки SMS:<br/><br/>"+
             "<b>+375 29 8077782  </b>tab<b>  Текст сообщения</b><br/>"+
-            "т.е. номер в международной форме, символ табуляции, тест сообщения"})
+            "т.е. номер в международной форме, символ табуляции, тест сообщения:<pre>"+txt+"</pre>"})
     }
 //++ patches
 Ext.override(Ext.view.AbstractView, {
@@ -788,7 +790,7 @@ var app_tabs ,prep_tabs
                 ,width: (355-81)
                 }
                 ,{  xtype: 'button'
-                ,text: '<b class="r">Отчистить</b>'
+                ,text: '<b class="r">Очистить</b>'
                 ,width:81
                 ,handler: smsFormH
                 }
@@ -984,10 +986,10 @@ Ext._log("rowIndex, colIndex: " + rowIndex + ", " +colIndex)
                 opts = s.getProxy().getReader().rawData
 Ext._log('smsq add OK data.length: ' + opts.data.length)
                 opts = opts.total / pageSize
+                s.removeAll()
+                s.add({})
                 v.onCellSelect({ row:0 ,column:0 })
                 v.onCellDeselect({ row:0 ,column:0 })
-                s.removeAll()
-
                 /*s = Math.floor(opts) //load last page
                 taq.loadPage(opts - s ? s + 1 : s,{
                     callback: function(records, operation, success) {
@@ -1041,7 +1043,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             }, '-'
             ,{ xtype: 'container'
         //,height:57
-        ,html: '<div style="float:left"><img src="images/ccxlscv.png"/></div><a href="sms.xls"><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать <b style="color:brown">CTRL+C</b> таблицу SMS<br/>из <b style="color:green">XLS</b> или <b style="color:blue">DOC</b>, вставить сюда <b style="color:orange">CTRL+V</b>:</div></a>'
+        ,html: '<a href="sms.xls"><div style="float:left"><img src="images/ccxlscv.png"/></div><div style="float:left;margin: 0 11px 0 11px;text-align:right">Скопировать <b style="color:brown">CTRL+C</b> таблицу SMS<br/>из <b style="color:green">XLS</b> или <b style="color:blue">DOC</b>, вставить сюда <b style="color:orange">CTRL+V</b>:</div></a>'
     }
             ]
         }]
@@ -1234,7 +1236,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             },'-'*/
             ,{
                 itemId: 'taqdrop'
-                ,text:'Отчистить очередь'
+                ,text:'Очистить очередь'
                 ,handler: taqdropH
                 ,tooltip:'Удалить все SMS и остановить отправку'
                 ,iconCls:'remove'
@@ -1368,8 +1370,8 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
             }, '-'
             ,{
                 itemId: 'gsmemD'
-                ,text:'Отчистить SIM'
-                ,tooltip:'Отчистка памяти SMS всех модулей'
+                ,text:'Очистить SIM'
+                ,tooltip:'Очистка памяти SMS всех модулей'
                 ,iconCls:'remove'
                 ,handler: delt_gsm_mem
                 ,disabled: !true
@@ -1757,7 +1759,7 @@ Ext._log('smsq add OK data.length: ' + opts.data.length)
                     if(!t || getText()[0] != "Н"){
                         setText('Начать отправку SMS из очереди')
                         setIconCls('add')
-                        taq_load()
+                        //taq_load()
                     }
                 }
             }
@@ -1919,8 +1921,6 @@ Ext._log(Ext.decode(response.responseText))
     Ext.smspasteS.add({})
     Ext.sheets.pasteSMS.getView().onCellSelect({row:0,column:0})
 
-    Ext.sync_extjs_nodejs()
-
     Ext.animateNode = function(el, start, end, listeners){
         Ext.create('Ext.fx.Anim', {
             target: Ext.get(el),
@@ -1934,6 +1934,8 @@ Ext._log(Ext.decode(response.responseText))
             listeners: listeners
          });
     }
+    Ext.sync_extjs_nodejs()
+
 
     //Ext.Msg.alert({icon: Ext.Msg.INFO ,buttons: Ext.Msg.OK
     //			,title:"Сообщение" ,msg:"Вставить приветствие клиенту."})
