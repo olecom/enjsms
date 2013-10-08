@@ -13,9 +13,8 @@ Docs (in Russian). Доки (кое-какие).
 Second Try
 ==========
 
-Using [node-webkit](https://github.com/voodootikigod/node-serialport) and [node-serialport](https://github.com/rogerwang/node-webkit).
+Using [node-webkit](https://github.com/rogerwang/node-webkit) and [node-serialport](https://github.com/voodootikigod/node-serialport).
 Files from `node-webkit` in root directory:
-`ffmpegsumo.dll
-`icudt.dll` `libEGL.dll``libGLESv2.dll`
+`ffmpegsumo.dll` `icudt.dll` `libEGL.dll` `libGLESv2.dll`
 `nw.exe` `nw.pak`
 and also `node.exe` for possible light child processes.
