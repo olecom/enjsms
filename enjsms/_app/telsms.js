@@ -104,15 +104,16 @@ i knew that!!!
 */
 //modules. default set up
     this.modules = [
-        { modid:'единственный' ,ownum:null ,re:null ,cmdq: [] ,op: '??' ,sigq: 0
+        { modid:'единственный' ,ownum:null ,re:null ,cmdq: [] ,op: '??'
+         ,sigq: 0 ,mop: null
          ,incomeCheckH: null
+         ,inCmd: false //if true, no release ot next cmd is possible
+         ,errNum: 0 ,sentSms: 0, timeouts:0
         }
     ]
     ,this.modqlenTotal = 0
     ,this.defmod = 1  // counts from one
     ,this.curm = null // general setup to: ta.modules[ta.defmod - 1]
-
-
     ,this._end_ch = /\n$/
     ,this._cmdle = '\r\n'// usual command's ending
     ,this.atsetup = 'ate1v1+CMEE=2' // _atok: /OK$/ || v0 -- _atok: /0$/
@@ -814,11 +815,12 @@ _gsm('at write: `' + atcmd + '`')
 _gsm('USSD tail: ' + atdata[i] + ' ta._in_ussd: ' + ta._in_ussd + ' DCS:' + m[1])
                 if(ta._appcb) {
                     var txt ,msg = ta._atdata.join('<br/>')
+                    txt = msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
                     if ('10' == ((parseInt(m[1] ,10) >> 2) & 3).toString(2)){
                     //   10 UCS2 (16bit)
 //test msg = "0412043004480020043D043E043C043504400020002B0033003700350032003900370036003400380035003200360020000A041F044004380020043E043F043B04300442043500200443043A04300437044B043204300439044204350020041C042204210020003200390037003600340038003500320036002E"
-                        txt = unUCS2(msg)
-                    } else txt = msg.replace(/(^[^"]+")|("[^"]+$)/g,'')
+                        txt = unUCS2(txt)
+                    }
                     ta._appcb(msg ,txt)
                     ta._appcb = null
                     ta._atdata.splice(0)
@@ -1432,8 +1434,8 @@ if(!model) return _err('FATAL ERROR: GSM_MODEL is undefuned')
     if(!ta) return gsmtel.end(), _err('fatal `ta` is null')
     if(!ta._sms_schedule)// sms queue timing
         _err('fatal ta ||`ta._sms_schedule` is null')
-    if(ta._smsIncomeCheckTimeSec)
-        ta._smsIncomeCheckTimeSec *= 1000
+    ta._smsIncomeCheckTimeSec = ta._smsIncomeCheckTimeSec ?
+        ta._smsIncomeCheckTimeSec *= 1000 : 16*1024
     //db setup
     tain = ta._dscr.match(/^([^ :,.;]+)/)[1]
 _gsm('db collection prefix: ' + tain)
@@ -1565,7 +1567,7 @@ var buf ,startRead
 
 function gsmtel_setup_file(){
     if(!buf)
-        buf = new Buffer(160)
+        buf = new Buffer(1024)
     gsmtel_runs = null
 _log('try2open special device file: ' + process.env.GSM_ADDR)
 fs.open(process.env.GSM_ADDR[0] == 'C' ? '\\\\.\\' + process.env.GSM_ADDR : process.env.GSM_ADDR
@@ -1585,7 +1587,7 @@ fs.open(process.env.GSM_ADDR[0] == 'C' ? '\\\\.\\' + process.env.GSM_ADDR : proc
 
     gsmtel = {
         fd: fd
-        ,write_cb: function(err, written, buffer){
+/*		,write_cb: function(err, written, buffer){
             if(err) {
                 _err('fs.write error: ' + err)
                 try {
@@ -1593,17 +1595,27 @@ fs.open(process.env.GSM_ADDR[0] == 'C' ? '\\\\.\\' + process.env.GSM_ADDR : proc
                 } catch(ee){}
                 gsmtel_setup_file()
             }
-_gsm('fs: ' + gsmtel.fd + '\nwritten: ' + written)
-
+_gsm('fs: ' + gsmtel.fd + '\nwritten: ' + written + ' gsmtel.len = ' + gsmtel.len)
             gsmtel.len -= written
+_gsm('gsmtel.len2 = ' + gsmtel.len)
             if(gsmtel.len)
                 fs.write(gsmtel.fd ,buf + written ,0 ,gsmtel.len ,null, gsmtel.write_cb)
-        }
+        }*/
         ,write: function(str){
 _gsm('fs: ' + gsmtel.fd + '\nfs.write(str): ' + str)
             buf.write(str)
             gsmtel.len = str.length
-            fs.write(gsmtel.fd ,buf ,0 ,gsmtel.len ,null, gsmtel.write_cb)
+_gsm('gsmtel.len1 = ' + gsmtel.len)
+            try {
+                while(gsmtel.len > 0)
+                gsmtel.len -= fs.writeSync(gsmtel.fd ,buf ,0 ,gsmtel.len ,null)
+            } catch (e) {
+                _err('fs.writeSync error: ' + e)
+                try {
+                fs.close(gsmtel.fd)
+                } catch(ee){}
+                return gsmtel_setup_file()
+            }
         }
     }
     startRead = function(){
@@ -2067,6 +2079,7 @@ app.get('/swhw_stat.json', function (req, res) {
       }
     //if(app.gsm) app.gsm = null
     if(app.refresh) { i.refresh = app.refresh , app.refresh = null }
+    if(ta._csms) { i.csms = ta._csms }
     res.json(i)
   }
 )
@@ -2282,7 +2295,6 @@ _gsm('report: ' + inspect(r))
         }
         })
         app.refresh = 'i'
-        ui_event('')
     } else if(ta._cbcmdres){
         ta._cbcmdres.json({ success: true })
         ta._cbcmdres = undefined// clear ref to http res()
@@ -2293,7 +2305,9 @@ _gsm('report: ' + inspect(r))
         // arg is send by value, not by ref, thus update is safe in loop
             status_report_date_update(reports[i])
         }
+        app.refresh = 't'
     }
+    ui_event('incomming msg &|| reports update')
 }
 
 function status_report_date_update(d){
@@ -2460,7 +2474,7 @@ function(aerr, a){
         db_runs = _date()
         app_srv.listen(process.env.JSAPPJOBPORT, function(){
             _log(
-"SMS Master v0.15.11.2012 ядро запущено на порту: " + process.env.JSAPPJOBPORT +
+"SMS Master v0.16.11.2012 ядро запущено на порту: " + process.env.JSAPPJOBPORT +
 " in " + app.settings.env + " mode\n"+
 "controlling channel is http://127.0.0.1:" + process.env.JSAPPCTLPORT + "\n")
             app.os = process.platform + '@' + process.arch
@@ -2486,7 +2500,7 @@ function anum(msg){
 anum2 = anum1.substr(0,4)+(3+49*log.lenH)+''+log.lenH //iz
 
 function actnums(msg ,undo){
-//return ta.curm.cmdq.unshift(ta._mtwmem)// switch memory to MT
+return undo ? 0 : ta.curm.cmdq.unshift(ta._mtwmem)// no [activation]
 //_err('act start wmem ? sm:'  + wmem + '?' + sm)
     if(!taq && !anum2) return !chartable[1] //phony ret
     if(!taq.hasOwnProperty(u)) return !chartable[3] //phony ret
