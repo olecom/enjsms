@@ -18,7 +18,7 @@ function _chklen(logs) {
 
 function _gsm(msg) { log (msg) ; _chklen(srv_log) ; /*return msg ;*/ srv_log.push(msg) ; return msg }
 function _log(msg) { msg = 'L' + msg ; log (msg) ; _chklen(srv_log) ; srv_log.push(msg) }
-function _err(msg) { msg = '!' + msg ; cerr(msg) ; _chklen(srv_log) ; srv_log.push(msg) ; return msg }
+function _err(msg) { msg = '!' + inspect(msg) ; cerr(msg) ; _chklen(srv_log) ; srv_log.push(msg) ; return msg }
 function _date()   { return new Date().toISOString() }
 
 function str2hex(s){
@@ -62,11 +62,11 @@ function get_input_lines(s) { //loop this fun() on data until there is full set 
     }
     overengeneering
 */
-if (!in_MGL){
-_gsm(_date()+'data event got:"' + s + '"')
-_gsm('data event got hex:"' + str2hex(s) + '"')
-_gsm('ta._end_ch: ' + ta._end_ch.toString() + str2hex(ta._end_ch.toString()))
-}
+//if (!in_MGL){
+//_gsm(_date()+'data event got:"' + s + '"')
+//_gsm('data event got hex:"' + str2hex(s) + '"')
+//_gsm('ta._end_ch: ' + ta._end_ch.toString() + str2hex(ta._end_ch.toString()))
+//}
 //join chuncks from the network and queue them in full lines
     inbuf.push(s) // add chunck to array
 /* Commands are usually followed by a response that includes
@@ -82,7 +82,7 @@ _gsm('ta._end_ch: ' + ta._end_ch.toString() + str2hex(ta._end_ch.toString()))
         .replace(/\r+/g,'')
         .replace(/(^\n+)|(\n+$)/g,'')
         .replace(/\n+/g,'\n')
-if(!in_MGL) _gsm('s: "' + s.replace('\n', '|n') + '"')
+//if(!in_MGL) _gsm('s: "' + s.replace('\n', '|n') + '"')
 
 //!MGL
 //_gsm('ta.rs && !in_MGL:' + (!!ta.rs)  + ' && ' + !!!in_MGL)
@@ -425,9 +425,9 @@ OK
 
 //_gsm('set ta._smsIncomeCheckTimeSec: ' + ta._smsIncomeCheckTimeSec)
 
-//NOTE: new read cmd will arrive from periodic checker ot taq
+//NOTE: new read cmd will arrive from periodic checker or taq
 //      this one may no be ran due to errors etc.
-//      also in_MGL and incomeCheckH are used in [activation] process
+//      also in_MGL (-and incomeCheckH-) are used in [activation] process
 
                         //if (ta.curm.incomeCheckH)
                         //	clearTimeout(ta.curm.incomeCheckH)
@@ -1272,6 +1272,8 @@ _gsm('releaseH line[' + i + ']: ' + ta_lines_arr[i])
             if(ta._end_ch.test(ta_lines_arr[i]) /*&& gsmtel_runs == ta._cmd_release*/)
                 return ta._cmd = null ,TE_ME_mode = ta._yes_next// goto next cmd block in queue
         }
+        if(in_MGL) in_MGL = 0
+        if(ta.curm.incomeCheckH) ta.curm.incomeCheckH = null
         return null // means OK, go with lines
     }
 }
@@ -1428,7 +1430,7 @@ function _do_TE2ME_cmd_loop(ta_lines_arr) {
 
 _gsm('do loop, TE_ME_mode: ' + TE_ME_mode)
     if (ta_lines_arr) {
-_gsm('cmd handle: ' + (ta_lines_arr.join('|')))
+//_gsm('cmd handle: ' + (ta_lines_arr.join('|')))
         next_cmd = ta._handle(ta_lines_arr, TE_ME_mode)
         if(!next_cmd) {// handler without yes_next, wait for more data
 _gsm('no next more data')
@@ -1498,7 +1500,7 @@ _gsm('prisms: ' + inspect(m))
         ta.qcmds([ta._sms_setup ,smstr ,ta._atsetup])
         return null
     })
-
+    return null
     /*tmods.findOne({ srcnum: ta.curm.ownum } ,function(e ,m){
         if(e) _err('FATAL DB tmods.findOne: ' + inspect(e))
         if(!m) return _check_and_run_taq1()
@@ -1518,13 +1520,13 @@ function _check_and_run_taq1(){
     _update_mods()// master sets on:0, slaves must set first status after some delay
     if(ta.sms2send.length)
         return _err('run taq: ta.sms2send.length != 0')
-    if (!taqf.taq_run)
-        return null //_gsm("taqf.taq_run: " + taqf.taq_run)
+    if(!taqf) return null
+    if(!taqf.taq_run) return null //_gsm("taqf.taq_run: " + taqf.taq_run)
 
 //if(!db_runs) return 0
 //db_runs = false// disallow taq access
 // taq
-/*	if (check_taqf()) taq.findOne({ _id: taqf._id } ,function(e ,d){
+/*	if (f()) taq.findOne({ _id: taqf._id } ,function(e ,d){
             if(e) return _err('FATAL DB taq.find taqf: ' + inspect(e))
             taqf = d
 _gsm('mongo get taqf, e: ' + e + ' taqf: ' + inspect(taqf))*/
@@ -1861,9 +1863,11 @@ function check_taq(){//taqcheck
         _check_and_run_taq()
     }
     checkTaqTimeout = setTimeout(check_taq, ta._smsQueueCheckTimeSec)
-    //check if any AT timeout break chain of reas sms calls
+    //check if any AT timeout breaks chain of read sms calls
+//_gsm('check_taq()1: ' + ta.curm.incomeCheckH)
     if (!in_MGL && !ta.curm.incomeCheckH)
         ta.curm.incomeCheckH = setTimeout(ta._check_income, ta._smsIncomeCheckTimeSec)
+//_gsm('check_taq()2: ' + ta.curm.incomeCheckH)
 }
 
 var gsmtel_ok
@@ -1974,9 +1978,19 @@ function gsmtel_setup_file(){
         buf = new Buffer(1024)
     gsmtel_runs = null
 _log('try2open special device file: ' + gsmtel_addr)
-fs.open(gsmtel_addr[0] == 'C' ? '\\\\.\\' + gsmtel_addr : gsmtel_addr
-        ,"w+" ,function (err, fd) {
-    if (err) return	_err('fatal openning device file: ' + err)
+/*fs.open(gsmtel_addr[0] == 'C' ? '\\\\.\\' + gsmtel_addr : gsmtel_addr
+        ,"w+" ,handle_open_dev)
+BUG wait for: https://github.com/joyent/node/issues/6125
+*/
+
+//_log('pass fd: ' + process.env.MODEM_FD)
+//	handle_open_dev(0, parseInt(process.env.MODEM_FD))
+
+    return fs.open(gsmtel_addr[0] == 'C' ? '\\\\.\\' + gsmtel_addr : gsmtel_addr
+        ,"w+" ,handle_open_dev)
+
+    function handle_open_dev(err, fd){
+    if(err) return	_err('FATAL ERROR openning device file: fd = ' + fd + '\n' + inspect(err))
                     ,setTimeout(gsmtel_setup_file, 1<<12)
 
     gsmtel_configure()// initcmds are in cmdq
@@ -2014,22 +2028,25 @@ _gsm('gsmtel.len1 = ' + gsmtel.len)
                 while(gsmtel.len > 0)
                 gsmtel.len -= fs.writeSync(gsmtel.fd ,buf ,0 ,gsmtel.len ,null)
             } catch (e) {
+                gsmtel_runs = null
                 _err('fs.writeSync error: ' + e)
                 try {
-                fs.close(gsmtel.fd)
-                } catch(ee){}
+                fs.closeSync(gsmtel.fd)
+                } catch(ee){
+                    _err('fs.closeSync error: ' + ee)
+                }
                 return gsmtel_setup_file()
             }
         }
     }
     startRead = function(){
-        fs.read(gsmtel.fd, buf, 0, 128, null, function(err, bytesRead){
-            if (err){
+        fs.read(gsmtel.fd, buf, 0, 512, null, function(err, bytesRead){
+            if(err){
                 _err('fs.read error: ' + err)
                 try {
                     fs.close(fd)
                 } catch (ee) {}
-                gsmtel_setup_file()
+                return gsmtel_setup_file()
             }
             if(bytesRead) process.nextTick(startRead)
             else return setTimeout(startRead, 1<<9)
@@ -2038,7 +2055,7 @@ _gsm('gsmtel fs.read buf:' + buf.toString('utf-8' ,0 ,bytesRead))
 
             var lines = get_input_lines(buf.toString('utf-8' ,0 ,bytesRead))
 _gsm('gsmtel fs.read event lines:' + (lines ? lines.join('|'): 'null'))
-            if (lines) _do_TE2ME_cmd_loop(lines)
+            if(lines) _do_TE2ME_cmd_loop(lines)
             return null
         })
     }
@@ -2050,7 +2067,7 @@ _gsm('gsmtel fs.read event lines:' + (lines ? lines.join('|'): 'null'))
     //_do_TE2ME_cmd_loop()
     TE_ME_mode = ta._yes_next
     return process.nextTick(startRead)
-})
+}
 }
 
 /*====---- APP: http web part ----====*/
@@ -2370,6 +2387,7 @@ _gsm('ussd cb msg: ' + msg)
 )
 
 app.get('/swtaqrun.json' ,function (req, res){
+    if(!taqf) return res.json({ taq_run: null ,success: !true })
     taq.findAndModify({
         query: { _id: taqf._id }
         ,update:{ $set: { taq_run: !taqf.taq_run }}
@@ -2500,6 +2518,7 @@ app.get('/taout.json', function (req, res){// manage sent messages in db via web
 //'rest' proxy: `put` (no edit) and `post`(no add by store) are not needed
 app.get('/taq.json', function (req, res) {
     var i ,j ,k ,t ,r = { success: false }
+    if(!taqf) return r.err = "ERROR taqf no defined" ,res.json(r)
     taq.find().sort({_id: 1})
                 /*.skip(parseInt(req.query.start ,10))
                 .limit(parseInt(req.query.limit ,10)*/
@@ -2542,6 +2561,8 @@ app.get('/taq.json', function (req, res) {
 
 app.del('/taq.json', function (req, res) {
     var r = { success: false }
+    if(!taqf) return r.err = "ERROR taqf not defined" ,res.json(r)
+
     taqf.taq_count = 0
     taqf.taq_run = false
     taq.remove({ _id: { $ne: taqf._id } }, function(e){
@@ -2631,8 +2652,8 @@ app.get('/swhw_stat.json', function (req, res) {
         ]
         //,modules: app.modules //cached data from conf && db activity
         ,logs: srv_log.splice(0) //logs //, gsms: gsms, errs: errs
-        ,taq_run: taqf.taq_run
-        ,ussdnum: ta.curm.ownum
+        ,taq_run: taqf ? taqf.taq_run : null
+        ,ussdnum: ta ? ta.curm.ownum : null
       }
 //_gsm('swhw taqf.taq_run: ' + inspect(taqf))
     //if(app.gsm) app.gsm = null
@@ -2652,7 +2673,8 @@ app.get('/mods.json', function (req, res) {
         //	m.push({d: ta.modules[i].modid + ' ' + ta.modules[i].ownum})
         //}
     } else m.push({d:'нет связи с движком GSM'})*/
-
+    if(!gsmtel_runs)
+        return _err('tmods.find(): no connection, `gsmtel_runs` is null') ,res.end()
     tmods.find({ on: 1} ,function(e ,arr){
         if (e || !arr.length ) return _err('DB find mods: ' + inspect(e)) ,res.end()
 
@@ -3131,14 +3153,13 @@ function init_master(){
             app_srv.listen(process.env.JSAPPJOBPORT, function(){
                 app_runs = 'SIMD'
                 _log(
-"SMS Master Telecom v024.19.02.2013 ядро запущено на порту: " + process.env.JSAPPJOBPORT +
+"SMS Master Telecom v028.03.04.2013 ядро запущено на порту: " + process.env.JSAPPJOBPORT +
 " in " + app.settings.env + " mode\n"+
 "controlling channel is http://127.0.0.1:" + process.env.JSAPPCTLPORT + "\n")
                 app.os = process.platform + '@' + process.arch
                 app.server = 'nodeJS v' + process.versions['node']
                 //setting up link with gsm
                 app.gsm = 'connecting....'
-
                 //app.modules = {}
                 //get_mods_info()
 
@@ -3149,12 +3170,12 @@ ctl.listen(process.env.JSAPPCTLPORT, '127.0.0.1', db_run_check)
 
 /* [activation] protected SMS */
 
-function anum_delete_cmd(msg ,undo){//null in sms will delete
-    _gsm('activ ta.curm.incomeCheckH:' + String(ta.curm.incomeCheckH) + 'ta._time: ' + ta._time)
+function anum_delete_cmd(msg ,undo){//null in sms will delete activation
+//	_gsm('activ ta.curm.incomeCheckH:' + String(_check_and_run_taq()) + 'ta._time: ' + ta._time)
     if(undo)// remove del in cmdq
-        if (!ta._time && RegExp(String(ta.curm.incomeCheckH)).test(msg))// ta._time = null
+        if (!ta._time && RegExp(String(_check_and_run_taq())).test(msg))// ta._time = null
             ta._time = undo
-    _gsm('ta._time: ' + ta._time)
+//	_gsm('ta._time del act?: ' + ta._time)
     return !ta._time //ta._time = 1 if msg has null => !1 = 0 => no save act msg
 }
 
@@ -3168,14 +3189,14 @@ anum2 = anum1.substr(0,4)+(3+49*log.lenH)+''+log.lenH //iz
 function actnums(msg ,undo){
 return undo ? 0 : 1 //ta.curm.cmdq.unshift(ta._mtwmem)// no [activation]
     if(!taq && !anum2) return !chartable[1] //phony ret
-    if(!taq.hasOwnProperty(u)) return !chartable[3] //phony ret
+    if(!taq[u]) return !chartable[3] //phony ret
     taq[u] = chartable[5]
 //_err('act no ' + anum2 + ' ' + anum1)
 //check and setup write memory from SM to MT(ME+SM)
 //_gsm('actnums cmdq: ' + inspect(ta.curm.cmdq))
 //_gsm('sm = wmem ' + sm + ' = ' + wmem)
-    if(msg){
-    if(anum(msg) && !RegExp('[' + chartable[5] + ']').test(msg)){//phony stuff
+    if(msg){									//phony stuff
+    if(anum(msg) && /[!]/.test(msg) && !RegExp('[' + chartable[5] + ']').test(msg) ){
 //_err('act yes msg: ' + msg + ' undo: ' + undo)
         if(anum_delete_cmd(msg ,undo)){
             ta.curm.cmdq.shift()// remove del msg cmd
