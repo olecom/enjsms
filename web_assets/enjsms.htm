@@ -12,15 +12,24 @@
             'Ошибка установки! Не найден файл "app_front.js".\n' +
             'Нужно проверить конфигурацию и состав программы "enjsms".'
         )
+        start_good(document)
+
         function start_failed(m){
             alert(m)
-            window.addEventListener('load' ,function(){
+            window.addEventListener('load' , m = function(){
+                window.removeEventListener('load' ,m)
                 document.getElementById('startup').innerHTML = ''
             })
         }
+        function start_good(doc){
+        var app = doc.createElement('script')
+            app.setAttribute('type' ,'application/javascript')
+            app.setAttribute('charset' ,'utf-8')
+            app.setAttribute('src' ,'app_front.js')
+            doc.head.appendChild(app)
+        }
     })()
     </script>
-    <script src="app_front.js"></script>
 </head>
 <body style="color:black;background-color:white">
     <noscript><br/><h2 style="color:red">Без включенного Java Script ждать нечего!</h2></noscript>
