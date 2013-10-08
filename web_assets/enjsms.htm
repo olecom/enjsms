@@ -1,0 +1,33 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>ENJSMS v026.07.11.2013 &copy; 2012-2013</title>
+    <link rel="shortcut icon" type="image/ico" href="images/favicon.ico" />
+    <script type="text/javascript">(
+    function startup(){
+        var xhr = new XMLHttpRequest()
+        xhr.open('HEAD' ,'app_front.js' ,false) ,xhr.send()
+        if(!xhr.responseText) return start_failed(
+            'Ошибка установки! Не найден файл "app_front.js".\n' +
+            'Нужно проверить конфигурацию и состав программы "enjsms".'
+        )
+        function start_failed(m){
+            alert(m)
+            window.addEventListener('load' ,function(){
+                document.getElementById('startup').innerHTML = ''
+            })
+        }
+    })()
+    </script>
+    <script src="app_front.js"></script>
+</head>
+<body style="color:black;background-color:white">
+    <noscript><br/><h2 style="color:red">Без включенного Java Script ждать нечего!</h2></noscript>
+    <center id='startup'><img src='images/loading.gif'>
+        <br/>Загрузка...<br/>
+        <a href='credits_node-webkit.html'>node-webkit credits</a>
+    </center>
+</body>
+</html>
+<!-- olecom: enjsms.htm ends here -->

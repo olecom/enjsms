@@ -1,0 +1,52 @@
+{
+    "name": "enjsms",
+    "license": "MIT",
+    "version": "0.26.0",
+    "description": "v026@2013-11-07: SMS sending via 3G or VoIP modems",
+    "maintainers": [{
+        "name": "Oleg Verych",
+        "email": "olecom@gmail.com"
+    }],
+    "main": "web_assets/enjsms.htm",
+    "webkit": {
+        "plugin": false,
+        "page-cache": false,
+        "java": false
+    },
+    "window": {
+        "title": "SMS Master",
+        "icon":"web_assets/images/favicon.png",
+        "toolbar": true,
+        "position": "center",
+        "width": 880,
+        "height": 555,
+        "resizable": true,
+        "show": true,
+        "frame": true
+    },
+    "engines": {
+        "node": "*",
+        "node-webkit": "0.7.5"
+    },
+    "dependencies": {
+        "express": "*",
+        "mongodb": "*",
+        "serialport": "*",
+        "step": "*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/olecom/enjsms"
+    },
+    "keywords": [
+        "sms",
+        "3g",
+        "modem",
+        "voip",
+        "extjs",
+        "nodejs",
+        "node.js",
+        "node-webkit",
+        "mongodb"
+    ]
+}
