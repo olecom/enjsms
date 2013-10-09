@@ -14,7 +14,7 @@ Second Try
 ==========
 
 Using [node-webkit](https://github.com/rogerwang/node-webkit) and [node-serialport](https://github.com/voodootikigod/node-serialport).
-Files from `node-webkit` in root directory:
+Files from `node-webkit` (win32) in root directory:
 `ffmpegsumo.dll` `icudt.dll` `libEGL.dll` `libGLESv2.dll`
 `nw.exe` `nw.pak`
 and also `node.exe` for possible light child processes.

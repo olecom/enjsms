@@ -1,8 +1,8 @@
 {
     "name": "enjsms",
     "license": "MIT",
-    "version": "0.26.0",
-    "description": "v026@2013-11-07: SMS sending via 3G or VoIP modems",
+    "version": "2.0.29",
+    "description": "v029@2013-11-09: SMS sending via GSM (3G or VoIP) modems",
     "maintainers": [{
         "name": "Oleg Verych",
         "email": "olecom@gmail.com"
@@ -14,7 +14,7 @@
         "java": false
     },
     "window": {
-        "title": "SMS Master",
+        "title": "Loading enjsms...",
         "icon":"web_assets/images/favicon.png",
         "toolbar": true,
         "position": "center",
