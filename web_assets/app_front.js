@@ -118,7 +118,7 @@ var extjs, path
             con.log('ExtJS version: ' + Ext.getVersion('extjs'))
             //Ext.application(app.configExtApp)
         } else {
-            con.err(l10n.extjsNotFound)
+            con.error(l10n.extjsNotFound)
             w.alert(l10n.extjsNotFound)
         }
     }))
@@ -126,15 +126,3 @@ var extjs, path
 }
 }
 //)(console ,app)
-
-// for express part:
-/*
-
-//  TODO; move after express setup      xhr.open('HEAD' ,'extjs/ext-all-debug.js' ,false) ,xhr.send()
-        if('undefined' != typeof global) try {
-            global.require('app_back.js')
-        } catch (e) {
-            start_failed('Работа программы не возможна. Отсуствует или повреждён файл `app_back.js`')
-            return
-        }
-*/
