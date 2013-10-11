@@ -2,20 +2,34 @@
     "name": "enjsms",
     "license": "MIT",
     "version": "2.0.29",
-    "description": "v029@2013-11-09: SMS sending via GSM (3G or VoIP) modems",
+    "description": "v029@2013-10-10: SMS sending via GSM (3G or VoIP) modems",
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/olecom/enjsms.git"
+    },
     "maintainers": [{
         "name": "Oleg Verych",
         "email": "olecom@gmail.com"
     }],
-    "main": "web_assets/enjsms.htm",
+    "keywords": [
+        "sms",
+        "3g",
+        "voip",
+        "modem",
+        "extjs",
+        "nodejs",
+        "node.js",
+        "node-webkit",
+        "mongodb"
+    ],
     "webkit": {
         "plugin": false,
         "page-cache": false,
         "java": false
     },
     "window": {
-        "title": "Loading enjsms...",
-        "icon":"web_assets/images/favicon.png",
+        "title": "Loading application...",
+        "icon":"app_main/images/favicon.png",
         "toolbar": true,
         "position": "center",
         "width": 880,
@@ -24,6 +38,7 @@
         "show": true,
         "frame": true
     },
+    "main": "app_main/app.htm",
     "engines": {
         "node": "*",
         "node-webkit": "0.7.5"
@@ -33,20 +48,5 @@
         "mongodb": "*",
         "serialport": "*",
         "step": "*"
-    },
-    "repository": {
-        "type": "git",
-        "url": "http://github.com/olecom/enjsms.git"
-    },
-    "keywords": [
-        "sms",
-        "3g",
-        "modem",
-        "voip",
-        "extjs",
-        "nodejs",
-        "node.js",
-        "node-webkit",
-        "mongodb"
-    ]
+    }
 }
