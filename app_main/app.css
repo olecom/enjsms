@@ -1,3 +1,57 @@
-#applicationManager-application-shortcut div {
-    background-image: url(images/shortcut.png);
+.appbar-shutdown {
+    background-image: url(images/shutdown.png);
+    width: 22px!important;
+    height: 22px!important;
 }
+.appbar-connect-on {
+    background-image: url(images/connect-on.gif);
+    width: 22px!important;
+    height: 22px!important;
+}
+.appbar-connect-off {
+    background-image: url(images/connect-off.gif);
+    width: 22px!important;
+    height: 22px!important;
+}
+.appbar-user-online {
+    background-image: url(images/user-online.png);
+    width: 22px!important;
+    height: 22px!important;
+}
+.appbar-user-offline {
+    background-image: url(images/user-offline.png);
+    width: 22px!important;
+    height: 22px!important;
+}
+.appbar-user-busy {
+    background-image: url(images/user-busy.png);
+    width: 22px!important;
+    height: 22px!important;
+}
+.appbar-user-away {
+    background-image: url(images/user-away.png);
+    width: 22px!important;
+    height: 22px!important;
+}
+
+/* simply:
+    text: '<img height=64 width=64 src="images/usersman_shortcut.png"/><br/><br/>' +
+          'Пользователи<br/>'
+   than all this stuff:
+------
+js:
+    text: '<br/><br/><br/><br/>Пользователи'
+    ,iconCls: 'appdesktop-shortcut appdesktop-usersman'
+    ,iconAlign: 'top'
+css:
+.appdesktop-shortcut {
+    height: 64px!important;
+    margin: 10px;
+}
+.appdesktop-procman {
+    background-image: url(images/procman_shortcut.png);
+}
+.appdesktop-usersman {
+    background-image: url(images/usersman_shortcut.png);
+}
+*/

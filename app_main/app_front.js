@@ -9,6 +9,8 @@ var app
             tray: { obj: null ,stat: 'show' },
             w: null,
             config: null //{ db: null ,extjs:null }
+            ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
+            ,role: { va_permissions: null }
             //,tools: { /*load_extjs: null*/ }
         }
         node_webkit(con ,app)
@@ -21,7 +23,7 @@ var app
 function node_webkit(con ,app){
     var gui = require('nw.gui')
     app.w = gui.Window.get()
-    app.w.showDevTools()
+    if(devel) app.w.showDevTools()
 
     setup_tray(app.tray ,app.w)
 
@@ -41,7 +43,7 @@ function load_config(app){// loaded only by main process -- node-webkit
         } else if(process.env.HOMEDRIVE && process.env.HOMEPATH){
             cfg = process.env.HOMEDRIVE +  process.env.HOMEPATH
         }
-        cfg = cfg + '/.enjsms.js'
+        cfg = cfg + '/.enjsms.js'//FIXME: app specific part
         try {
             fs.statSync(cfg)
         } catch (ex){
@@ -126,15 +128,17 @@ var extjs, path
 
 function extjs_launch(){
     Ext.fly('startup').remove()
+    Ext.state.Manager.setProvider(new Ext.state.CookieProvider())
+
+    //TODO: for each app.config.app.modules load module
+    //TODO: dynamic addition in toolbar or items/xtype construction
+    //global `App` object is available now
+    app.config.extjs = null // clear ref for GC
+    App.config = app.config ,App.user = app.user ,App.role = app.role
+    //TODO: events via long pooling from app_backend/express
+    //App.sync_clearTimeout = Ext.defer(App.sync_extjs_nodejs, 3777)
+    Ext.create('App.view.Viewport')
     con.log('extjs_launch: OK')
-
-    // All the paths for custom classes
-    //,paths: {
-    //        'Ext.ux': 'extjs/examples/ux'
-    //    }
-
-      //global `App` object is available now
-  //  App.sync_clearTimeout = Ext.defer(App.sync_extjs_nodejs, 3777)
 }
 
 })(console ,process)
