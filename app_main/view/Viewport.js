@@ -51,21 +51,21 @@ Ext.define('App.view.shortcuts_Desktop', {
         ,{
             text: '<img height=64 width=64 src="images/procman_shortcut.png"/><br/><br/>' +
                   'Процессы<br/>'
-            ,height:110 ,width:92
+            ,height:110 ,minWidth:92
             ,tooltip: 'Запуск/Управление процессами'
         }
 
         ,{
             text: '<img height=64 width=64 src="images/usersman_shortcut.png"/><br/><br/>' +
                   l10n.um.users + '<br/>'
-            ,height:110 ,width:92
+            ,height:110 ,minWidth:92
             ,tooltip: 'Управление пользователями, правами доступа и т.п.'
         }
 
         ,{
             text: '<img height=64 width=64 src="images/favicon.png"/><br/><br/>' +
                   'SMS Программа<br/>'
-            ,height:110 ,width:92
+            ,height:110 ,minWidth:92
             ,tooltip: 'SMS Программа'
         }
 
@@ -75,52 +75,32 @@ Ext.define('App.view.shortcuts_Desktop', {
 Ext.define('App.view.Bar', {
     extend: 'Ext.toolbar.Toolbar',
     xtype: 'app-bar'
+    ,baseCls: 'x-gray-toolbar'
     ,defaults:{
         //scale: 'small'
         //cls: 'appdesktop-btn'
         //height:44
-
     }
-    ,enableOverflow: true
     ,items : [
         {
-            xtype:'splitbutton',
-            text: 'Menu Button',
-            iconCls: 'add16',
-            menu: [{text: 'Menu Item 1'}]
-        },
-        {
-            xtype:'splitbutton',
-            text: 'Cut',
-            iconCls: 'add16',
-            menu: [{text: 'Cut Menu Item'}]
-        },
-        /*{
-            xtype: 'datefield'
-        },*/
-        {
-            text: 'Copy',
-            iconCls: 'add16'
-        },
-        {
-            text: 'Copy',
-            iconCls: 'add16'
-        },
-        {
-            text: 'Copy',
-            iconCls: 'add16'
-        },
-        {
-            text: 'Copy',
-            iconCls: 'add16'
-        },
-        {
-            text: 'Copy',
-            iconCls: 'add16'
-        },
+            xtype:'toolbar'
+            ,baseCls: 'x-gray-toolbar'
+            ,style:'border:0;'
+            ,flex: 1
+            ,enableOverflow: true
+            ,items:[{
+                text: '<img height=16 width=16 src="images/favicon.png"/>'
+                ,enableToggle: true
+                //,toggleHandler: onItemToggle
+                ,pressed: true
+            }
+            ,{  text: '<img height=16 width=16 src="images/usersman_shortcut.png"/>'
+            }
+            ]
+        },'-',
         {
             iconCls: 'appbar-user-online'
-            ,height:28 //,width:28
+            ,height:28
             ,tooltip: l10n.userStatus + ': <b>' + App.user.id + '</b>'
             ,text: '<i>' + App.user.name + '</i> (<b>' + App.user.role + '</b>)'
             ,menu:{

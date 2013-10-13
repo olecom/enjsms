@@ -57,3 +57,69 @@ css:
     background-image: url(images/usersman_shortcut.png);
 }
 */
+
+.x-gray-toolbar-default {
+  border-color: #bcb0b0;
+  border-width: 1px 1px 2px 1px;
+  background-image: none;
+  background-color: #d8d8d8;
+  background-image: -webkit-gradient(linear, 50% 0%, 50% 100%, color-stop(0%, #e6e6e6), color-stop(100%, #efefef));
+  background-image: -webkit-linear-gradient(top, #e6e6e6, #efefef);
+  background-image: -moz-linear-gradient(top, #e6e6e6, #efefef);
+  background-image: -o-linear-gradient(top, #e6e6e6, #efefef);
+  background-image: linear-gradient(top, #e6e6e6, #efefef);
+}
+.x-gray-toolbar {
+  font-size: 11px;
+  border-style: solid;
+  padding: 2px 0 2px 2px;
+}
+
+/* line 101, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-item {
+  margin: 0 2px 0 0;
+}
+
+/* line 112, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-text {
+  margin: 0 6px 0 4px;
+  color: black;
+  line-height: 16px;
+  font-family: tahoma, arial, verdana, sans-serif;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+/* line 121, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-separator-horizontal {
+  margin: 0 2px 0 0;
+  height: 14px;
+  border-style: solid;
+  border-width: 0 1px;
+  border-left-color: #aca899;
+  border-right-color: white;
+}
+
+/* line 137, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-footer {
+  background: transparent;
+  border: 0;
+  margin: 3px 0 0;
+  padding: 2px 0 2px 6px;
+}
+/* line 144, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-footer .x-gray-toolbar-item {
+  margin: 0 6px 0 0;
+}
+
+/* line 149, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-spacer {
+  width: 2px;
+}
+
+/* line 154, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
+.x-gray-toolbar-more-icon {
+  background-image: url(images/toolbar/more.gif) !important;
+  background-position: center center !important;
+  background-repeat: no-repeat;
+}
