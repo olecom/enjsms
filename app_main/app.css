@@ -5,11 +5,13 @@
 }
 .appbar-connect-on {
     background-image: url(images/connect-on.gif);
+    margin-top: 3px;/* align with `shutdown.png` */
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-connect-off {
     background-image: url(images/connect-off.gif);
+    margin-top: 3px;
     width: 22px!important;
     height: 22px!important;
 }
