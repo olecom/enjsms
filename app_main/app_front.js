@@ -2,19 +2,6 @@
 var devel = true
 var app
 
-l10n = {
-    tray: {
-        title: 'SMSки'
-        ,winvis: 'SMSки работают (окно видно)'
-        ,wininv: 'SMSки работают (окно скрыто)'
-    }
-    ,extjsNotFound:
-        'Не найден или не загрузился "ExtJS" (визуальная библиотека).\n' +
-        'Нужно проверить конфигурацию программы "enjsms".'
-    ,configLoadError:
-        'Ошибка при чтении файла конфигурации!'
-}
-
     // two parts: under `node-webkit` and `express` in browser
 
     if(typeof process != 'undefined'){

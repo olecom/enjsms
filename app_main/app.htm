@@ -2,23 +2,32 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>ENJSMS v026.07.11.2013 &copy; 2012-2013</title>
+    <title>ENJSMS v029.13.10.2013 &copy; 2012-2013</title>
     <link rel="shortcut icon" type="image/ico" href="images/favicon.ico" />
+    <script type="text/javascript" src ="l10n/ru.js"></script>
+    <script type="text/javascript">(
+    function pre_load(){
+        var m ,b = document.createElement('b')
+        b.innerHTML = l10n.loading
+        window.addEventListener('load' , m = function(){
+            window.removeEventListener('load' ,m)
+            document.getElementById('startup').appendChild(b)
+        })
+    })()
+    </script>
     <script type="text/javascript">(
     function startup(){
         var xhr = new XMLHttpRequest()
         xhr.open('HEAD' ,'app_front.js' ,false) ,xhr.send()
-        if(!xhr.responseText) return start_failed(
-            'Ошибка установки! Не найден файл "app_front.js".\n' +
-            'Нужно проверить конфигурацию и состав программы "enjsms".'
-        )
-        start_good(document)
+        return xhr.responseText ?
+                   start_good(document) :
+                   start_failed(l10n.errload_no_app)
 
         function start_failed(m){
             alert(m)
             window.addEventListener('load' , m = function(){
                 window.removeEventListener('load' ,m)
-                document.getElementById('startup').innerHTML = ''
+                document.getElementById('startup').innerHTML = l10n.errload
             })
         }
         function start_good(doc){
@@ -32,11 +41,14 @@
     </script>
 </head>
 <body style="color:black;background-color:white">
-    <noscript><br/><h2 style="color:red">Без включенного Java Script ждать нечего!</h2></noscript>
-    <center id='startup'><img src='images/loading.gif'>
-        <br/>Загрузка...<br/>
-        <a href='credits_node-webkit.html'>node-webkit credits</a>
-    </center>
+    <noscript><br/>
+    <h2 style="color:red">
+Error: NO Java Script. Sorry!<br/>
+Без включенного Java Script ждать нечего!
+    </h2></noscript>
+<center id='startup'><img src='images/loading.gif'/><br/>
+<a href='credits_node-webkit.html'>node-webkit credits</a><br/><br/>
+</center>
 </body>
 </html>
 <!-- olecom: app.htm ends here -->
