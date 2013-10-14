@@ -23,7 +23,7 @@ var app
 function node_webkit(con ,app){
     var gui = require('nw.gui')
     app.w = gui.Window.get()
-    if(devel) app.w.showDevTools()
+    //if(devel) app.w.showDevTools()
 
     setup_tray(app.tray ,app.w)
 
@@ -127,7 +127,6 @@ var extjs, path
 }
 
 function extjs_launch(){
-    Ext.fly('startup').remove()
     Ext.state.Manager.setProvider(new Ext.state.CookieProvider())
 
     //TODO: for each app.config.app.modules load module
@@ -137,7 +136,16 @@ function extjs_launch(){
     App.config = app.config ,App.user = app.user ,App.role = app.role
     //TODO: events via long pooling from app_backend/express
     //App.sync_clearTimeout = Ext.defer(App.sync_extjs_nodejs, 3777)
-    Ext.create('App.view.Viewport')
+
+    // very strange composition to get gears to fadeOut and viewport to fadeIn
+    var b = Ext.getBody()
+    b.fadeOut({duration:777 ,callback: function(){
+        Ext.fly('startup').remove()
+        b.show()
+        Ext.create('App.view.Viewport')
+        b.fadeIn({easing:'easeIn' ,duration:1024})
+        con.log('extjs: faded In')
+    }})
     con.log('extjs_launch: OK')
 }
 
