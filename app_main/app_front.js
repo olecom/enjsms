@@ -105,9 +105,10 @@ var extjs, path
     extjs.setAttribute('src' ,path + 'ext-all' + (devel ? '-debug' : '') + '.js')
     doc.head.appendChild(extjs)
 
-    w.addEventListener('load' ,(extjs = function(){
-        w.removeEventListener('load' ,extjs)
+    path = '1234'
+    extjs = setInterval(function waiting_extjs(){
         if('undefined' != typeof Ext){
+            clearInterval(extjs)
             path = Ext.Loader.getPath('Ext')
             con.log(
                 'ExtJS version: ' + Ext.getVersion('extjs') + '\n' +
@@ -117,12 +118,15 @@ var extjs, path
             Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
             app.config.extjs.launch = extjs_launch
             Ext.application(app.config.extjs)
-            app.config.extjs.launch = null // clear ref for GC
-        } else {
+            return
+        } else if('' == path){
+            clearInterval(extjs)
             con.error(l10n.extjsNotFound)
             w.alert(l10n.extjsNotFound)
+            return
         }
-    }))
+        path = path.slice(1)
+    }, 1024)
     con.log('load_extjs: done, waiting for ExtJS')
 }
 
