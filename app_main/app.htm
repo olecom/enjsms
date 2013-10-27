@@ -8,10 +8,10 @@
     <script type="text/javascript" src ="l10n/ru.js"></script>
     <script type="text/javascript">(
     function pre_load(){
-        var m ,b = document.createElement('b')
+        var b = document.createElement('b')
         b.innerHTML = l10n.loading
-        window.addEventListener('load' ,m = function(){
-            window.removeEventListener('load' ,m)
+        window.addEventListener('load' ,function(e){
+            e.target.removeEventListener(e.type ,arguments.callee)
             document.getElementById('startup').appendChild(b)
         })
     })()
