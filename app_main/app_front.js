@@ -55,12 +55,12 @@ function load_config(app){// loaded only by main process -- node-webkit
 
     try {
         app.config = (
-            new Function('return (function(){ var config ; return ' +
-                          fs.readFileSync(cfg ,'utf8') + '})()')
+            new Function('var config ; return ' +
+                          fs.readFileSync(cfg ,'utf8'))
         )()
     } catch(ex){
-        con.error('ERROR load_config:' + ex + '\n' + ex+ '\n' + cfg)
-        app.w.window.alert(l10n.configLoadError + '\n' + ex + '\n' + cfg)
+        con.error('ERROR load_config:' + (cfg = (' ' + cfg + '\n' + ex)))
+        app.w.window.alert(l10n.configLoadError + cfg)
         return false
     }
     con.log('reading config: ' + cfg + ' done')
