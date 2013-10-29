@@ -4,7 +4,7 @@ var app
 
     // two parts: under `node-webkit` and `express` in browser
 
-    if(typeof process != 'undefined'){
+    if(typeof process != 'undefined'){// `nodeJS` is inside HTML
         app = { // configuration placeholders
             tray: { obj: null ,stat: 'show' },
             w: null,
@@ -13,22 +13,33 @@ var app
             ,role: { va_permissions: null }
             //,tools: { /*load_extjs: null*/ }
         }
+
         node_webkit(con ,app)
     }
-    //else 'node_express'
+    //else 'node_express': XHR communication with backend, CORS?
 
 /*
  * front end: node-webkit part
  */
 function node_webkit(con ,app){
+
+    process.on('uncaughtException' ,function(err){
+        con.error('uncaughtException:', err)
+        alert(l10n.uncaughtException  + err)
+    })
+
     var gui = require('nw.gui')
+
     app.w = gui.Window.get()
+
     //if(devel) app.w.showDevTools()
 
     setup_tray(app.tray ,app.w)
 
-    load_config(app) && extjs_load(app.w.window.document ,app.w.window)
-
+    if(load_config(app)){// if config is OK, load UI and backend in parallel
+        extjs_load(app.w.window.document ,app.w.window)
+        require('./app_back.js')(app)
+    }
     return
 
 function load_config(app){// loaded only by main process -- node-webkit

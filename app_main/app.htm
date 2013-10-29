@@ -8,6 +8,15 @@
     <script type="text/javascript" src ="l10n/ru.js"></script>
     <script type="text/javascript">(
     function pre_load(){
+        window.addEventListener('error' ,function(errEvent){
+            console && console.error(errEvent)
+            alert(// show any errors early
+                l10n.uncaughtException  +
+                errEvent.message + '\n' +
+                errEvent.filename + ':' + errEvent.lineno
+            )
+        })
+
         var b = document.createElement('b')
         b.innerHTML = l10n.loading
         window.addEventListener('load' ,function(e){
