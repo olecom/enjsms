@@ -36,11 +36,48 @@ function node_webkit(con ,app){
 
     setup_tray(app.tray ,app.w)
 
-    if(load_config(app)){// if config is OK, load UI and backend in parallel
+    if(load_config(app) && spawn_backend(app)){
+        // long xhr pooling gets messages from backend
         extjs_load(app.w.window.document ,app.w.window)
-        require('./app_back.js')(app)
     }
     return
+
+function spawn_backend(app){
+// loads `express` and answers on http requests,
+// as for this `nw` instance as for remote clients
+// closing `nw` doesn't mean closing backend processing (maybe cfg it?)
+
+    var fs = require('fs')
+
+    try {// check and/or create log dir
+        if(!fs.statSync(app.config.log).isDirectory()){
+            con.error('ERROR log dir is not a directory')
+            app.w.window.alert(l10n.errload_config_log_not_dir + app.config.log)
+            return false
+        }
+    } catch(ex){
+        try {
+            fs.mkdirSync(app.config.log)
+        } catch(ex) {
+            con.error('ERROR log dir:' + (ex = (' ' + app.config.log + '\n' + ex)))
+            app.w.window.alert(l10n.errload_config_log_mkdir + ex)
+            return false
+        }
+    }
+    return true
+
+    var out = fs.openSync('./out.log', 'a')
+        ,err = fs.openSync('./out.log', 'a')
+        ,backend = spawn = require('child_process').spawn(
+            app.config.backend.nodeGUI.file,
+            [],
+            {
+                detached: true,
+                stdio: [ 'ignore', out, err ]
+            }
+        )
+    backend.unref()
+}
 
 function load_config(app){// loaded only by main process -- node-webkit
     var cfg
@@ -71,7 +108,7 @@ function load_config(app){// loaded only by main process -- node-webkit
         )()
     } catch(ex){
         con.error('ERROR load_config:' + (cfg = (' ' + cfg + '\n' + ex)))
-        app.w.window.alert(l10n.configLoadError + cfg)
+        app.w.window.alert(l10n.errload_config_read + cfg)
         return false
     }
     con.log('reading config: ' + cfg + ' done')

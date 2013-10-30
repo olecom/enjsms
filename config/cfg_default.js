@@ -12,14 +12,23 @@ config = {
     /* standard configuration of extjs+node-webkit application */
 
     dev: 'enjsms',// developring this component
+    log: 'log/',
     app: {
         db: { mongodb:1 ,nedb:0 }, // github.com/louischatriot/nedb
-        modules: [ 'procman' ] // things from 'app_modules'
+        modules: {// cfg things from 'app_modules'
+            procman: {
+                // default: cfg_procman.js in own directory
+                config: 'config/cfg_procman_mongo_node_sms.js'
+                ,autoSpawn: true
+            }
+            ,usersman: {
+                store: 'dummy' //dummy (internal ro default roles), json file, db
+            }
+        }
     },
     extjs: {
         name: 'App',             // default
         appFolder: '.',          // default
-        autoCreateViewport: true,// default
         launch: null             // default
 
         /* custom ExtJS applicaiton config...
@@ -28,7 +37,13 @@ config = {
          * controllers: ['', '']
          */
     },
-    backend: { nw:1 ,express:0 },
+    backend: {
+        nodeGUI: {
+            active: true,
+            file: 'app_main/app_back.js'
+        }
+        ,express:0
+    },
     mongodb: {
          host: 'localhost'
         ,port: 27017
