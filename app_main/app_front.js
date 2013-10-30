@@ -64,19 +64,28 @@ function spawn_backend(app){
             return false
         }
     }
-    return true
-
-    var out = fs.openSync('./out.log', 'a')
-        ,err = fs.openSync('./out.log', 'a')
-        ,backend = spawn = require('child_process').spawn(
-            app.config.backend.nodeGUI.file,
-            [],
-            {
-                detached: true,
-                stdio: [ 'ignore', out, err ]
+    var  log = app.config.log +
+               app.config.backend.nodeGUI.file.replace(/[\\/]/g ,'_') + '.log'
+        ,backend = require('child_process').spawn(
+            'node'
+            ,[ app.config.backend.nodeGUI.file ]
+            ,{
+                 detached: true
+                ,stdio: [ 'ignore'
+                    ,fs.openSync(log ,'a+')
+                    ,fs.openSync(log ,'a+')
+                ]
             }
         )
+    if(!backend.pid || backend.exitCode){
+        con.error('ERROR spawn backend exit code: ' + backend.exitCode)
+        app.w.window.alert(l10n.errload_spawn_backend + backend.exitCode)
+        return false
+    }
     backend.unref()
+    con.error('backend.pid: ' + backend.pid)
+
+    return true
 }
 
 function load_config(app){// loaded only by main process -- node-webkit
