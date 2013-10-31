@@ -36,11 +36,27 @@ function node_webkit(con ,app){
 
     setup_tray(app.tray ,app.w)
 
-    if(load_config(app) && spawn_backend(app)){
-        // long xhr pooling gets messages from backend
-        extjs_load(app.w.window.document ,app.w.window)
-    }
+    // long xhr pooling gets messages from backend
+    load_config(app) && require('http')
+    .get("http://127.0.0.1:" + app.config.backend.ctl_port ,backend_is_running)
+    .on('error' ,backend_ctl_errors)
+
     return
+
+function backend_is_running(){
+    extjs_load(app.w.window.document ,app.w.window)
+    con.log('backend is up, just extjs')
+}
+
+function backend_ctl_errors(e){
+// NOTE: this is permanent error handler for all requests to `backend.ctl_port`
+    if(app.config.extjs){// run setup only first time after ctl check
+        spawn_backend(app) && extjs_load(app.w.window.document ,app.w.window)
+        con.log('on error backend spawed && extjs')
+    }
+    // ignore other errors for now
+    con.warn(e)
+}
 
 function spawn_backend(app){
 // loads `express` and answers on http requests,
@@ -65,12 +81,15 @@ function spawn_backend(app){
         }
     }
     var  log = app.config.log +
-               app.config.backend.nodeGUI.file.replace(/[\\/]/g ,'_') + '.log'
+               app.config.backend.file.replace(/[\\/]/g ,'_') + '.log'
         ,backend = require('child_process').spawn(
             'node'
-            ,[ app.config.backend.nodeGUI.file ]
+            ,[ app.config.backend.file ]
             ,{
                  detached: true
+                ,env: {
+                    NODEJS_CONFIG: JSON.stringify(app.config)
+                }
                 ,stdio: [ 'ignore'
                     ,fs.openSync(log ,'a+')
                     ,fs.openSync(log ,'a+')

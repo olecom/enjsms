@@ -38,11 +38,8 @@ config = {
          */
     },
     backend: {
-        nodeGUI: {
-            active: true,
-            file: 'app_main/app_back.js'
-        }
-        ,express:0
+        file: 'app_main/app_back.js',
+        ctl_port: 3000
     },
     mongodb: {
          host: 'localhost'
