@@ -1,29 +1,43 @@
-(function uglify_js_closure(con ,process){
+(function uglify_js_closure(con ,doc ,win ,l10n){
 var devel = true
-var app
+var app = { // configuration placeholders
+        config: null //{ db: null ,extjs:null }
+        ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
+        ,role: { va_permissions: null }
+        //,tools: { /*load_extjs: null*/ }
+    }
 
-    // two parts: under `node-webkit` and `express` in browser
+    /* two frontend parts: under `node-webkit` and `express` in browser */
 
     if(typeof process != 'undefined'){// `nodeJS` is inside HTML
-        app = { // configuration placeholders
-            tray: { obj: null ,stat: 'show' },
-            w: null,
-            config: null //{ db: null ,extjs:null }
-            ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
-            ,role: { va_permissions: null }
-            //,tools: { /*load_extjs: null*/ }
-        }
-
+        app.process = process
+        app.tray = { obj: null ,stat: 'show' }
+        app.w = null
+        // start local ExtJS 'App'
         node_webkit(con ,app)
+    } else {// 'node_express': XHR communication with backend
+        var xhr = new XMLHttpRequest()
+        xhr.open('GET' ,'/app.config.extjs.json' ,true)
+        xhr.onreadystatechange = function(){
+            if(4 == xhr.readyState) {
+                if(200 != xhr.status){
+                    alert(l10n.errload_config_read)
+                } else {
+                    // start external ExtJS 'App'
+                    app.config = { extjs: JSON.parse(xhr.responseText) }
+                    extjs_load(doc ,win)
+                }
+            }
+        }
+        xhr.send(null)
     }
-    //else 'node_express': XHR communication with backend, CORS?
 
 /*
  * front end: node-webkit part
  */
 function node_webkit(con ,app){
 
-    process.on('uncaughtException' ,function(err){
+    app.process.on('uncaughtException' ,function(err){
         con.error('uncaughtException:', err)
         alert(l10n.uncaughtException  + err)
     })
@@ -45,7 +59,7 @@ function node_webkit(con ,app){
 
 function backend_is_running(){
     extjs_load(app.w.window.document ,app.w.window)
-    con.log('backend is up, just extjs')
+    con.log('reload just extjs, backend is up and running already')
 }
 
 function backend_ctl_errors(e){
@@ -111,13 +125,13 @@ function load_config(app){// loaded only by main process -- node-webkit
     var cfg
     var fs = require('fs')
 
-    if((cfg = process._nw_app.argv[0])){// cmd line
+    if((cfg = app.process._nw_app.argv[0])){// cmd line
         cfg = 'config/' + cfg
     } else {// HOME config
-        if(process.env.HOME){
-            cfg = process.env.HOME
-        } else if(process.env.HOMEDRIVE && process.env.HOMEPATH){
-            cfg = process.env.HOMEDRIVE +  process.env.HOMEPATH
+        if(app.process.env.HOME){
+            cfg = app.process.env.HOME
+        } else if(app.process.env.HOMEDRIVE && app.process.env.HOMEPATH){
+            cfg = app.process.env.HOMEDRIVE +  app.process.env.HOMEPATH
         }
         cfg = cfg + '/.enjsms.js'//FIXME: app specific part
         try {
@@ -169,7 +183,7 @@ function setup_tray(t ,w){
 function extjs_load(doc ,w){
 var extjs, path
 
-    path = devel ? '../../../ext-4.2.1.883/' : 'extjs/'
+    path = app.config.extjs.path
     extjs = doc.createElement('link')
     extjs.setAttribute('rel', 'stylesheet')
     extjs.setAttribute('href', path + 'resources/css/ext-all.css')
@@ -207,7 +221,7 @@ var extjs, path
 }
 
 function extjs_launch(){
-    Ext.state.Manager.setProvider(new Ext.state.CookieProvider())
+    Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
 
     //TODO: for each app.config.app.modules load module
     //TODO: dynamic addition in toolbar or items/xtype construction
@@ -229,4 +243,4 @@ function extjs_launch(){
     con.log('extjs_launch: OK')
 }
 
-})(console ,process)
+})(console ,document ,window ,l10n)
