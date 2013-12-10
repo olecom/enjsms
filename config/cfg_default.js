@@ -30,7 +30,7 @@ config = {
         name: 'App',             // default
         appFolder: '.',          // default
         launch: null             // default
-
+        ,path: '../../../ext-4.2.1.883/' // and 'extjs/' for external users
         /* custom ExtJS applicaiton config...
          * models: ['', ''],
          * stores: ['', '', ''],
@@ -39,7 +39,9 @@ config = {
     },
     backend: {
         file: 'app_main/app_back.js',
-        ctl_port: 3000
+        ctl_port: 3000,
+        job_port: 3007,
+        sess_sec: 'enjsms'
     },
     mongodb: {
          host: 'localhost'
