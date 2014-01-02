@@ -3,58 +3,57 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="google" value="notranslate" />
-    <title>ENJSMS v029.13.10.2013 &copy; 2012-2013</title>
+    <title>ENJSMS v030.02.01.2014 &copy; 2012-2014</title>
     <link rel="shortcut icon" type="image/ico" href="images/favicon.ico" />
     <link rel="stylesheet" href="app.css" />
-<!-- l10n can be configured and/or changed by server side view engine and template
-     another way is: https://hacks.mozilla.org/2013/04/localize-your-node-js-service-part-1-of-3-a-node-js-holiday-season-part-9/
-     for now it's static: -->
-    <script type="text/javascript" src="l10n/ru.js"></script>
+    <!-- l10n can be configured and/or changed by server side view engine and template
+         for now it's static: -->
+    <script type="text/javascript" src="l10n/ru.js" charset="utf-8"></script>
     <script type="text/javascript">(
-    function pre_load(w ,d ,l10n ,c){
+    function pre_load(w ,d ,l10n ,c ,alert){
+        var b = "FATAL ERROR: no language! File './l10n/ru.js' or similar."
         if('undefined' == typeof l10n)
-            alert("FATAL ERROR: no language! File './l10n/ru.js' or similar.")
+            return d.write(b) && alert(b)
 
         w.addEventListener('error' ,function(errEvent){
+            var m
             c && c.error(errEvent)
-            alert(// show any errors early
-                l10n.uncaughtException  +
-                errEvent.message + '\n' +
-                errEvent.filename + ':' + errEvent.lineno
-            )
+            m = l10n.uncaughtException  +
+                errEvent.message + '\nfilename:"' +
+                (errEvent.filename ? errEvent.filename : 'app_front.js') +
+                '", line:' + errEvent.lineno
+            // show any errors early
+            d.write('<pre>' + m + '</pre>')
+            alert(m)
         })
 
-        var b = d.createElement('b')
+        b = d.createElement('b')
         b.innerHTML = l10n.loading
         w.addEventListener('load' ,function pre_onload(e){
             e.target.removeEventListener(e.type ,pre_onload)
             d.getElementById('startup').appendChild(b)
-            b = null// mark for GC
+            setTimeout(startup, 0)// schedule heavy loading after html && dom
         })
-    })(window, document, l10n, console)
-    </script>
-    <script type="text/javascript">setTimeout(
-    function startup(){
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET' ,'app_front.js' ,false) ,xhr.send()
 
-        return xhr.responseText ?
-                   start_good(document ,xhr.responseText) :
-                   start_failed(l10n.errload_no_app)
-
-        function start_failed(m){
-            alert(m)
-            document.getElementById('startup').innerHTML = l10n.errload
+        function startup(){
+            b = new XMLHttpRequest()
+            b.open('GET' ,'app_front.js' ,false)
+            b.send()
+            if(b.responseText){
+                d.head.removeChild(d.head.getElementsByTagName('script')[1])
+                b = d.createElement('script')
+                    .appendChild(d.createTextNode(b.responseText))
+                    .parentNode
+                b.setAttribute('type' ,'application/javascript')
+                b.setAttribute('charset' ,'utf-8')
+                //.setAttribute('src' ,'app_front.js')
+                d.head.appendChild(b)
+            } else {
+                d.write(l10n.errload_no_app + '<br>' + l10n.errload)
+            }
+            b = null// mark for GC
         }
-        function start_good(doc ,data){
-            xhr = doc.createElement('script')
-            xhr.setAttribute('type' ,'application/javascript')
-            xhr.setAttribute('charset' ,'utf-8')
-            //xhr.setAttribute('src' ,'app_front.js')
-            xhr.appendChild(doc.createTextNode(data))
-            doc.head.appendChild(xhr)
-        }
-    }, 0)
+    })(window, document, l10n, console, alert)
     </script>
 </head>
 <body style="color:black;background-color:white">
