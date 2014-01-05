@@ -49,21 +49,21 @@ Ext.define('App.view.shortcuts_Desktop', {
         }
         ,{ xtype: 'datefield' }
         ,{
-            text: '<img height=64 width=64 src="images/procman_shortcut.png"/><br/><br/>' +
+            text: '<img height=64 width=64 src="css/procman_shortcut.png"/><br/><br/>' +
                   'Процессы<br/>'
             ,height:110 ,minWidth:92
             ,tooltip: 'Запуск/Управление процессами'
         }
 
         ,{
-            text: '<img height=64 width=64 src="images/usersman_shortcut.png"/><br/><br/>' +
+            text: '<img height=64 width=64 src="css/usersman_shortcut.png"/><br/><br/>' +
                   l10n.um.users + '<br/>'
             ,height:110 ,minWidth:92
             ,tooltip: 'Управление пользователями, правами доступа и т.п.'
         }
 
         ,{
-            text: '<img height=64 width=64 src="images/favicon.png"/><br/><br/>' +
+            text: '<img height=64 width=64 src="css/favicon.png"/><br/><br/>' +
                   'SMS Программа<br/>'
             ,height:110 ,minWidth:92
             ,tooltip: 'SMS Программа'
@@ -89,12 +89,12 @@ Ext.define('App.view.Bar', {
             ,flex: 1
             ,enableOverflow: true
             ,items:[{
-                text: '<img height=16 width=16 src="images/favicon.png"/>'
+                text: '<img height=16 width=16 src="css/favicon.png"/>'
                 ,enableToggle: true
                 //,toggleHandler: onItemToggle
                 ,pressed: true
             }
-            ,{  text: '<img height=16 width=16 src="images/usersman_shortcut.png"/>'
+            ,{  text: '<img height=16 width=16 src="css/usersman_shortcut.png"/>'
             }
             ]
         },'-',
@@ -115,10 +115,10 @@ Ext.define('App.view.Bar', {
         var s = new Array(5) ,l = [ 'online','away','busy','offline' ]
         for(var i = 0; i < 4; i++)  s[i] = {
             text: l10n.userStatuses[l[i]]
-           ,icon: 'images/user-' +  l[i]+ '.png'
+           ,icon: 'css/user-' +  l[i]+ '.png'
            ,handler: onItemClick ,width: '100%'
         }
-        s[i] = { text: l10n.um.users ,scale:'large' ,icon:'images/um32x32.gif'}
+        s[i] = { text: l10n.um.users ,scale:'large' ,icon:'css/um32x32.gif'}
         return s
         function onItemClick(i ,j){
            (j = i.up('button')).setIcon(i.icon)

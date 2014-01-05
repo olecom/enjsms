@@ -1,43 +1,43 @@
 .appbar-shutdown {
-    background-image: url(images/shutdown.png);
+    background-image: url(css/shutdown.png);
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-connect-on {
-    background-image: url(images/connect-on.gif);
+    background-image: url(css/connect-on.gif);
     margin-top: 3px;/* align with `shutdown.png` */
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-connect-off {
-    background-image: url(images/connect-off.gif);
+    background-image: url(css/connect-off.gif);
     margin-top: 3px;
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-user-online {
-    background-image: url(images/user-online.png);
+    background-image: url(css/user-online.png);
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-user-offline {
-    background-image: url(images/user-offline.png);
+    background-image: url(css/user-offline.png);
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-user-busy {
-    background-image: url(images/user-busy.png);
+    background-image: url(css/user-busy.png);
     width: 22px!important;
     height: 22px!important;
 }
 .appbar-user-away {
-    background-image: url(images/user-away.png);
+    background-image: url(css/user-away.png);
     width: 22px!important;
     height: 22px!important;
 }
 
 /* simply:
-    text: '<img height=64 width=64 src="images/usersman_shortcut.png"/><br/><br/>' +
+    text: '<img height=64 width=64 src="css/usersman_shortcut.png"/><br/><br/>' +
           'Пользователи<br/>'
    than all this stuff:
 ------
@@ -51,10 +51,10 @@ css:
     margin: 10px;
 }
 .appdesktop-procman {
-    background-image: url(images/procman_shortcut.png);
+    background-image: url(css/procman_shortcut.png);
 }
 .appdesktop-usersman {
-    background-image: url(images/usersman_shortcut.png);
+    background-image: url(css/usersman_shortcut.png);
 }
 */
 
@@ -119,7 +119,7 @@ css:
 
 /* line 154, ../../../ext-theme-neutral/sass/src/toolbar/Toolbar.scss */
 .x-gray-toolbar-more-icon {
-  background-image: url(images/toolbar/more.gif) !important;
+  background-image: url(css/gray-toolbar/more.gif) !important;
   background-position: center center !important;
   background-repeat: no-repeat;
 }
