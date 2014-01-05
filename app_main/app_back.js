@@ -1,39 +1,59 @@
 (function uglify_js_closure(con ,process){
 var cfg = JSON.parse(process.env.NODEJS_CONFIG) ,ctl
 var ipt = require('util').inspect
+   ,text_plain = { 'Content-Type': 'text/plain; charset=utf-8' }
+   ,app_json   = { 'Content-Type': 'application/json; charset=utf-8' }
+
     function run_backend(){
         con.log('^ app is starting http @ port ' + cfg.backend.job_port + '\n' +
                 new Date().toISOString()
         )
         //con.error('error check')
-        run_express_app()
+        run_app()
     }
 
-//express for business logic as from node-webkit(local UI) as from regular HTTP (localhost or any host)
+require('http').ServerResponse.prototype.json =
+/*  res.json({ success: true })
+ *  res.json('{ "success": true }')
+ *  res.json(401, { msg: ' Authorization Required' })
+ */
+function res_json(obj){
+    if(2 == arguments.length){// args: status / body
+        this.statusCode = obj
+        obj = arguments[1]
+    }
+    if('string' != typeof obj) obj = JSON.stringify(obj)
+    this.setHeader('Content-Length', obj.length)
+    this.writeHead(this.statusCode, app_json)
+    this.end(obj)
+}
 
-function run_express_app(){
-var express = require('express')//,MongoStore = require('connect-mongo')(express)
-    ,utils  = require('express/node_modules/connect/lib/utils.js')
-    ,_limit = require('express/node_modules/connect/lib/middleware/limit.js')
-    ,putf = { 'Content-Type': 'text/plain; charset=utf-8' }
-    ,app
+/*`connect` for business logic as from node-webkit(local UI)
+ * as from regular HTTP (localhost or any host)
+ */
+
+function run_app(){
+var utils  = require('connect/lib/utils.js')
+   ,connect = require('connect')
+   ,app = connect()
 
     /* Application middleware setup */
-    app = express()
-        .use(express.cookieParser())
-        .use(express.session({secret: cfg.backend.sess_sec}))
-        .use(express.json())
-        .use(mwPostTextPlain)
 
-    /* HTTP routing: app.get, app.post, etc. are called here */
-    app .use(app.router)
+    app.use(connect.cookieParser())
+    app.use(connect.json())
+    app.use(mwPostTextPlain)
+
+    //.use(require('connect/lib/middleware/session')({secret: cfg.backend.sess_sec}))
+    //,MongoStore = require('connect-mongo')(express)
 
     /* backend static: for non localhost users */
     app.use('/app_back.js' ,mwAssume404)
-    app.use('/' ,express.static(__dirname))
-    app.use('/extjs/' ,express.static(__dirname + '/' + cfg.extjs.path))
-    cfg.extjs.path = 'extjs/'
+    app.use('/' ,connect.static(__dirname))
+    app.use('/extjs/' ,connect.static(__dirname + '/' + cfg.extjs.path))
+    cfg.extjs.path = 'extjs/'// switch local to external path
+    app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
 
+// TODO: require plugins here
 /* https://github.com/caulagi/sntd/blob/master/config/express.js */
 /*/ Bootstrap models
     var models_path = __dirname + '/app/models'
@@ -41,20 +61,16 @@ var express = require('express')//,MongoStore = require('connect-mongo')(express
         if (~file.indexOf('.js')) require(models_path + '/' + file)
     })*/
 
-//TODO: mount plugin/app backends
-// Modular web applications with Node.js and Express http://vimeo.com/56166857
-// from tjholowaychuk
-
     /* Finally, error middleware setup */
-    app .use(function mwErrorHandler(err, req, res, next){
-        if(!err) return next()
-        if (err.status) res.statusCode = err.status
-        if (res.statusCode < 400) res.statusCode = 500
-        con.error(ipt(err) + ' (internal backend error)')
-        res.writeHead(res.statusCode, putf)
-        return res.end(err.stack)// frontend must wrap this in pretty UI
-    })
-    .use(mwAssume404)
+    app.use(function mwErrorHandler(err, req, res, next){
+            if(!err) return next()
+            if (err.status) res.statusCode = err.status
+            if (res.statusCode < 400) res.statusCode = 500
+            con.error(ipt(err) + ' (internal backend error)')
+            res.writeHead(res.statusCode, text_plain)
+            return res.end(err.stack)//XXX frontend must wrap this in pretty UI
+        })
+       .use(mwAssume404)// no middleware handled request
     .listen(cfg.backend.job_port ,app_is_up_and_running)
     return
 
@@ -62,14 +78,10 @@ var express = require('express')//,MongoStore = require('connect-mongo')(express
         con.log('^ app is up and running\n' +
             new Date().toISOString()
         )
-
-        app.get('/app.config.extjs.json' ,function(req, res){
-            res.json(cfg.extjs)
-        })
     }
 
-    function mwAssume404(req, res){// no middleware handled request
-        res.writeHead(res.statusCode = 404, putf)
+    function mwAssume404(req, res){
+        res.writeHead(res.statusCode = 404, text_plain)
         return res.end(
             'URL: ' + req.originalUrl + '\n\n' +
             'Not found'
@@ -78,7 +90,7 @@ var express = require('express')//,MongoStore = require('connect-mongo')(express
 
     function mwPostTextPlain(req, res, next){
         if (req._body) return next()
-        var limit = _limit('4mb')
+        var limit = connect.limit('4mb')
         if('text/plain' == utils.mime(req))
             return limit(req, res
         ,function(err){
