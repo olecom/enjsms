@@ -115,36 +115,27 @@ process.on('exit', function process_exit(){
 
 ctl = require('http').createServer(
 function proc_ctl_http_serv(req, res){
-    var len = 0, body = null
-    con.log(req.url)
-    if ('/cmd_exit' == req.url){
+    var body = ''
+
+    res.on('close', proc_ctl_res_unexpected_close)
+
+    con.log('ctl req url:' + req.url)
+    if ('/sts_running' == req.url){
+    } else if ('/cmd_exit' == req.url){
         process.nextTick(function(){
             process.exit(0)
         })
-        body = '$ is going down' ,len = body.length
-    } else if ('/sts_running' == req.url){
+        body += '$ is going down'
     } else if ('/cmd_stat' == req.url){
-        if ('GET' == req.method){
-            body = Math.ceil(process.uptime()).toString() ,len = body.length
-        }
+        body += Math.ceil(process.uptime()) + '\n' + ctl.toISOString()
+    } else {// show somw info about this
+        body += '? control channel resourses:\n\n' +
+        'sts_running cmd_stat cmd_exit' +
+        '\n\n' +
+        'application under control is at port: ' + cfg.backend.job_port + '\n'
     }
-    res.writeHead(200 ,{ 'Content-Length': len ,'Content-Type': 'text/plain' })
+    res.writeHead(200 ,{ 'Content-Length': body.length ,'Content-Type': 'text/plain' })
     res.end(body)
-})
-
-ctl.on('error',
-function proc_ctl_http_serv_error(e){
-// NOTE: net error handler must not be inside init(listen) callback!!!
-    if('EADDRINUSE' == e.code){// 'EADDRNOTAVAIL'?
-        con.error(
-            "FATAL: can't listen host:port='127.0.0.1':" + cfg.backend.ctl_port +
-            "\n" + ipt(e) +
-            "\nNOTE: check config 'ctl_port' option collision"
-        )
-    } else {//FIXME: handle all fatal errors to unset `ctl` and process.exit()
-        con.error("ERROR controlling http channel: " + ipt(e))
-    }
-    if (!ctl) process.exit(1)
 })
 
 ctl.on('listening',
@@ -155,6 +146,30 @@ function proc_ctl_http_serv_listening(){
         ctl.toISOString()
     )
 })
+
+ctl.on('error',
+function proc_ctl_http_serv_error(e){
+// NOTE: net error handler must not be inside init(listen) callback!!!
+    if('EADDRINUSE' == e.code){// 'EADDRNOTAVAIL'?
+        con.error(
+            "!!! FATAL(ctl): can't listen host:port='127.0.0.1':" + cfg.backend.ctl_port +
+            "\n" + ipt(e) +
+            "\nNOTE: check config 'ctl_port' option collision"
+        )
+    } else {//FIXME: handle all fatal errors to unset `ctl` and process.exit()
+        con.error("! ERROR(ctl) controlling http channel: " + ipt(e))
+    }
+    if (!ctl) process.exit(1)
+})
+
+ctl.on('clientError',
+function proc_ctl_client_error(e, sock){
+    con.error("! ERROR(ctl) in client connection: " + ipt(e))
+})
+
+function proc_ctl_res_unexpected_close(){
+    con.error('! ERROR(ctl) aborted request')
+}
 
 ctl.listen(cfg.backend.ctl_port ,'127.0.0.1' ,run_backend)
 ctl.unref()// "allow the program to exit if this is the only active server in the event system"
