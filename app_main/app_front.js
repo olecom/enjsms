@@ -21,6 +21,8 @@ var app = { // configuration placeholders
         xhr.onreadystatechange = function(){
             if(4 == xhr.readyState){
                 if(200 != xhr.status){
+                    con && con.error && con.error(l10n.errload_config_read)
+                    doc.write(l10n.errload_config_read)
                     alert(l10n.errload_config_read)
                 } else {
                     // start external ExtJS 'App'
@@ -78,11 +80,15 @@ function spawn_backend(app){
 // closing `nw` doesn't mean closing backend processing (maybe cfg it?)
 
     var fs = require('fs')
+        ,log
+        ,backend
 
     try {// check and/or create log dir
         if(!fs.statSync(app.config.log).isDirectory()){
             con.error('ERROR log dir is not a directory')
-            app.w.window.alert(l10n.errload_config_log_not_dir + app.config.log)
+            log = l10n.errload_config_log_not_dir + app.config.log
+            doc.write(log)
+            app.w.window.alert(log)
             return false
         }
     } catch(ex){
@@ -90,29 +96,34 @@ function spawn_backend(app){
             fs.mkdirSync(app.config.log)
         } catch(ex) {
             con.error('ERROR log dir:' + (ex = (' ' + app.config.log + '\n' + ex)))
-            app.w.window.alert(l10n.errload_config_log_mkdir + ex)
+            log = l10n.errload_config_log_mkdir + ex
+            doc.write(log)
+            app.w.window.alert(log)
             return false
         }
     }
-    var  log = app.config.log +
-               app.config.backend.file.replace(/[\\/]/g ,'_') + '.log'
-        ,backend = require('child_process').spawn(
-            'node'
-            ,[ app.config.backend.file ]
-            ,{
-                 detached: true
-                ,env: {
-                    NODEJS_CONFIG: JSON.stringify(app.config)
-                }
-                ,stdio: [ 'ignore'
-                    ,fs.openSync(log ,'a+')
-                    ,fs.openSync(log ,'a+')
-                ]
+
+    log = app.config.log +
+          app.config.backend.file.replace(/[\\/]/g ,'_') + '.log'
+    backend = require('child_process').spawn(
+        'node'
+        ,[ app.config.backend.file ]
+        ,{
+             detached: true
+            ,env: {
+                NODEJS_CONFIG: JSON.stringify(app.config)
             }
-        )
+            ,stdio: [ 'ignore'
+                ,fs.openSync(log ,'a+')
+                ,fs.openSync(log ,'a+')
+            ]
+        }
+    )
     if(!backend.pid || backend.exitCode){
         con.error('ERROR spawn backend exit code: ' + backend.exitCode)
-        app.w.window.alert(l10n.errload_spawn_backend + backend.exitCode)
+        log = l10n.errload_spawn_backend + backend.exitCode
+        doc.write(log)
+        app.w.window.alert(log)
         return false
     }
     backend.unref()
@@ -150,7 +161,9 @@ function load_config(app){// loaded only by main process -- node-webkit
         )()
     } catch(ex){
         con.error('ERROR load_config:' + (cfg = (' ' + cfg + '\n' + ex)))
-        app.w.window.alert(l10n.errload_config_read + cfg)
+        cfg = l10n.errload_config_read + cfg
+        doc.write(cfg)
+        app.w.window.alert(cfg)
         return false
     }
     con.log('reading config: ' + cfg + ' done')
@@ -212,6 +225,7 @@ var extjs, path
         } else if('' == path){
             clearInterval(extjs)
             con.error(l10n.extjsNotFound)
+            doc.write(l10n.extjsNotFound)
             w.alert(l10n.extjsNotFound)
             return
         }
