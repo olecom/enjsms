@@ -158,7 +158,7 @@ function load_config(app){// loaded only by main process -- node-webkit
 }
 
 function setup_tray(t ,w){
-    t.obj = new gui.Tray({ title: l10n.tray.title ,icon: 'app_main/images/favicon.png' })
+    t.obj = new gui.Tray({ title: l10n.tray.title ,icon: 'app_main/css/favicon.png' })
     t.obj.tooltip = l10n.tray.winvis
 
     t.obj.on('click' ,function onTrayClick(){
