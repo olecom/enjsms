@@ -226,20 +226,25 @@ function extjs_launch(){
     //TODO: for each app.config.app.modules load module
     //TODO: dynamic addition in toolbar or items/xtype construction
     //global `App` object is available now
-    app.config.extjs = null // clear ref for GC
     App.config = app.config ,App.user = app.user ,App.role = app.role
     //TODO: events via long pooling from app_backend/express
     //App.sync_clearTimeout = Ext.defer(App.sync_extjs_nodejs, 3777)
 
-    // very strange composition to get gears to fadeOut and viewport to fadeIn
-    var b = Ext.getBody()
-    b.fadeOut({duration:777 ,callback: function(){
-        Ext.fly('startup').remove()
-        b.show()
-        Ext.create('App.view.Viewport')
-        b.fadeIn({easing:'easeIn' ,duration:1024})
-        con.log('extjs: faded In')
-    }})
+    if(app.config.extjs.fading){
+        // very strange composition to get gears to fadeOut and viewport to fadeIn
+        var b = Ext.getBody()
+        b.fadeOut({duration:777 ,callback:
+            function(){
+                Ext.fly('startup').remove()
+                b.show()
+                Ext.create('App.view.Viewport')
+                b.fadeIn({easing:'easeIn' ,duration:1024})
+                con.log('extjs: faded In')
+            }
+        })
+    } else Ext.create('App.view.Viewport')
+
+    app.config.extjs = null // clear ref for GC
     con.log('extjs_launch: OK')
 }
 

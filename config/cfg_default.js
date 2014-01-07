@@ -41,6 +41,7 @@ config = {
         file: 'app_main/app_back.js',
         ctl_port: 3000,
         job_port: 3007,
+        fading: true,            // visual effects for content appearance
         sess_sec: 'enjsms'
     },
     mongodb: {
