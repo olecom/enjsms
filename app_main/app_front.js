@@ -9,17 +9,17 @@ var app = { // configuration placeholders
 
     /* two frontend parts: under `node-webkit` and `express` in browser */
 
-    if(typeof process != 'undefined'){// `nodeJS` is inside HTML
+    if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
         app.process = process
         app.tray = { obj: null ,stat: 'show' }
         app.w = null
         // start local ExtJS 'App'
         node_webkit(con ,app)
-    } else {// 'node_express': XHR communication with backend
+    } else {// 'nodejs + connectjs': XHR communication with backend (remote web browser)
         var xhr = new XMLHttpRequest()
         xhr.open('GET' ,'/app.config.extjs.json' ,true)
         xhr.onreadystatechange = function(){
-            if(4 == xhr.readyState) {
+            if(4 == xhr.readyState){
                 if(200 != xhr.status){
                     alert(l10n.errload_config_read)
                 } else {
@@ -73,8 +73,8 @@ function backend_ctl_errors(e){
 }
 
 function spawn_backend(app){
-// loads `express` and answers on http requests,
-// as for this `nw` instance as for remote clients
+// loads `node`+`connect` as separate process and answers on http requests,
+// as for this `nw` instance, as for remote clients
 // closing `nw` doesn't mean closing backend processing (maybe cfg it?)
 
     var fs = require('fs')
