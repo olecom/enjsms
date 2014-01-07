@@ -1,8 +1,8 @@
 {
     "name": "enjsms",
     "license": "MIT",
-    "version": "2.0.29",
-    "description": "v029@2013-10-10: SMS sending via GSM (3G or VoIP) modems",
+    "version": "2.0.30",
+    "description": "v030@2014-01-02: SMS sending via GSM (3G or VoIP) modems",
     "repository": {
         "type": "git",
         "url": "http://github.com/olecom/enjsms.git"
@@ -40,11 +40,11 @@
     },
     "main": "app_main/app.htm",
     "engines": {
-        "node": "*",
-        "node-webkit": "0.7.5"
+        "node": "0.10.24",
+        "node-webkit": "0.8.2 (node: '0.10.22')"
     },
     "dependencies": {
-        "express": "*",
+        "connect": "2.9.2- (low fat)",
         "mongodb": "*",
         "serialport": "*",
         "step": "*"
