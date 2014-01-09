@@ -46,14 +46,15 @@ var utils  = require('connect/lib/utils.js')
     app.use(connect.json())
     app.use(mwPostTextPlain)
 
-    //.use(require('connect/lib/middleware/session')({secret: cfg.backend.sess_puzl}))
-    //,MongoStore = require('connect-mongo')(express)
-
     /* backend static: for non localhost users */
     app.use('/app_back.js' ,mwAssume404)
     app.use('/' ,connect.static(__dirname))
     app.use('/extjs/' ,connect.static(__dirname + '/' + cfg.extjs.path))
     cfg.extjs.path = 'extjs/'// switch local to external path
+
+    /* have `session` after `static`, to prevent needless work */
+    // TODO!!!: .use(require('connect.session')({secret: cfg.backend.sess_puzl}))
+    //,MongoStore = require('connect-mongo')(express)
     app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
 
 // TODO: require plugins here
