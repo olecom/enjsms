@@ -236,6 +236,11 @@ var extjs, path
 
 function extjs_launch(){
     //Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
+    // handle errors raised by Ext.Error.raise()
+    Ext.Error.handle = function(err){
+        //TODO: error list, kebab's popup with extdesk gears to show them
+        return !con.warn(err)
+    }
 
     //TODO: for each app.config.app.modules load module
     //TODO: dynamic addition in toolbar or items/xtype construction

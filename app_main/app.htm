@@ -23,7 +23,10 @@
                 (errEvent.filename ? errEvent.filename : 'app_front.js') +
                 '", line:' + errEvent.lineno
             // show any errors early
-            d.write('<pre>' + m + '\n' + errEvent.error.stack + '</pre>')
+            d.write('<pre><h2>' +
+                m + '</h2><div style="color:white;background-color:red">' +
+                errEvent.error.stack + '</div></pre>'
+            )
             alert(m)
         })
 
