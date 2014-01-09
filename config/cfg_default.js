@@ -30,7 +30,8 @@ config = {
         name: 'App',             // default
         appFolder: '.',          // default
         launch: null             // default
-        ,path: '../../../ext-4.2.1.883/' // and 'extjs/' for external users
+        ,path: 'ext-4.2.1.883/'  // search this above './'; 'extjs/' is for HTML
+        ,fading: true            // visual effects for content appearance
         /* custom ExtJS applicaiton config...
          * models: ['', ''],
          * stores: ['', '', ''],
@@ -39,10 +40,9 @@ config = {
     },
     backend: {
         file: 'app_main/app_back.js',
-        ctl_port: 3000,
+        ctl_port: 3008,
         job_port: 3007,
-        fading: true,            // visual effects for content appearance
-        sess_sec: 'enjsms'
+        sess_puzl: 'puzzle-word$50000X'
     },
     mongodb: {
          host: 'localhost'
