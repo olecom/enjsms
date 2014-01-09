@@ -9,6 +9,119 @@ Ext.define('App.view.Desktop', {
         }
         ,{ xtype: 'useredit' }
     ]
+    ,initComponent: function(){
+        var me = this
+
+        /* resizing of parent: add `status_Desktop` to `desktop`
+         * show() floating Component, or it is hidden
+         * */
+
+        me.on({
+        'boxready': {
+            'single': true,
+            fn: function onBoxready(){
+                var ss = Ext.create('App.view.desktop.Status')
+                me.add(ss)// for `constrain`
+                Ext.defer(function(){
+                    var r = me.getRegion()
+                    ss.show()
+                    Ext.tip.QuickTipManager.register({
+                        target: ss.getEl().id,
+                        title: 'Что и как происходит внутри системы?',
+                        text: 'Двойной клик по шестерням раскрывает/скрывает окно',
+                        width: 300,
+                        dismissDelay: 0
+                    })
+                    ss.setXY([r.right - 18, r.bottom - 18])
+                    ss.animate({
+                        duration: 1234,
+                        keyframes : {
+                        '0%': {
+                            y: r.bottom - 18 - 0000
+                            ,x: r.right - 18 - 0000
+                            ,width:  7 + 0000
+                            ,height: 7 + 0000
+                        },
+                        '40%': {
+                            y: r.bottom - 18 - 67/4
+                            ,x: r.right - 18 - 84/4
+                            ,width:  84/4
+                            ,height: 67/4
+                        },
+                        '60%': {
+                            y: r.bottom - 18 - 67/2
+                            ,x: r.right - 18 - 84/2
+                            ,width:  84/2
+                            ,height: 67/2
+                        },
+                        '100%': {
+                            y: r.bottom - 18 - 67/1
+                            ,x: r.right - 18 - 84/1
+                            ,width:  84/1
+                            ,height: 67/1
+                        }}
+                    })
+                    ss.getEl().setStyle('z-index', 999999)// very always on top
+                    me.on({// don't loose status outside application window
+                    'resize': function(){
+                        var r = me.getRegion()
+                           ,f = ss.getRegion()
+                        if(f.top >= r.bottom || f.left >= r.right){
+                            ss.animate({
+                                to: {
+                                    top: r.bottom - 28 - 84,
+                                    left: r.right - 28 - 67
+                                }
+                                ,easing: 'elasticOut'
+                                ,duration: 678
+                            })
+                        }
+                    }})
+                }, 1)
+            }
+        }})
+        me.callParent(arguments)
+    }
+})
+
+Ext.define('App.view.desktop.Status', {
+    //extend: 'Ext.Component',
+    xtype: 'app-status-bubble',
+    extend: 'Ext.container.Container',
+    layout: 'hbox',
+    width: 7,
+    height: 7,
+    floating: true,
+    constrain: true,
+    draggable: true,
+    resizable: true,
+
+    stateful: true,
+    stateId: 'dpsb',
+    style: 'padding: 4px; box-shadow: 0px 10px 20px #111; text-align: center;',
+    items: [
+        {
+            xtype: 'container'
+            ,tooltip: 'Двойной клик раскрывает/скрывает содержимое'
+            ,layout: 'vbox'
+            ,width: 77
+            ,align: 'strech'
+            ,defaults: {
+                width: '100%'
+            }
+            ,items:[
+                Ext.create('Ext.Img', {
+                    src: 'css/extdeskrun.gif',
+                    height:61// fix first layout
+
+                })
+                ,{
+                    xtype: 'component'
+                    ,html: 'СУПРО СУПРО СИСТЕМАНИПЕЛЬб СУПРО СУПРО СУПРО СУПРО СИСТЕМАНИПЕЛЬ'
+                }
+            ]
+        }
+    ]
 })
 
 Ext.define('App.view.shortcuts_Desktop', {
