@@ -235,7 +235,7 @@ var extjs, path
 }
 
 function extjs_launch(){
-    Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
+    //Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
 
     //TODO: for each app.config.app.modules load module
     //TODO: dynamic addition in toolbar or items/xtype construction
@@ -256,7 +256,10 @@ function extjs_launch(){
                 con.log('extjs: faded In')
             }
         })
-    } else Ext.create('App.view.Viewport')
+    } else {
+        Ext.fly('startup').remove()
+        Ext.create('App.view.Viewport')
+    }
 
     app.config.extjs = null // clear ref for GC
     con.log('extjs_launch: OK')
