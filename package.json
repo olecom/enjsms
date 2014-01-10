@@ -43,6 +43,9 @@
         "node": "0.10.24",
         "node-webkit": "0.8.2 (node: '0.10.22')"
     },
+    "extjs":{
+        "version": "4.2.1"
+    },
     "dependencies": {
         "connect": "2.9.2- (low fat)",
         "mongodb": "*",
