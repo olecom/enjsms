@@ -184,7 +184,7 @@ function check_extjs_path(){// find local ExtJS in and above cwd './'
             extjs_path = app.config.extjs.path
             d += 'c'
         } else {
-            ex.message += '\n\n' + l10n.extjsPathNotFound(ef, app.config.extjs.path)
+            ex.message += '\n\n' + l10n.extjsPathNotFound(ef)
             throw ex
         }
     }
