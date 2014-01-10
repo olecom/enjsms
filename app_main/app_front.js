@@ -180,10 +180,12 @@ function check_extjs_path(){// find local ExtJS in and above cwd './'
     try{
         extjs_path = fs.readFileSync(ef).toString().trim()
     } catch(ex){
-        console.dir(ex)
         if(app.config.extjs.path){
             extjs_path = app.config.extjs.path
             d += 'c'
+        } else {
+            ex.message += '\n\n' + l10n.extjsPathNotFound(ef, app.config.extjs.path)
+            throw ex
         }
     }
     if('/' != extjs_path[extjs_path.length - 1]) extjs_path += '/'
@@ -192,7 +194,7 @@ function check_extjs_path(){// find local ExtJS in and above cwd './'
     do {
        try{
             p = fs.statSync(extjs_path)
-        } catch(ex){ console.dir(ex) }
+        } catch(ex){ }
         extjs_path = pe + extjs_path// add final level from `app_main` anyway
         if(p) break
     } while(--i)
