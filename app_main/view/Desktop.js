@@ -22,11 +22,11 @@ Ext.define('App.view.Desktop', {
             fn: function onBoxready(){
                 var ss = Ext.create('App.view.desktop.Status')
                 me.add(ss)// for `constrain`
-                Ext.defer(function(){
+                Ext.defer(function(){// layouts are not always available
                     var r = me.getRegion()
                     ss.show()
                     Ext.tip.QuickTipManager.register({
-                        target: ss.getEl().id,
+                        target: ss.down('image').getEl().id,
                         title: 'Что и как происходит внутри системы?',
                         text: 'Двойной клик по шестерням раскрывает/скрывает окно',
                         width: 300,
