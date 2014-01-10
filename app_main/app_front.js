@@ -38,7 +38,7 @@ var app = { // configuration placeholders
  * front end: node-webkit part
  */
 function node_webkit(con ,app){
-
+    //TODO: wrap `uncaughtException` in ExtJS window, add xhr to backend
     app.process.on('uncaughtException' ,function(err){
         con.error('uncaughtException:', err)
         alert(l10n.uncaughtException  + err)
@@ -167,7 +167,74 @@ function load_config(app){// loaded only by main process -- node-webkit
         return false
     }
     con.log('reading config: ' + cfg + ' done')
-    return true
+
+    return check_extjs_path()
+}
+
+function check_extjs_path(){// find local ExtJS in and above cwd './'
+    var fs = require('fs'), pe = '../', d = '', i, p
+       ,ef = 'extjs.txt'
+       ,extjs_path
+
+    /* lookup extjs.txt first */
+    try{
+        extjs_path = fs.readFileSync(ef).toString().trim()
+    } catch(ex){
+        console.dir(ex)
+        if(app.config.extjs.path){
+            extjs_path = app.config.extjs.path
+            d += 'c'
+        }
+    }
+    if('/' != extjs_path[extjs_path.length - 1]) extjs_path += '/'
+
+    i = 7
+    do {
+       try{
+            p = fs.statSync(extjs_path)
+        } catch(ex){ console.dir(ex) }
+        extjs_path = pe + extjs_path// add final level from `app_main` anyway
+        if(p) break
+    } while(--i)
+
+    while(1){
+        if(p){
+            d = ''
+            break
+        }
+        if(d){/* no 'extjs.txt' file, and cfg failed */
+            d = l10n.extjsPathNotFound(ef, app.config.extjs.path, 1)
+            break
+        }
+
+        if(app.config.extjs.path){
+            extjs_path = app.config.extjs.path
+            if('/' != extjs_path[extjs_path.length - 1]) extjs_path += '/'
+        } else {/* no `extjs.txt` && no cfg value */
+            d = l10n.extjsPathNotFound(ef, app.config.extjs.path, 2)
+            break
+        }
+        i = 7, p = null
+        do {
+            try{
+                p = fs.statSync(extjs_path)
+            } catch(ex){ }
+            extjs_path = pe + extjs_path
+            if(p) break
+        } while(--i)
+        if(p) break
+        d = l10n.extjsPathNotFound(ef, app.config.extjs.path)
+        break
+    }
+    if(!d){
+        app.config.extjs.path = extjs_path
+        con.log('ExtJS path found: "' + extjs_path + '"')
+        return true
+    }
+    con.error('ExtJS path not found')
+    doc.getElementById('e').style.display = "block"
+    doc.getElementById('d').innerHTML = d.replace(/\n/g, '<br>')
+    return false
 }
 
 function setup_tray(t ,w){
@@ -195,7 +262,6 @@ function setup_tray(t ,w){
 
 function extjs_load(doc ,w){
 var extjs, path
-
     path = app.config.extjs.path
     extjs = doc.createElement('link')
     extjs.setAttribute('rel', 'stylesheet')

@@ -30,7 +30,7 @@ config = {
         name: 'App',             // default
         appFolder: '.',          // default
         launch: null             // default
-        ,path: 'ext-4.2.1.883/'  // search this above './'; 'extjs/' is for HTML
+        ,path: 'ext-4.2.1.883/'  // search extjs.txt or this above './'; 'extjs/' is for HTML
         ,fading: true            // visual effects for content appearance
         /* custom ExtJS applicaiton config...
          * models: ['', ''],
