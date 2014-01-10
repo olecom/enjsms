@@ -173,7 +173,7 @@ function load_config(app){// loaded only by main process -- node-webkit
 
 function check_extjs_path(){// find local ExtJS in and above cwd './'
     var fs = require('fs'), pe = '../', d = '', i, p
-       ,ef = 'extjs.txt'
+       ,ef = app.config.extjs.pathFile
        ,extjs_path
 
     /* lookup extjs.txt first */
