@@ -1,9 +1,8 @@
 /**
- * Status {@link App.model.Status} model for all backend info
+ * Status {@link Ext.data.Model} model for all backend info
  */
 Ext.require('App.model.Base')
 Ext.define('App.cfg.modelStatus',{
-    extend: 'App.cfg.model.Base',
     singleton: true,// used only once
     fields:[
     {
