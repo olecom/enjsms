@@ -28,6 +28,7 @@ Ext.define('App.view.Desktop',{
                         title: l10n.stsHandleTipTitle,
                         text: l10n.stsHandleTip,
                         width: 244,
+                        showDelay: 1024,
                         dismissDelay: 0
                     })
 
