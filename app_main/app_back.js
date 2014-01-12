@@ -47,15 +47,15 @@ var utils  = require('connect/lib/utils.js')
     app.use(mwPostTextPlain)
 
     /* backend static: for non localhost users */
-    app.use('/app_back.js' ,mwAssume404)
-    app.use('/' ,connect.static(__dirname))
-    app.use('/extjs/' ,connect.static(__dirname + '/' + cfg.extjs.path))
+    app.use('/extjs/' ,connect['static'](__dirname + '/' + cfg.extjs.path))
     cfg.extjs.path = 'extjs/'// switch local to external path
+    app.use('/' ,connect['static'](__dirname, { index: 'app.htm' }))
+    app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
+    app.use('/app_back.js' ,mwAssume404)
 
     /* have `session` after `static`, to prevent needless work */
     // TODO!!!: .use(require('connect.session')({secret: cfg.backend.sess_puzl}))
     //,MongoStore = require('connect-mongo')(express)
-    app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
 
 // TODO: require plugins here
 /* https://github.com/caulagi/sntd/blob/master/config/express.js */
