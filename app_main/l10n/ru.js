@@ -45,6 +45,22 @@ var l10n = {
 пример_названия
     }
     ,uncaughtException: 'Неожиданная внутренняя ошибка! Обратитесь к разработчикам.\n'
+
+    ,stsHandleTipTitle: 'Что и как происходит внутри системы?'
+    ,stsHandleTip: 'Двойной клик по шестерням раскрывает или скрывает содержимое'
+    ,stsStart: 'ЗАПУСК основной `nodejs`'
+    ,stsCheck: 'ПРОВЕРКА работы основной `nodejs`'
+    ,stsBackendPid: function(pid){
+        return '' + pid + ' - идентификатор основного процесса(nodejs) системы'
+    }
+    ,stsBackendXHR: "подключение к основному процессу(nodejs) системы"
+    ,stsOK: 'OK'
+
+    ,time: 'Время'
+    ,operation: 'Операция'
+    ,description: 'Описание'
+    ,result: 'Итог'
+
     ,shutdown: 'Выйти или блокировать'
     ,connection: 'Состояние сетевого соединения'
     ,userStatus: 'Рабочий статус пользователя'

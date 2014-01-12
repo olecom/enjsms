@@ -144,11 +144,12 @@ function proc_ctl_http_serv(req, res){
         body += '$ is going down'
     } else if ('/cmd_stat' == req.url){
         body += Math.ceil(process.uptime()) + '\n' + ctl.toISOString()
-    } else {// show somw info about this
-        body += '? control channel resourses:\n\n' +
-        'sts_running cmd_stat cmd_exit' +
+    } else {// show some info about this
+        body += '? pid: ' + process.pid +
+        '\ncontrol channel resourses:\n' +
+        '\n"sts_running", "cmd_stat", "cmd_exit"' +
         '\n\n' +
-        'application under control is at port: ' + cfg.backend.job_port + '\n'
+        'application under control is at HTTP port: ' + cfg.backend.job_port + '\n'
     }
     res.writeHead(200 ,{ 'Content-Length': body.length ,'Content-Type': 'text/plain' })
     res.end(body)

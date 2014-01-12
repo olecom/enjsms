@@ -27,6 +27,11 @@ var app = { // configuration placeholders
                 } else {
                     // start external ExtJS 'App'
                     app.config = { extjs: JSON.parse(xhr.responseText) }
+                    app.config.backend = {
+                        time: new Date(),
+                        msg: l10n.stsBackendXHR,
+                        op: l10n.stsCheck
+                    }
                     extjs_load(doc ,win)
                 }
             }
@@ -56,19 +61,26 @@ function node_webkit(con ,app){
     load_config(app) && require('http')
     .get("http://127.0.0.1:" + app.config.backend.ctl_port ,backend_is_running)
     .on('error' ,backend_ctl_errors)
-
     return
 
-function backend_is_running(){
-    extjs_load(app.w.window.document ,app.w.window)
-    con.log('reload just extjs, backend is up and running already')
+function backend_is_running(res){
+    res.setEncoding('utf8');
+    res.on('data', function (chunk){
+        app.config.backend = {
+            time: new Date,// remove backend's '? pid: '
+            msg: l10n.stsBackendPid(chunk.slice(7).replace(/\n[\s\S]*/g, '')),
+            op: l10n.stsCheck
+        }
+        extjs_load(app.w.window.document ,app.w.window)
+        con.log('reload just extjs, backend is up and running already')
+    })
 }
 
 function backend_ctl_errors(e){
 // NOTE: this is permanent error handler for all requests to `backend.ctl_port`
     if(app.config.extjs){// run setup only first time after ctl check
         spawn_backend(app) && extjs_load(app.w.window.document ,app.w.window)
-        con.log('on error backend spawed && extjs')
+        con.log('backend spawned && extjs')
     }
     // ignore other errors for now
     con.warn(e)
@@ -127,8 +139,13 @@ function spawn_backend(app){
         return false
     }
     backend.unref()
-    con.error('backend.pid: ' + backend.pid)
-
+    app.config.backend = {
+        time: new Date,
+        msg: l10n.stsBackendPid(backend.pid),
+        pid: backend.pid,
+        op: l10n.stsStart
+    }
+    con.log('backend.pid: ' + backend.pid)
     return true
 }
 
@@ -325,17 +342,27 @@ function extjs_launch(){
                 Ext.fly('startup').remove()
                 b.show()
                 Ext.create('App.view.Viewport')
-                b.fadeIn({easing:'easeIn' ,duration:1024})
+                b.fadeIn({easing:'easeIn' ,duration: 1024 ,callback: backendInfo })
                 con.log('extjs: faded In')
             }
         })
     } else {
         Ext.fly('startup').remove()
         Ext.create('App.view.Viewport')
+        backendInfo()
     }
+    app.config.extjs = null// clear ref for GC
+    con.log('Ext JS + App launch: OK')
 
-    app.config.extjs = null // clear ref for GC
-    con.log('extjs_launch: OK')
+    function backendInfo(){
+        App.sts(// add first System Status message
+            app.config.backend.op,
+            app.config.backend.msg,
+            l10n.stsOK,
+            app.config.backend.time
+        )
+        app.config.backend = app.config.backend.pid ? app.config.backend.pid : null
+    }
 }
 
 })(console ,document ,window ,l10n)

@@ -1,66 +1,54 @@
-Ext.define('App.view.Desktop', {
+Ext.define('App.view.Desktop',{
     extend: 'Ext.Container',
     xtype: 'desktop'
-    ,flex:1
-    ,items: [
-        {
-            xtype: 'app-shortcuts'
-            ,id: 'app-shortcuts-id'
-        }
-        ,{ xtype: 'useredit' }
+   ,flex:1
+   ,items: [
+    {
+        xtype: 'app-shortcuts'
+       ,id: 'app-shortcuts-id'
+    }
+   ,{
+        xtype: 'useredit'
+    }
     ]
     ,initComponent: function(){
         var me = this
 
-        /* resizing of parent: add `status_Desktop` to `desktop`
-         * show() floating Component, or it is hidden
-         * */
-
         me.on({
-        'boxready': {
-            'single': true,
+        'boxready':{
+            'single': true,// once on load
             fn: function onBoxready(){
                 var ss = Ext.create('App.view.desktop.Status')
-                me.add(ss)// for `constrain`
+                me.add(ss)// for `constrain` + resizing of parent
                 Ext.defer(function(){// layouts are not always available
                     var r = me.getRegion()
-                    ss.show()
+                    ss.show()// floating Component show() manually
                     Ext.tip.QuickTipManager.register({
                         target: ss.down('image').getEl().id,
-                        title: 'Что и как происходит внутри системы?',
-                        text: 'Двойной клик по шестерням раскрывает/скрывает окно',
-                        width: 300,
+                        title: l10n.stsHandleTipTitle,
+                        text: l10n.stsHandleTip,
+                        width: 244,
                         dismissDelay: 0
                     })
-                    ss.setXY([r.right - 18, r.bottom - 18])
-                    ss.animate({
-                        duration: 1234,
-                        keyframes : {
-                        '0%': {
-                            y: r.bottom - 18 - 0000
-                            ,x: r.right - 18 - 0000
-                            ,width:  7 + 0000
-                            ,height: 7 + 0000
-                        },
-                        '40%': {
-                            y: r.bottom - 18 - 67/4
-                            ,x: r.right - 18 - 84/4
-                            ,width:  84/4
-                            ,height: 67/4
-                        },
-                        '60%': {
-                            y: r.bottom - 18 - 67/2
-                            ,x: r.right - 18 - 84/2
-                            ,width:  84/2
-                            ,height: 67/2
-                        },
-                        '100%': {
-                            y: r.bottom - 18 - 67/1
-                            ,x: r.right - 18 - 84/1
-                            ,width:  84/1
-                            ,height: 67/1
-                        }}
+
+                    ss.down('image').getEl().on({
+                        'dblclick': function(){
+                            var r = me.getRegion()
+                               ,s = ss.getRegion()
+                            if(s.bottom - s.top < 100){//small 2 big
+                                ss.animate(animate_up(350, 650, 67, 84, 18, r))
+                            } else {// reverse
+                                ss.animate(animate_up(
+                                    s.bottom - s.top,
+                                    s.right - s.left,
+                                    67, 84, 18, r, true)
+                                )
+                            }
+                        }
                     })
+
+                    ss.setXY([r.right - 18, r.bottom - 18])
+                    ss.animate(animate_up(67, 84, 7, 7, 18, r))
                     ss.getEl().setStyle('z-index', 999999)// very always on top
                     me.on({// don't loose status outside application window
                     'resize': function(){
@@ -68,7 +56,7 @@ Ext.define('App.view.Desktop', {
                            ,f = ss.getRegion()
                         if(f.top >= r.bottom || f.left >= r.right){
                             ss.animate({
-                                to: {
+                                to:{
                                     top: r.bottom - 28 - 84,
                                     left: r.right - 28 - 67
                                 }
@@ -77,20 +65,66 @@ Ext.define('App.view.Desktop', {
                             })
                         }
                     }})
-                }, 1)
+                    function animate_up(h, w, f, g, d, r, t){
+                    var fx = { duration: 256, keyframes: {} }
+                        t = t ? ['100%', '60%', '40%', '0%' ]:
+                                ['0%', '40%', '60%', '100%' ]
+
+                        fx.keyframes[t[0]] = {
+                            y: r.bottom - f - 0000
+                           ,x: r.right - g - 0000
+                           ,width:  g + 0000
+                           ,height: f + 0000
+                        }
+                        fx.keyframes[t[1]] = {
+                            y: r.bottom - d - h/4
+                           ,x: r.right - d - w/4
+                           ,width:  w/4
+                           ,height: h/4
+                        },
+                        fx.keyframes[t[2]] = {
+                            y: r.bottom - d - h/2
+                           ,x: r.right - d - w/2
+                           ,width:  w/2
+                           ,height: h/2
+                        },
+                        fx.keyframes[t[3]] = {
+                            y: r.bottom - d - h/1
+                           ,x: r.right - d - w/1
+                           ,width:  w/1
+                           ,height: h/1
+                        }
+                        return fx
+                    }
+                }, 256)
             }
         }})
         me.callParent(arguments)
     }
 })
 
-Ext.define('App.view.desktop.Status', {
-    //extend: 'Ext.Component',
+Ext.require('App.store.Status')
+Ext.define ('App.view.desktop.StatusGrid',{
+    extend: 'Ext.grid.Panel',
+    singleton: true,
+    title: 'System Status',
+    /* config for stretching `grid` to fit container correctly: */
+    height: '100%', width: 123, flex: 1,//+ { layout: 'hbox', align: 'stretch' }
+    viewConfig: {
+        deferEmptyText: false
+       ,emptyText: '--== ? ? ? ? ==--'
+    },
+    /* `columns` are going to be dynamicly configured, here is some experiment */
+    columns: Ext.Array.merge(App.cfg.modelBase.fields, App.cfg.modelStatus.fields),
+    store: App.store.Status
+})
+
+Ext.define('App.view.desktop.Status',{
     xtype: 'app-status-bubble',
     extend: 'Ext.container.Container',
     layout: 'hbox',
-    width: 7,
-    height: 7,
+    align: 'stretch',
+    width: 7, height: 7,// it is being resized and animated, when created
     floating: true,
     constrain: true,
     draggable: true,
@@ -98,29 +132,31 @@ Ext.define('App.view.desktop.Status', {
 
     stateful: true,
     stateId: 'dpsb',
-    style: 'padding: 4px; box-shadow: 0px 10px 20px #111; text-align: center;',
-    items: [
-        {
-            xtype: 'container'
-            ,tooltip: 'Двойной клик раскрывает/скрывает содержимое'
-            ,layout: 'vbox'
-            ,width: 77
-            ,align: 'strech'
-            ,defaults: {
-                width: '100%'
-            }
-            ,items:[
-                Ext.create('Ext.Img', {
-                    src: 'css/extdeskrun.gif',
-                    height:61// fix first layout
 
-                })
-                ,{
-                    xtype: 'component'
-                    ,html: 'СУПРО СУПРО СИСТЕМАНИПЕЛЬб СУПРО СУПРО СУПРО СУПРО СИСТЕМАНИПЕЛЬ'
-                }
-            ]
+    style: 'padding: 4px; box-shadow: 0px 10px 20px #111; text-align: center;',
+    items: [{
+        xtype: 'container'
+        ,layout: 'vbox'
+        ,width: 77
+        ,align: 'strech'
+        ,defaults:{
+            width: '100%'
         }
+        ,items:[
+            Ext.create('Ext.Img',{
+                src: 'css/extdeskrun.gif',
+                style: 'cursor:move;',
+                height:61// fix first layout
+            }),
+        {
+            xtype: 'component'
+           ,html: '-= versions =-'+
+'\nnodejs,0.10.24\nextjs,4.2.1\nconnectjs:,2.9.2\nnode-webkit:,0.8.4'
+                .replace(/\n/g,'</b><br>').replace(/,/g, '<br><b>')
+        }
+        ]
+    }
+        ,App.view.desktop.StatusGrid
     ]
 })
 
