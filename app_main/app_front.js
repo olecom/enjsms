@@ -70,8 +70,9 @@ function backend_is_running(res){
             time: new Date,// remove backend's '? pid: '
             msg: l10n.stsBackendPid(chunk.slice(7).replace(/\n[\s\S]*/g, '')),
             op: l10n.stsCheck
+            ,url: 'http://127.0.0.1:' + app.config.backend.job_port
         }
-        extjs_load(app.w.window.document ,app.w.window)
+        get_remote_ip(extjs_load)
         con.log('reload just extjs, backend is up and running already')
     })
 }
@@ -79,14 +80,14 @@ function backend_is_running(res){
 function backend_ctl_errors(e){
 // NOTE: this is permanent error handler for all requests to `backend.ctl_port`
     if(app.config.extjs){// run setup only first time after ctl check
-        spawn_backend(app) && extjs_load(app.w.window.document ,app.w.window)
-        con.log('backend spawned && extjs')
+        spawn_backend(app ,extjs_load)
+        con.log('backend spawned && extjs load as callback')
     }
     // ignore other errors for now
     con.warn(e)
 }
 
-function spawn_backend(app){
+function spawn_backend(app, extjs_load){
 // loads `node`+`connect` as separate process and answers on http requests,
 // as for this `nw` instance, as for remote clients
 // closing `nw` doesn't mean closing backend processing (maybe cfg it?)
@@ -139,14 +140,30 @@ function spawn_backend(app){
         return false
     }
     backend.unref()
+
+    get_remote_ip(extjs_load)
+
     app.config.backend = {
         time: new Date,
         msg: l10n.stsBackendPid(backend.pid),
         pid: backend.pid,
         op: l10n.stsStart
+        ,url: 'http://127.0.0.1:' + app.config.backend.job_port
     }
     con.log('backend.pid: ' + backend.pid)
     return true
+}
+
+function get_remote_ip(extjs_load){
+    require('child_process').exec('ipconfig',
+    function(err, stdout){
+        if(!err){
+            err = stdout.match(/^[\s\S]*IPv4-[^:]*: ([^\n]*)\n/)
+            if(err) app.config.backend.url = app.config.backend.url
+                .replace(/127\.0\.0\.1/, err[1])
+        }
+        extjs_load(app.w.window.document ,app.w.window)
+    })
 }
 
 function load_config(app){// loaded only by main process -- node-webkit
@@ -361,7 +378,10 @@ function extjs_launch(){
             l10n.stsOK,
             app.config.backend.time
         )
-        app.config.backend = app.config.backend.pid ? app.config.backend.pid : null
+        app.config.backend = {
+            pid: app.config.backend.pid ? app.config.backend.pid : null,
+            url: app.config.backend.url
+        }
     }
 }
 

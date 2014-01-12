@@ -150,9 +150,11 @@ Ext.define('App.view.desktop.Status',{
             }),
         {
             xtype: 'component'
-           ,html: '-= versions =-'+
+           ,html: '-= versions =-' +
 '\nnodejs,0.10.24\nextjs,4.2.1\nconnectjs:,2.9.2\nnode-webkit:,0.8.4'
-                .replace(/\n/g,'</b><br>').replace(/,/g, '<br><b>')
+                .replace(/\n/g,'</b><br>').replace(/,/g, '<br><b>') +
+'<br><a href="' + (App.config.backend.url ? App.config.backend.url : '#TyT') +
+'">HTTP Remote Application</a>'
         }
         ]
     }
