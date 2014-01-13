@@ -21,7 +21,7 @@ App.cfg.model.Base = Ext.define('App.cfg.modelBase',{
        //,sortType : Function/String(Ext.data.SortTypes:[asText, asUCString, asUCText, asDate, asFloat, asInt])
        //,useNull : Boolean
       ,text: l10n.time, dataIndex:'created'
-      ,renderer: 'status_created', width: 70
+      ,renderer: 'status_created', width: 77
     }
     ]
     //,associations : Object[]

@@ -123,3 +123,7 @@ css:
   background-position: center center !important;
   background-repeat: no-repeat;
 }
+
+.x-grid-row .x-grid-cell-inner {
+	font-family: verdana !important;
+}

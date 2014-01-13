@@ -8,7 +8,7 @@ Ext.define('App.cfg.modelStatus',{
     {
         name: 'op',
         type: 'string'
-       ,text: l10n.operation, dataIndex:'op', width: 78
+       ,text: l10n.operation, dataIndex:'op', width: 88
     }
    ,{
         name: 'args',
