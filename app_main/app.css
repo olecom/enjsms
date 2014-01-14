@@ -127,3 +127,9 @@ css:
 .x-grid-row .x-grid-cell-inner {
 	font-family: verdana !important;
 }
+/* TODO flag: background-color: red !important; */
+
+.sg-c { background-image:url(css/comments_delete.png) !important; }
+.sg-e { background-image:url(css/script_link.png) !important; }
+.sg-r { background-image:url(css/link_go.png) !important; }
+.sg-k { background-image:url(css/link_delete.png) }

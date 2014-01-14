@@ -46,15 +46,24 @@ var l10n = {
     }
     ,uncaughtException: 'Неожиданная внутренняя ошибка! Обратитесь к разработчикам.\n'
 
+    ,stsSystem: 'Связь с основным процессом. Информация (Log).'
     ,stsHandleTipTitle: 'Что и как происходит внутри системы?'
     ,stsHandleTip: 'Двойной клик по шестерням раскрывает или скрывает содержимое'
     ,stsStart: 'ЗАПУСК основной `nodejs`'
     ,stsCheck: 'ПРОВЕРКА работы основной `nodejs`'
+    ,stsKilling: 'ЗАВЕРШИТЬ основной `nodejs` (завис)'
     ,stsBackendPid: function(pid){
         return '' + pid + ' - идентификатор основного процесса(nodejs) системы'
     }
     ,stsBackendXHR: "подключение к основному процессу(nodejs) системы"
     ,stsOK: 'OK'
+    ,stsHE: 'НЕ'
+    ,stsClean: 'Очистить'
+    ,stsEcho: 'Запрос-проверка'
+    ,stsRestart: 'Перезапустить'
+    ,stsKill: 'Завершить силой, "убить" (завис)'
+    ,stsKilled: 'основной процесс "умер"'
+    ,stsAlive: 'основной процесс "живой"'
 
     ,time: 'Время'
     ,operation: 'Операция'

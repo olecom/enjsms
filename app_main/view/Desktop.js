@@ -104,17 +104,60 @@ Ext.define('App.view.Desktop',{
     }
 })
 
+Ext.define ('App.view.desktop.backendTools',{
+//!!!auth*n:    extend: 'Ext.Component'
+    extend: 'Ext.toolbar.Toolbar',
+    xtype: 'sg-ct',
+    dock: 'bottom',
+    items:[ '-','nodejs: ',{
+        text: l10n.stsEcho
+       ,iconCls:'sg-e'
+       ,handler: function(){
+            if(App.doCheckBackend)// request, check/sync $PID
+                return App.doCheckBackend()
+            throw new Error('OOPS: backend code in frontend')
+        }
+    },'->',{
+        text: l10n.stsRestart
+       ,iconCls:'sg-r'
+       ,handler: function(){
+        }
+    },'-',{
+        text: l10n.stsKill
+       ,iconCls:'sg-k'
+       ,handler: function(){
+            if(App.doTerminateBackend)// spawn `terminate.wsh $PID`
+                return App.doTerminateBackend()
+            throw new Error('OOPS: backend code in frontend')
+        }
+    }]
+})
+
 Ext.require('App.store.Status')
 Ext.define ('App.view.desktop.StatusGrid',{
     extend: 'Ext.grid.Panel',
     singleton: true,
-    title: 'System Status',
+    title: l10n.stsSystem,
     /* config for stretching `grid` to fit container correctly: */
     height: '100%', width: 123, flex: 1,//+ { layout: 'hbox', align: 'stretch' }
     viewConfig: {
         deferEmptyText: false
        ,emptyText: '--== ? ? ? ? ==--'
     },
+    dockedItems:[{
+        xtype: 'toolbar',
+        dock: 'top',
+        items:['log: ',{
+        text: l10n.stsClean
+       ,iconCls: 'sg-c'
+       ,handler: function(){
+            this.up('grid').getStore().removeAll()
+            }
+        },
+        ]
+    },{
+        xtype: 'sg-ct'
+    }],
     /* `columns` are going to be dynamicly configured, here is some experiment */
     columns: Ext.Array.merge(App.cfg.modelBase.fields, App.cfg.modelStatus.fields),
     store: App.store.Status

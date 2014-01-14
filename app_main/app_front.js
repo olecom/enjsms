@@ -6,7 +6,7 @@ var app = { // configuration placeholders
         ,role: { va_permissions: null }
         //,tools: { /*load_extjs: null*/ }
     }
-
+    ,check_backend, terminate_backend
     /* two frontend parts: under `node-webkit` and `express` in browser */
 
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
@@ -39,6 +39,7 @@ var app = { // configuration placeholders
         xhr.send(null)
     }
 
+    return
 /*
  * front end: node-webkit part
  */
@@ -61,17 +62,21 @@ function node_webkit(con ,app){
     load_config(app) && require('http')
     .get("http://127.0.0.1:" + app.config.backend.ctl_port ,backend_is_running)
     .on('error' ,backend_ctl_errors)
+    terminate_backend = terminate
+    check_backend = check
     return
 
 function backend_is_running(res){
-    res.setEncoding('utf8');
+    res.setEncoding('utf8')
     res.on('data', function (chunk){
-        app.config.backend = {
-            time: new Date,// remove backend's '? pid: '
-            msg: l10n.stsBackendPid(chunk.slice(7).replace(/\n[\s\S]*/g, '')),
-            op: l10n.stsCheck
-            ,url: 'http://127.0.0.1:' + app.config.backend.job_port
-        }
+        var pid = chunk.slice(7).replace(/\n[\s\S]*/g, '')// remove '? pid: '
+
+        app.config.backend.time = new Date
+        app.config.backend.msg = l10n.stsBackendPid(pid)
+        app.config.backend.pid = pid
+        app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port
+        app.config.backend.op = l10n.stsCheck
+
         get_remote_ip(extjs_load)
         con.log('reload just extjs, backend is up and running already')
     })
@@ -82,9 +87,11 @@ function backend_ctl_errors(e){
     if(app.config.extjs){// run setup only first time after ctl check
         spawn_backend(app ,extjs_load)
         con.log('backend spawned && extjs load as callback')
+        return
     }
     // ignore other errors for now
-    con.warn(e)
+    con.warn('backend_ctl_errors():')
+    con.dir(e)
 }
 
 function spawn_backend(app, extjs_load){
@@ -143,14 +150,13 @@ function spawn_backend(app, extjs_load){
 
     get_remote_ip(extjs_load)
 
-    app.config.backend = {
-        time: new Date,
-        msg: l10n.stsBackendPid(backend.pid),
-        pid: backend.pid,
-        op: l10n.stsStart
-        ,url: 'http://127.0.0.1:' + app.config.backend.job_port
-    }
+    app.config.backend.time = new Date
+    app.config.backend.msg = l10n.stsBackendPid(backend.pid),
+    app.config.backend.pid = backend.pid
+    app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port
+    app.config.backend.op = l10n.stsStart
     con.log('backend.pid: ' + backend.pid)
+
     return true
 }
 
@@ -164,6 +170,80 @@ function get_remote_ip(extjs_load){
         }
         extjs_load(app.w.window.document ,app.w.window)
     })
+}
+
+function check(){
+    con.log('check backend')
+    require('http')
+    .get("http://127.0.0.1:" + app.config.backend.ctl_port
+    ,backend_ctl_alive).on('error' ,backend_ctl_dead)
+}
+
+function backend_ctl_alive(res){
+    res.setEncoding('utf8')
+    res.on('data', function (chunk){
+        var pid = parseInt(chunk.slice(7).replace(/\n[\s\S]*/g, ''), 10)// remove '? pid: '
+
+        if(app.config.backend.pid != pid){
+            con.warn('app.config.backend.pid != pid:'+ app.config.backend.pid + ' ' + pid)
+            app.config.backend.pid = pid
+        }
+        App.sts(l10n.stsCheck, pid + ' - ' + l10n.stsAlive, l10n.stsOK)
+    })
+}
+
+function backend_ctl_dead(){
+    if(app.config.backend.pid)
+        app.config.backend.pid = null
+
+    App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
+    con.log('backend is dead')
+}
+
+function terminate(){
+    var path
+    if(!app.config.backend.pid) return
+
+    con.warn('kill pid = ' + app.config.backend.pid)
+
+    path = process.cwd()
+    path += path.indexOf('/') ? '/' : '\\'
+    require('child_process').exec(
+       'wscript ' + 'terminate.wsf ' + app.config.backend.pid,
+        defer_request_check_kill
+    )
+}
+
+function defer_request_check_kill(err){
+    var msg = app.config.backend.pid + ' ' + l10n.stsKilling
+    if(err){
+        con.error(err)
+        App.sts(l10n.stsKilling, msg, l10n.stsHE)
+        return
+    }
+    App.sts(l10n.stsKilling, msg, l10n.stsOK)
+
+    setTimeout(
+        function send_check_request(){
+            require('http')
+            .get("http://127.0.0.1:" + app.config.backend.ctl_port
+            ,backend_ctl_not_killed).on('error' ,backend_ctl_killed)
+        }
+        ,2048
+    )
+}
+
+function backend_ctl_not_killed(income){
+    con.dir(income)
+    App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
+}
+
+function backend_ctl_killed(){
+    if(app.config.backend.pid){
+        app.config.backend.pid = null
+        App.sts(l10n.stsCheck, l10n.stsKilled, l10n.stsOK)
+    }
+    con.log('backend is killed')
 }
 
 function load_config(app){// loaded only by main process -- node-webkit
@@ -378,10 +458,8 @@ function extjs_launch(){
             l10n.stsOK,
             app.config.backend.time
         )
-        app.config.backend = {
-            pid: app.config.backend.pid ? app.config.backend.pid : null,
-            url: app.config.backend.url
-        }
+        App.doCheckBackend = check_backend
+        App.doTerminateBackend = terminate_backend
     }
 }
 
