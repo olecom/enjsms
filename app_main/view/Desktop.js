@@ -1,7 +1,7 @@
 Ext.define('App.view.Desktop',{
     extend: 'Ext.Container',
     xtype: 'desktop'
-   ,flex:1
+   ,flex: 1
    ,items: [
     {
         xtype: 'app-shortcuts'
@@ -72,8 +72,8 @@ Ext.define('App.view.Desktop',{
                                 ['0%', '40%', '60%', '100%' ]
 
                         fx.keyframes[t[0]] = {
-                            y: r.bottom - f - 0000
-                           ,x: r.right - g - 0000
+                            y: r.bottom - f - d
+                           ,x: r.right - g - d
                            ,width:  g + 0000
                            ,height: f + 0000
                         }
@@ -111,7 +111,7 @@ Ext.define ('App.view.desktop.backendTools',{
     dock: 'bottom',
     items:[ '-','nodejs: ',{
         text: l10n.stsEcho
-       ,iconCls:'sg-e'
+       ,iconCls: 'sg-e'
        ,handler: function(){
             if(App.doCheckBackend)// request, check/sync $PID
                 return App.doCheckBackend()
@@ -119,7 +119,7 @@ Ext.define ('App.view.desktop.backendTools',{
        }
     },'->',{
         text: l10n.stsRestart
-       ,iconCls:'sg-r'
+       ,iconCls: 'sg-r'
        ,handler: function(){
             if(App.doRestartBackend)// request cmd_exit, respawn, recheck
                 return App.doRestartBackend()
@@ -127,7 +127,7 @@ Ext.define ('App.view.desktop.backendTools',{
        }
     },'-',{
         text: l10n.stsKill
-       ,iconCls:'sg-k'
+       ,iconCls: 'sg-k'
        ,handler: function(){
             if(App.doTerminateBackend)// spawn `terminate.wsh $PID`
                 return App.doTerminateBackend()
@@ -150,13 +150,15 @@ Ext.define ('App.view.desktop.StatusGrid',{
     dockedItems:[{
         xtype: 'toolbar',
         dock: 'top',
-        items:['log: ',{
-        text: l10n.stsClean
-       ,iconCls: 'sg-c'
-       ,handler: function(){
-            this.up('grid').getStore().removeAll()
-            }
-        },
+        items:[
+            'log: ',
+            {
+            text: l10n.stsClean
+           ,iconCls: 'sg-c'
+           ,handler: function(){
+                    this.up('grid').getStore().removeAll()
+                }
+            },
         ]
     },{
         xtype: 'sg-ct'
@@ -193,7 +195,7 @@ Ext.define('App.view.desktop.Status',{
             Ext.create('Ext.Img',{
                 src: 'css/extdeskrun.gif',
                 style: 'cursor:move;',
-                height:61// fix first layout
+                height: 61// fix first layout
             }),
         {
             xtype: 'component'
