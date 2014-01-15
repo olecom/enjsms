@@ -21,7 +21,7 @@ App.cfg.model.Base = Ext.define('App.cfg.modelBase',{
        //,sortType : Function/String(Ext.data.SortTypes:[asText, asUCString, asUCText, asDate, asFloat, asInt])
        //,useNull : Boolean
       ,text: l10n.time, dataIndex:'created'
-      ,renderer: 'status_created', width: 77
+      ,renderer: 'status_created', width: 84
     }
     ]
     //,associations : Object[]
@@ -37,6 +37,29 @@ App.cfg.model.Base = Ext.define('App.cfg.modelBase',{
 })
 
 Ext.define('App.model.Base',{
+    extend: 'Ext.data.Model',
+    fields: Ext.Array.clone(App.cfg.modelBase.fields)
+})
+
+Ext.Array.insert(
+    App.cfg.modelBase.fields,
+    0,
+    [{
+        name: 'n',// new msg marker
+        type: 'boolean',
+        persist: false,
+        defaultValue: true,
+        dataIndex:'n',
+        width: 22,
+        text: '<img src="css/colread.png"></img>',
+        renderer:function style_res(value, meta){
+            meta.tdCls = value ? 'row-unread' : 'row-read'
+            return ''
+        }
+    }]
+)
+
+Ext.define('App.model.BaseR',{
     extend: 'Ext.data.Model',
     fields: App.cfg.modelBase.fields
 })

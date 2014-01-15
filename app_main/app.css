@@ -133,5 +133,11 @@ css:
 .sg-e { background-image:url(css/script_link.png); }
 .sg-r { background-image:url(css/link_go.png); }
 .sg-k { background-image:url(css/link_delete.png); }
+.sg-m { background-image:url(css/comments.png); }
 
 .redwhite { background-color: #FF0000 !important; color: #FFFFFF; }
+.new-bold-row .x-grid-cell { font-weight: bold; }
+#stscount { color: blue; }
+
+.row-unread { background-image:url(css/itemunread.png); background-repeat: no-repeat; }
+.row-read { background-image:url(css/itemread.png); background-repeat: no-repeat; }

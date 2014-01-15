@@ -23,6 +23,7 @@ Ext.define('App.view.Desktop',{
                 Ext.defer(function(){// layouts are not always available
                     var r = me.getRegion()
                     ss.show()// floating Component show() manually
+                    App.store.Status.showReadAllCount()// custom manual setup
                     Ext.tip.QuickTipManager.register({
                         target: ss.down('image').getEl().id,
                         title: l10n.stsHandleTipTitle,
@@ -37,19 +38,19 @@ Ext.define('App.view.Desktop',{
                             var r = me.getRegion()
                                ,s = ss.getRegion()
                             if(s.bottom - s.top < 100){//small 2 big
-                                ss.animate(animate_up(350, 650, 67, 84, 18, r))
+                                ss.animate(animate_up(350, 650, 96, 84, 18, r))
                             } else {// reverse
                                 ss.animate(animate_up(
                                     s.bottom - s.top,
                                     s.right - s.left,
-                                    67, 84, 18, r, true)
+                                    96, 84, 18, r, true)
                                 )
                             }
                         }
                     })
 
                     ss.setXY([r.right - 18, r.bottom - 18])
-                    ss.animate(animate_up(67, 84, 7, 7, 18, r))
+                    ss.animate(animate_up(96, 84, 7, 7, 18, r))
                     ss.getEl().setStyle('z-index', 999999)// very always on top
                     me.on({// don't loose status outside application window
                     'resize': function(){
@@ -58,7 +59,7 @@ Ext.define('App.view.Desktop',{
                         if(f.top >= r.bottom || f.left >= r.right){
                             ss.animate({
                                 to:{
-                                    y: r.bottom - 18 - 67,
+                                    y: r.bottom - 18 - 96,
                                     x: r.right - 18 - 84
                                 }
                                 ,easing: 'elasticOut'
@@ -155,6 +156,14 @@ Ext.define ('App.view.desktop.StatusGrid',{
     viewConfig: {
         deferEmptyText: false
        ,emptyText: '--== ? ? ? ? ==--'
+       ,getRowClass: function(record) {
+            return record.get('n') ? 'new-bold-row' : ''
+        }
+    },
+    listeners:{
+       itemclick: function itemclickStatusGrid(grid, rec){
+           if(rec.get('n')) rec.set('n', false)
+       }
     },
     dockedItems:[{
         xtype: 'toolbar',
@@ -162,12 +171,19 @@ Ext.define ('App.view.desktop.StatusGrid',{
         items:[
             'log: ',
             {
+            text: l10n.stsMarkRead
+           ,iconCls: 'sg-m'
+           ,handler: function(){
+                    this.up('grid').getStore().markAllAsRead()
+                }
+            },'->',
+            {
             text: l10n.stsClean
            ,iconCls: 'sg-c'
            ,handler: function(){
                     this.up('grid').getStore().removeAll()
                 }
-            },
+            }
         ]
     },{
         xtype: 'sg-ct'
@@ -208,7 +224,7 @@ Ext.define('App.view.desktop.Status',{
             }),
         {
             xtype: 'component'
-           ,html: '-= versions =-' +
+           ,html: l10n.stsMsg + '<b id="stscount">0/0</b><br>-= versions =-' +
 '\nnodejs,0.10.24\nextjs,4.2.1\nconnectjs:,2.9.2\nnode-webkit:,0.8.4'
                 .replace(/\n/g,'</b><br>').replace(/,/g, '<br><b>') +
 '<br><a href="' + (App.config.backend.url ? App.config.backend.url : '#TyT') +

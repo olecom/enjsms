@@ -19,17 +19,17 @@ Ext.define('App.cfg.modelStatus',{
         name: 'res',
         type: 'string'
        ,text: l10n.result, dataIndex:'res', width: 42
-       ,renderer:function style_res(value, meta){
-           if(l10n.stsOK == value)
-               return value
-           meta.tdCls = 'redwhite'
-           return value
-       }
+       ,renderer: function style_res(value, meta){
+            if(l10n.stsOK == value)
+                return value
+            meta.tdCls = 'redwhite'
+            return value
+        }
     }
     ]
 })
 
 Ext.define('App.model.Status',{
-   extend: 'App.model.Base',
+   extend: 'App.model.BaseR',
    fields: App.cfg.modelStatus.fields
 })
