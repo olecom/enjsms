@@ -68,6 +68,7 @@ Ext.define('App.view.Desktop',{
                     }})
                     function animate_up(h, w, f, g, d, r, t){
                     var fx = { duration: 256, keyframes: {} }
+                       ,grid = ss.down('grid')
                         t = t ? ['100%', '60%', '40%', '0%' ]:
                                 ['0%', '40%', '60%', '100%' ]
 
@@ -95,6 +96,14 @@ Ext.define('App.view.Desktop',{
                            ,width:  w/1
                            ,height: h/1
                         }
+
+                        Ext.defer(function(){
+                            grid.show()
+                            grid.getEl().fadeIn({ duration: 512 })
+                        }, 1024)
+                        grid.getEl().fadeOut({ opacity: 0, duration: 0 })
+                        grid.hide()
+
                         return fx
                     }
                 }, 256)

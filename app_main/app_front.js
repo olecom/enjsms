@@ -252,10 +252,12 @@ function restart(){
     function reload_ok_spawn(){
         con.log('reload_ok_spawn()')
         App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
-        setTimeout(function spawn_reloaded_backend(){
-            load_config(app) && spawn_backend(app, null, check_backend)
-        }
-        ,2048)
+        setTimeout(
+            function spawn_reloaded_backend(){
+                load_config(app) && spawn_backend(app, null, check_backend)
+            }
+            ,2048
+        )
     }
 
     function check_backend(){
