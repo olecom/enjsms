@@ -6,7 +6,7 @@ var app = { // configuration placeholders
         ,role: { va_permissions: null }
         //,tools: { /*load_extjs: null*/ }
     }
-    ,check_backend, terminate_backend
+    ,backend_check, backend_restart, backend_terminate
     /* two frontend parts: under `node-webkit` and `express` in browser */
 
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
@@ -47,10 +47,12 @@ function node_webkit(con ,app){
     //TODO: wrap `uncaughtException` in ExtJS window, add xhr to backend
     app.process.on('uncaughtException' ,function(err){
         con.error('uncaughtException:', err)
+        con.error(err.stack)
         alert(l10n.uncaughtException  + err)
     })
 
     var gui = require('nw.gui')
+       ,http = require('http')
 
     app.w = gui.Window.get()
 
@@ -59,11 +61,15 @@ function node_webkit(con ,app){
     setup_tray(app.tray ,app.w)
 
     // long xhr pooling gets messages from backend
-    load_config(app) && require('http')
-    .get("http://127.0.0.1:" + app.config.backend.ctl_port ,backend_is_running)
-    .on('error' ,backend_ctl_errors)
-    terminate_backend = terminate
-    check_backend = check
+    load_config(app) && http.get(
+        "http://127.0.0.1:" + app.config.backend.ctl_port
+        ,backend_is_running
+    ).on('error'
+        ,backend_ctl_errors
+    )
+    backend_check = check
+    backend_restart = restart
+    backend_terminate = terminate
     return
 
 function backend_is_running(res){
@@ -94,7 +100,7 @@ function backend_ctl_errors(e){
     con.dir(e)
 }
 
-function spawn_backend(app, extjs_load){
+function spawn_backend(app, extjs_load, restart){
 // loads `node`+`connect` as separate process and answers on http requests,
 // as for this `nw` instance, as for remote clients
 // closing `nw` doesn't mean closing backend processing (maybe cfg it?)
@@ -148,7 +154,7 @@ function spawn_backend(app, extjs_load){
     }
     backend.unref()
 
-    get_remote_ip(extjs_load)
+    get_remote_ip(extjs_load, restart)
 
     app.config.backend.time = new Date
     app.config.backend.msg = l10n.stsBackendPid(backend.pid),
@@ -160,7 +166,7 @@ function spawn_backend(app, extjs_load){
     return true
 }
 
-function get_remote_ip(extjs_load){
+function get_remote_ip(extjs_load, restart){
     require('child_process').exec('ipconfig',
     function(err, stdout){
         if(!err){
@@ -168,18 +174,25 @@ function get_remote_ip(extjs_load){
             if(err) app.config.backend.url = app.config.backend.url
                 .replace(/127\.0\.0\.1/, err[1])
         }
-        extjs_load(app.w.window.document ,app.w.window)
+        if(extjs_load){
+            extjs_load(app.w.window.document ,app.w.window)
+        } else {
+            restart()
+        }
     })
 }
 
-function check(){
-    con.log('check backend')
-    require('http')
-    .get("http://127.0.0.1:" + app.config.backend.ctl_port
-    ,backend_ctl_alive).on('error' ,backend_ctl_dead)
+function check(check_ok, check_he){
+    con.log('check backend port: ' + app.config.backend.ctl_port)
+    http.get(
+        "http://127.0.0.1:" + app.config.backend.ctl_port
+        ,check_ok ? check_ok : backend_ctl_alive
+    ).on('error'
+        ,check_he ? check_he : backend_ctl_dead
+    )
 }
 
-function backend_ctl_alive(res){
+function backend_ctl_alive(res, callback){
     res.setEncoding('utf8')
     res.on('data', function (chunk){
         var pid = parseInt(chunk.slice(7).replace(/\n[\s\S]*/g, ''), 10)// remove '? pid: '
@@ -189,6 +202,7 @@ function backend_ctl_alive(res){
             app.config.backend.pid = pid
         }
         App.sts(l10n.stsCheck, pid + ' - ' + l10n.stsAlive, l10n.stsOK)
+        if(callback) callback()
     })
 }
 
@@ -197,19 +211,65 @@ function backend_ctl_dead(){
         app.config.backend.pid = null
 
     App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
-    con.log('backend is dead')
+    con.log('check: backend is dead')
+}
+
+
+function restart(){
+    con.log('restart: check, spawn, check')
+    check(check_ok, check_he)
+
+    function check_ok(res){
+        backend_ctl_alive(res, request_cmd_exit)
+    }
+
+    function check_he(e){
+        if(e){
+            if("ECONNRESET" == e.code){
+                con.log('prev. backend connection has been reset, ignore')
+                return
+            }
+            con.error('check_he(error):')
+            con.dir(e)
+        }
+
+        if(app.config.backend.pid)
+            app.config.backend.pid = null
+
+        App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
+        con.log('restart: backend is dead; starting new')
+        spawn_backend(app, null, check)
+    }
+
+    function request_cmd_exit(){
+        con.log('request_cmd_exit ctl_port: ' + app.config.backend.ctl_port)
+        http.get(
+            "http://127.0.0.1:" + app.config.backend.ctl_port + '/cmd_exit'
+            ,reload_ok_spawn
+        ).on('error' ,check_he)
+    }
+
+    function reload_ok_spawn(){
+        con.log('reload_ok_spawn()')
+        App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
+        setTimeout(function spawn_reloaded_backend(){
+            spawn_backend(app, null, check)
+        }
+        ,2048)
+    }
+
 }
 
 function terminate(){
     var path
     if(!app.config.backend.pid) return
-
+    /* TODO: check pid via request before kill */
     con.warn('kill pid = ' + app.config.backend.pid)
 
     path = process.cwd()
     path += path.indexOf('/') ? '/' : '\\'
     require('child_process').exec(
-       'wscript ' + 'terminate.wsf ' + app.config.backend.pid,
+       'wscript terminate.wsf ' + app.config.backend.pid,
         defer_request_check_kill
     )
 }
@@ -225,9 +285,10 @@ function defer_request_check_kill(err){
 
     setTimeout(
         function send_check_request(){
-            require('http')
-            .get("http://127.0.0.1:" + app.config.backend.ctl_port
-            ,backend_ctl_not_killed).on('error' ,backend_ctl_killed)
+            http.get(
+                "http://127.0.0.1:" + app.config.backend.ctl_port
+                ,backend_ctl_not_killed
+            ).on('error' ,backend_ctl_killed)
         }
         ,2048
     )
@@ -449,7 +510,7 @@ function extjs_launch(){
         backendInfo()
     }
     app.config.extjs = null// clear ref for GC
-    con.log('Ext JS + App launch: OK')
+    con.log('ExtJS + App launch: OK')
 
     function backendInfo(){
         App.sts(// add first System Status message
@@ -458,8 +519,9 @@ function extjs_launch(){
             l10n.stsOK,
             app.config.backend.time
         )
-        App.doCheckBackend = check_backend
-        App.doTerminateBackend = terminate_backend
+        App.doCheckBackend = backend_check
+        App.doRestartBackend = backend_restart
+        App.doTerminateBackend = backend_terminate
     }
 }
 

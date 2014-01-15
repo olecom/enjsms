@@ -51,6 +51,7 @@ var l10n = {
     ,stsHandleTip: 'Двойной клик по шестерням раскрывает или скрывает содержимое'
     ,stsStart: 'ЗАПУСК основной `nodejs`'
     ,stsCheck: 'ПРОВЕРКА работы основной `nodejs`'
+    ,stsRestarting: '(2 сек.) запускается новый основной `nodejs`'
     ,stsKilling: 'ЗАВЕРШИТЬ основной `nodejs` (завис)'
     ,stsBackendPid: function(pid){
         return '' + pid + ' - идентификатор основного процесса(nodejs) системы'

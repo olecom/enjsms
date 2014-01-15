@@ -115,20 +115,23 @@ Ext.define ('App.view.desktop.backendTools',{
        ,handler: function(){
             if(App.doCheckBackend)// request, check/sync $PID
                 return App.doCheckBackend()
-            throw new Error('OOPS: backend code in frontend')
-        }
+            throw new Error('OOPS: restricted code in frontend')
+       }
     },'->',{
         text: l10n.stsRestart
        ,iconCls:'sg-r'
        ,handler: function(){
-        }
+            if(App.doRestartBackend)// request cmd_exit, respawn, recheck
+                return App.doRestartBackend()
+            throw new Error('OOPS: restricted code in frontend')
+       }
     },'-',{
         text: l10n.stsKill
        ,iconCls:'sg-k'
        ,handler: function(){
             if(App.doTerminateBackend)// spawn `terminate.wsh $PID`
                 return App.doTerminateBackend()
-            throw new Error('OOPS: backend code in frontend')
+            throw new Error('OOPS: restricted code in frontend')
         }
     }]
 })
