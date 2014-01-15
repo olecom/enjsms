@@ -19,6 +19,12 @@ Ext.define('App.cfg.modelStatus',{
         name: 'res',
         type: 'string'
        ,text: l10n.result, dataIndex:'res', width: 42
+       ,renderer:function style_res(value, meta){
+           if(l10n.stsOK == value)
+               return value
+           meta.tdCls = 'redwhite'
+           return value
+       }
     }
     ]
 })
