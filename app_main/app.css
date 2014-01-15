@@ -129,9 +129,9 @@ css:
 }
 /* TODO flag: background-color: red !important; */
 
-.sg-c { background-image:url(css/comments_delete.png) !important; }
-.sg-e { background-image:url(css/script_link.png) !important; }
-.sg-r { background-image:url(css/link_go.png) !important; }
-.sg-k { background-image:url(css/link_delete.png) }
+.sg-c { background-image:url(css/comments_delete.png); }
+.sg-e { background-image:url(css/script_link.png); }
+.sg-r { background-image:url(css/link_go.png); }
+.sg-k { background-image:url(css/link_delete.png); }
 
 .redwhite { background-color: #FF0000 !important; color: #FFFFFF; }
