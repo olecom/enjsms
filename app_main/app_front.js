@@ -237,6 +237,7 @@ function restart(){
             app.config.backend.pid = null
 
         App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
+        App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
         con.log('restart: backend is dead; starting new')
         load_config(app) && spawn_backend(app, null, check_backend)
     }
