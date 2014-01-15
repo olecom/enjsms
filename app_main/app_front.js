@@ -238,7 +238,7 @@ function restart(){
 
         App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
         con.log('restart: backend is dead; starting new')
-        spawn_backend(app, null, check)
+        load_config(app) && spawn_backend(app, null, check_backend)
     }
 
     function request_cmd_exit(){
@@ -253,11 +253,15 @@ function restart(){
         con.log('reload_ok_spawn()')
         App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
         setTimeout(function spawn_reloaded_backend(){
-            spawn_backend(app, null, check)
+            load_config(app) && spawn_backend(app, null, check_backend)
         }
         ,2048)
     }
 
+    function check_backend(){
+        app.config.extjs = null// frontend and extjs aren't touched
+        check()
+    }
 }
 
 function terminate(){
