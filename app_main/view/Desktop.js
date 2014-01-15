@@ -58,8 +58,8 @@ Ext.define('App.view.Desktop',{
                         if(f.top >= r.bottom || f.left >= r.right){
                             ss.animate({
                                 to:{
-                                    top: r.bottom - 28 - 84,
-                                    left: r.right - 28 - 67
+                                    y: r.bottom - 18 - 67,
+                                    x: r.right - 18 - 84
                                 }
                                 ,easing: 'elasticOut'
                                 ,duration: 678
