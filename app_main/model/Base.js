@@ -51,7 +51,7 @@ Ext.Array.insert(
         defaultValue: true,
         dataIndex:'n',
         width: 22,
-        text: '<img src="css/colread.png"></img>',
+        text: '<img src="css/colread.png"></img>&#160',
         renderer:function style_res(value, meta){
             meta.tdCls = value ? 'row-unread' : 'row-read'
             return ''
