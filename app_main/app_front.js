@@ -67,14 +67,14 @@ function node_webkit(con ,app){
     ).on('error'
         ,backend_ctl_errors
     )
-    backend_check = check
+    backend_check = check_backend
     backend_restart = restart
     backend_terminate = terminate
     return
 
 function backend_is_running(res){
     res.setEncoding('utf8')
-    res.on('data', function (chunk){
+    res.on('data', function(chunk){
         var pid = chunk.slice(7).replace(/\n[\s\S]*/g, '')// remove '? pid: '
 
         app.config.backend.time = new Date
@@ -182,7 +182,7 @@ function get_remote_ip(extjs_load, restart){
     })
 }
 
-function check(check_ok, check_he){
+function check_backend(check_ok, check_he){
     con.log('check backend port: ' + app.config.backend.ctl_port)
     http.get(
         "http://127.0.0.1:" + app.config.backend.ctl_port
@@ -214,10 +214,9 @@ function backend_ctl_dead(){
     con.log('check: backend is dead')
 }
 
-
 function restart(){
     con.log('restart: check, spawn, check')
-    check(check_ok, check_he)
+    check_backend(check_ok, check_he)
 
     function check_ok(res){
         backend_ctl_alive(res, request_cmd_exit)
@@ -260,25 +259,40 @@ function restart(){
             ,2048
         )
     }
-
-    function check_backend(){
-        app.config.extjs = null// frontend and extjs aren't touched
-        check()
-    }
 }
 
 function terminate(){
-    var path
-    if(!app.config.backend.pid) return
-    /* TODO: check pid via request before kill */
-    con.warn('kill pid = ' + app.config.backend.pid)
+    var current_pid = app.config.backend.pid
 
-    path = process.cwd()
-    path += path.indexOf('/') ? '/' : '\\'
-    require('child_process').exec(
-       'wscript terminate.wsf ' + app.config.backend.pid,
-        defer_request_check_kill
+    if(!app.config.backend.pid) return App.sts(
+        l10n.stsCheck, l10n.stsKilledAlready, l10n.stsOK
     )
+
+    return http.get(
+        "http://127.0.0.1:" + app.config.backend.ctl_port
+        ,backend_get_current_pid
+    ).on('error' ,backend_ctl_killed)
+
+    function backend_get_current_pid(res){
+        App.sts(l10n.stsKilling, l10n.stsCheck,l10n.stsOK)
+        app.config.backend.pid = current_pid
+
+        res.setEncoding('utf8')
+        res.on('data'
+       ,function(chunk){
+            var pid  = chunk.slice(7).replace(/\n[\s\S]*/g, '')// remove '? pid: '
+               ,path = app.process.cwd()
+
+            path += path.indexOf('/') ? '/' : '\\'// add OS-specific slash
+            if(pid != current_pid)
+                con.warn('current pid != app.config.backend.pid; kill anyway!'),
+            app.config.backend.pid = pid
+            require('child_process').exec(
+               'wscript terminate.wsf ' + pid,
+                defer_request_check_kill
+            )
+        })
+    }
 }
 
 function defer_request_check_kill(err){
@@ -307,11 +321,16 @@ function backend_ctl_not_killed(income){
 }
 
 function backend_ctl_killed(){
+    var m, log = 'backend is killed'
     if(app.config.backend.pid){
         app.config.backend.pid = null
-        App.sts(l10n.stsCheck, l10n.stsKilled, l10n.stsOK)
+        m =  l10n.stsKilled
+    } else {
+        m = l10n.stsKilledAlready
+        log += ' already'
     }
-    con.log('backend is killed')
+    App.sts(l10n.stsCheck, m, l10n.stsOK)
+    con.log(log)
 }
 
 function load_config(app){// loaded only by main process -- node-webkit
