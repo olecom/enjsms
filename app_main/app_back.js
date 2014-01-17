@@ -1,6 +1,6 @@
 (function uglify_js_closure(con ,process){
-var cfg = JSON.parse(process.env.NODEJS_CONFIG) ,ctl
-var ipt = require('util').inspect
+var cfg ,ctl
+   ,ipt = require('util').inspect
    ,text_plain = { 'Content-Type': 'text/plain; charset=utf-8' }
    ,app_json   = { 'Content-Type': 'application/json; charset=utf-8' }
 
@@ -128,6 +128,13 @@ process.on('uncaughtException', function(err){
 process.on('exit', function process_exit(){
     log('$ backend process exit event')
 })
+
+
+try {
+    cfg = JSON.parse(process.env.NODEJS_CONFIG)
+} catch(ex){
+    cfg = (new Function('var config ; return ' + process.env.NODEJS_CONFIG))(ex)
+}
 
 ctl = require('http').createServer(
 function proc_ctl_http_serv(req, res){
