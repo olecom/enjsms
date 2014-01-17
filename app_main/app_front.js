@@ -89,9 +89,13 @@ function backend_is_running(res){
 }
 
 function backend_ctl_errors(e){
-// NOTE: this is permanent error handler for all requests to `backend.ctl_port`
+    if("ECONNRESET" == e.code){
+        con.log('backend_ctl_errors: prev. backend connection has been reset, ignore')
+        return
+    }
+
     if(app.config.extjs){// run setup only first time after ctl check
-        spawn_backend(app ,extjs_load)
+        spawn_backend(app)
         con.log('backend spawned && extjs load as callback')
         return
     }
@@ -100,7 +104,7 @@ function backend_ctl_errors(e){
     con.dir(e)
 }
 
-function spawn_backend(app, extjs_load, restart){
+function spawn_backend(app, restart){
 // loads `node`+`connect` as separate process and answers on http requests,
 // as for this `nw` instance, as for remote clients
 // closing `nw` doesn't mean closing backend processing (maybe cfg it?)
@@ -154,8 +158,6 @@ function spawn_backend(app, extjs_load, restart){
     }
     backend.unref()
 
-    get_remote_ip(extjs_load, restart)
-
     app.config.backend.time = new Date
     app.config.backend.msg = l10n.stsBackendPid(backend.pid),
     app.config.backend.pid = backend.pid
@@ -163,10 +165,12 @@ function spawn_backend(app, extjs_load, restart){
     app.config.backend.op = l10n.stsStart
     con.log('backend.pid: ' + backend.pid)
 
+    check_backend(restart ? null : get_remote_ip, null)// start or restart
+
     return true
 }
 
-function get_remote_ip(extjs_load, restart){
+function get_remote_ip(){
     require('child_process').exec('ipconfig',
     function(err, stdout){
         if(!err){
@@ -174,16 +178,16 @@ function get_remote_ip(extjs_load, restart){
             if(err) app.config.backend.url = app.config.backend.url
                 .replace(/127\.0\.0\.1/, err[1])
         }
-        if(extjs_load){
-            extjs_load(app.w.window.document ,app.w.window)
-        } else {
-            restart()
-        }
+        extjs_load(app.w.window.document ,app.w.window)
     })
 }
 
 function check_backend(check_ok, check_he){
     con.log('check backend port: ' + app.config.backend.ctl_port)
+    if(!check_ok && !app.config.backend.pid){// not restart, check if dead
+        App.sts(l10n.stsCheck, l10n.stsDead, l10n.stsHE)
+        return
+    }
     http.get(
         "http://127.0.0.1:" + app.config.backend.ctl_port
         ,check_ok ? check_ok : backend_ctl_alive
@@ -206,12 +210,24 @@ function backend_ctl_alive(res, callback){
     })
 }
 
-function backend_ctl_dead(){
+function backend_ctl_dead(e){
+    if(e && "ECONNRESET" == e.code){
+        con.log('backend_ctl_dead: prev. backend connection has been reset, ignore')
+        return
+    }
+
+    con.log('check: backend is dead')
+    if(app.config.extjs){// init
+        win.setTimeout(function(){
+            throw new Error(l10n.errload_check_backend)
+        }, 1)
+        return
+    }
+
     if(app.config.backend.pid)
         app.config.backend.pid = null
-
-    App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
-    con.log('check: backend is dead')
+    if('undefined' != typeof App)
+        App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
 }
 
 function restart(){
@@ -224,8 +240,8 @@ function restart(){
 
     function check_he(e){
         if(e){
-            if("ECONNRESET" == e.code){
-                con.log('prev. backend connection has been reset, ignore')
+            if(e && "ECONNRESET" == e.code){
+                con.log('reload: prev. backend connection has been reset, ignore')
                 return
             }
             con.error('check_he(error):')
@@ -238,7 +254,7 @@ function restart(){
         App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
         App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
         con.log('restart: backend is dead; starting new')
-        load_config(app) && spawn_backend(app, null, check_backend)
+        load_config(app) && spawn_backend(app, true)
     }
 
     function request_cmd_exit(){
@@ -254,7 +270,7 @@ function restart(){
         App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
         setTimeout(
             function spawn_reloaded_backend(){
-                load_config(app) && spawn_backend(app, null, check_backend)
+                load_config(app) && spawn_backend(app, true)
             }
             ,2048
         )
@@ -262,20 +278,17 @@ function restart(){
 }
 
 function terminate(){
-    var current_pid = app.config.backend.pid
-
     if(!app.config.backend.pid) return App.sts(
         l10n.stsCheck, l10n.stsKilledAlready, l10n.stsOK
     )
 
-    return http.get(
+    return http.get(// get current pid
         "http://127.0.0.1:" + app.config.backend.ctl_port
         ,backend_get_current_pid
     ).on('error' ,backend_ctl_killed)
 
     function backend_get_current_pid(res){
         App.sts(l10n.stsKilling, l10n.stsCheck,l10n.stsOK)
-        app.config.backend.pid = current_pid
 
         res.setEncoding('utf8')
         res.on('data'
@@ -284,7 +297,7 @@ function terminate(){
                ,path = app.process.cwd()
 
             path += path.indexOf('/') ? '/' : '\\'// add OS-specific slash
-            if(pid != current_pid)
+            if(pid != app.config.backend.pid)
                 con.warn('current pid != app.config.backend.pid; kill anyway!'),
             app.config.backend.pid = pid
             require('child_process').exec(
@@ -320,7 +333,12 @@ function backend_ctl_not_killed(income){
     App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
 }
 
-function backend_ctl_killed(){
+function backend_ctl_killed(e){
+    if(e && "ECONNRESET" == e.code){
+        con.log('backend_ctl_killed: prev. backend connection has been reset, ignore')
+        return
+    }
+
     var m, log = 'backend is killed'
     if(app.config.backend.pid){
         app.config.backend.pid = null
