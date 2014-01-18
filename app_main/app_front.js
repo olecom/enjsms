@@ -500,8 +500,12 @@ var extjs, path
         if('undefined' != typeof Ext){
             clearInterval(extjs)
             path = Ext.Loader.getPath('Ext')
+            Ext.Loader.loadScript({
+                url: path + '/../locale/ext-lang-' + l10n.lang + '.js'
+            })
             con.log(
                 'ExtJS version: ' + Ext.getVersion('extjs') + '\n' +
+                'ExtJS locale: ' + l10n.lang + '\n' +
                 'ExtJS is at <' + path + '>'
             )
             Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')

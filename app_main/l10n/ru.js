@@ -1,4 +1,4 @@
-var l10n = {
+var l10n = { lang: 'ru',
     loading: 'Загрузка...'
     ,errload: 'Загрузка прекращена из-за ошибок.'
     ,errload_no_app:
