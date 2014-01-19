@@ -1,9 +1,8 @@
 /**
  * Status {@link Ext.data.Model} model for all backend info
  */
-Ext.require('App.model.Base')
-Ext.define('App.cfg.modelStatus',{
-    singleton: true,// used only once
+
+App.cfg.modelStatus = {
     fields:[
     {
         name: 'op',
@@ -27,8 +26,9 @@ Ext.define('App.cfg.modelStatus',{
         }
     }
     ]
-})
+}
 
+Ext.require('App.model.Base')//loading Models manually, then [M]VC
 Ext.define('App.model.Status',{
    extend: 'App.model.BaseR',
    fields: App.cfg.modelStatus.fields

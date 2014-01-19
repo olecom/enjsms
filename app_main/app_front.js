@@ -7,7 +7,7 @@ var app = { // configuration placeholders
         //,tools: { /*load_extjs: null*/ }
     }
     ,backend_check, backend_restart, backend_terminate
-    /* two frontend parts: under `node-webkit` and `express` in browser */
+    /* two frontend parts: under `node-webkit` and `connectjs` in browser */
 
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
         app.process = process
@@ -526,6 +526,7 @@ var extjs, path
 }
 
 function extjs_launch(){
+    var me = this
     //Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
     // handle errors raised by Ext.Error.raise()
     Ext.Error.handle = function(err){
@@ -536,7 +537,7 @@ function extjs_launch(){
     //TODO: for each app.config.app.modules load module
     //TODO: dynamic addition in toolbar or items/xtype construction
     //global `App` object is available now
-    App.config = app.config ,App.user = app.user ,App.role = app.role
+    App.cfg = app.config ,App.user = app.user ,App.role = app.role
     //TODO: events via long pooling from app_backend/express
     //App.sync_clearTimeout = Ext.defer(App.sync_extjs_nodejs, 3777)
 
@@ -548,19 +549,30 @@ function extjs_launch(){
                 Ext.fly('startup').remove()
                 b.show()
                 Ext.create('App.view.Viewport')
-                b.fadeIn({easing:'easeIn' ,duration: 1024 ,callback: backendInfo })
+                b.fadeIn({easing:'easeIn' ,duration: 1024 ,callback: appRun })
                 con.log('extjs: faded In')
             }
         })
     } else {
         Ext.fly('startup').remove()
         Ext.create('App.view.Viewport')
-        backendInfo()
+        appRun()
     }
     app.config.extjs = null// clear ref for GC
     con.log('ExtJS + App launch: OK')
 
-    function backendInfo(){
+    function appRun(){
+        /*dynamic controller for dynamic models
+         * this doesn't work due to curved loading.
+           application.config: {
+                models: [ 'Base', 'BaseR', 'Status' ],
+                stores: [ 'Status' ],
+                controllers: [ 'Main' ]
+            }
+         **/
+        //me.viewport = Ext.ComponentQuery.query('viewport')[0]
+        me.getController('Viewport').init() /* dynamically loaded controller */
+
         App.sts(// add first System Status message
             app.config.backend.op,
             app.config.backend.msg,
