@@ -165,7 +165,11 @@ function spawn_backend(app, restart){
     app.config.backend.op = l10n.stsStart
     con.log('backend.pid: ' + backend.pid)
 
-    check_backend(restart ? null : get_remote_ip, null)// start or restart
+    if(restart){
+        setTimeout(check_backend, 4321)// restart, wait a bit
+    } else {
+        check_backend(get_remote_ip, null)// start
+    }
 
     return true
 }
@@ -500,8 +504,12 @@ var extjs, path
         if('undefined' != typeof Ext){
             clearInterval(extjs)
             path = Ext.Loader.getPath('Ext')
+            extjs = path + '/../locale/ext-lang-' + l10n.lang + '.js'
             Ext.Loader.loadScript({
-                url: path + '/../locale/ext-lang-' + l10n.lang + '.js'
+                url: extjs,
+                onError: function fail_load_locale(){
+                    throw new Error('Error loading locale file:\n' + extjs)
+                }
             })
             con.log(
                 'ExtJS version: ' + Ext.getVersion('extjs') + '\n' +
