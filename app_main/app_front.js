@@ -221,17 +221,16 @@ function backend_ctl_dead(e){
     }
 
     con.log('check: backend is dead')
-    if(app.config.extjs){// init
-        win.setTimeout(function(){
+
+    if('undefined' == typeof App){// init
+        win.setTimeout(function backend_init_check(){
+            if(app.config.backend.pid)
+                app.config.backend.pid = null
             throw new Error(l10n.errload_check_backend)
         }, 1)
-        return
-    }
-
-    if(app.config.backend.pid)
-        app.config.backend.pid = null
-    if('undefined' != typeof App)
+    } else {// keep UI, if loaded
         App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
+    }
 }
 
 function restart(){
@@ -566,7 +565,7 @@ function extjs_launch(){
         Ext.create('App.view.Viewport')
         appRun()
     }
-    app.config.extjs = null// clear ref for GC
+    //app.config.extjs = null// clear ref for GC
     con.log('ExtJS + App launch: OK')
 
     function appRun(){
@@ -587,6 +586,10 @@ function extjs_launch(){
             l10n.stsOK,
             app.config.backend.time
         )
+        delete app.config.backend.op
+        delete app.config.backend.msg
+        delete app.config.backend.time
+
         App.doCheckBackend = backend_check
         App.doRestartBackend = backend_restart
         App.doTerminateBackend = backend_terminate
