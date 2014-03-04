@@ -227,7 +227,7 @@ function backend_ctl_dead(e){
             if(app.config.backend.pid)
                 app.config.backend.pid = null
             throw new Error(l10n.errload_check_backend)
-        }, 1)
+        }, app.config.backend.init_timeout || 1234)
     } else {// keep UI, if loaded
         App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
     }

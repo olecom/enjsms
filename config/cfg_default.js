@@ -39,6 +39,7 @@ config = {
         ctl_port: 3008,
         job_port: 3007,
         sess_puzl: 'puzzle-word$50000X'
+       ,init_timeout: 123
     }
    ,mongodb:{
          host: 'localhost'
