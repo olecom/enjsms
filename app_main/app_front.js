@@ -6,15 +6,18 @@ var app = { // configuration placeholders
         ,role: { va_permissions: null }
         //,tools: { /*load_extjs: null*/ }
     }
-    ,backend_check, backend_restart, backend_terminate
     /* two frontend parts: under `node-webkit` and `connectjs` in browser */
 
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
         app.process = process
+        app.c_p = require('child_process')
         app.tray = { obj: null ,stat: 'show' }
-        app.w = null
+        app.versions = { node: '' ,connectjs: '' }
+        app.w = app.backend_check = app.backend_restart = app.backend_terminate = null
+
         // start local ExtJS 'App'
-        node_webkit(con ,app)
+        check_versions(node_webkit)
+        return
     } else {// 'nodejs + connectjs': XHR communication with backend (remote web browser)
         var xhr = new XMLHttpRequest()
         xhr.open('GET' ,'/app.config.extjs.json' ,true)
@@ -24,11 +27,10 @@ var app = { // configuration placeholders
                     con && con.error && con.error(l10n.errload_config_read)
                     doc.write(l10n.errload_config_read)
                     alert(l10n.errload_config_read)
-                } else {
-                    // start external ExtJS 'App'
+                } else {// start external/remote ExtJS 'App'
                     app.config = { extjs: JSON.parse(xhr.responseText) }
-                    app.config.backend = {
-                        time: new Date(),
+                    app.config.backend = {// record start time
+                        time: new Date,
                         msg: l10n.stsBackendXHR,
                         op: l10n.stsCheck
                     }
@@ -38,12 +40,41 @@ var app = { // configuration placeholders
         }
         xhr.send(null)
     }
-
     return
 /*
  * front end: node-webkit part
  */
-function node_webkit(con ,app){
+function check_versions(cb){
+    app.c_p.exec('node --version',
+    function(err, stdout){
+        if(err){
+            con.error("ERROR spawn `node` process: " + err)
+            doc.write(l10n.errload_spawn_backend)
+            app.w.window.alert(l10n.errload_spawn_backend)
+            return
+        }
+        app.versions.node = stdout.slice(1)
+
+    app.c_p.exec("node -e \"console.log(require('connect').version)\"",
+    function(err, stdout){
+        if(err){
+            con.error("ERROR require('connect'): " + err)
+            doc.write(l10n.errload_spawn_backend)
+            app.w.window.alert(l10n.errload_spawn_backend)
+            return
+        }
+        app.versions.connectjs = stdout
+        if(typeof Ext != 'undefined'){
+            App.cfg.backend.versions.connectjs = app.versions.connectjs
+            App.cfg.backend.versions.node = app.versions.node
+            Ext.globalEvents.fireEvent('updateVersions')
+        }
+        cb(app, con)// node_webkit(app, con) || spawn_backend(app, true)
+    })//connectjs
+    })//node.js
+}
+
+function node_webkit(app, con){
     //TODO: wrap `uncaughtException` in ExtJS window, add xhr to backend
     app.process.on('uncaughtException' ,function(err){
         con.error('uncaughtException:', err)
@@ -67,9 +98,9 @@ function node_webkit(con ,app){
     ).on('error'
         ,backend_ctl_errors
     )
-    backend_check = check_backend
-    backend_restart = restart
-    backend_terminate = terminate
+    app.backend_check = check_backend
+    app.backend_restart = restart
+    app.backend_terminate = terminate
     return
 
 function backend_is_running(res){
@@ -135,7 +166,8 @@ function spawn_backend(app, restart){
 
     log = app.config.log +
           app.config.backend.file.replace(/[\\/]/g ,'_') + '.log'
-    backend = require('child_process').spawn(
+
+    backend = app.c_p.spawn(
         'node'
         ,[ app.config.backend.file ]
         ,{
@@ -175,7 +207,7 @@ function spawn_backend(app, restart){
 }
 
 function get_remote_ip(){
-    require('child_process').exec('ipconfig',
+    app.c_p.exec('ipconfig',
     function(err, stdout){
         if(!err){
             err = stdout.match(/^[\s\S]*IPv4-[^:]*: ([^\n]*)\n/)
@@ -257,7 +289,7 @@ function restart(){
         App.sts(l10n.stsCheck, l10n.stsAlive, l10n.stsHE)
         App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
         con.log('restart: backend is dead; starting new')
-        load_config(app) && spawn_backend(app, true)
+        load_config(app) && check_versions(spawn_backend)
     }
 
     function request_cmd_exit(){
@@ -273,7 +305,7 @@ function restart(){
         App.sts(l10n.stsStart, l10n.stsRestarting, l10n.stsOK)
         setTimeout(
             function spawn_reloaded_backend(){
-                load_config(app) && spawn_backend(app, true)
+                load_config(app) && check_versions(spawn_backend)
             }
             ,2048
         )
@@ -303,7 +335,7 @@ function terminate(){
             if(pid != app.config.backend.pid)
                 con.warn('current pid != app.config.backend.pid; kill anyway!'),
             app.config.backend.pid = pid
-            require('child_process').exec(
+            app.c_p.exec(
                'wscript terminate.wsf ' + pid,
                 defer_request_check_kill
             )
@@ -388,6 +420,14 @@ function load_config(app){// loaded only by main process -- node-webkit
         app.w.window.alert(cfg)
         return false
     }
+
+    app.config.backend.time = null
+    app.config.backend.versions = {
+        node: app.versions.node,
+        connectjs: app.versions.connectjs,
+        nw: app.process.versions['node-webkit']
+    }
+
     con.log('reading config: ' + cfg + ' done')
 
     return check_extjs_path()
@@ -570,7 +610,7 @@ function extjs_launch(){
 
     function appRun(){
         /*dynamic controller for dynamic models
-         * this doesn't work due to curved loading.
+         * this doesn't work due to curved loading: Controller first, not Model.
            application.config: {
                 models: [ 'Base', 'BaseR', 'Status' ],
                 stores: [ 'Status' ],
@@ -590,9 +630,13 @@ function extjs_launch(){
         delete app.config.backend.msg
         delete app.config.backend.time
 
-        App.doCheckBackend = backend_check
-        App.doRestartBackend = backend_restart
-        App.doTerminateBackend = backend_terminate
+        App.doCheckBackend = app.backend_check
+        App.doRestartBackend = app.backend_restart
+        App.doTerminateBackend = app.backend_terminate
+
+        delete app.backend_check
+        delete app.backend_restart
+        delete app.backend_terminate
     }
 }
 
