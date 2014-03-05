@@ -114,39 +114,9 @@ Ext.define('App.view.Desktop',{
     }
 })
 
-Ext.define ('App.view.desktop.backendTools',{
-//!!!auth*n:    extend: 'Ext.Component'
-    extend: 'Ext.toolbar.Toolbar',
-    xtype: 'sg-ct',
-    dock: 'bottom',
-    items:[ '-','nodejs: ',{
-        text: l10n.stsEcho
-       ,iconCls: 'sg-e'
-       ,handler: function(){
-            if(App.doCheckBackend)// request, check/sync $PID
-                return App.doCheckBackend()
-            throw new Error('OOPS: restricted code in frontend')
-       }
-    },'->',{
-        text: l10n.stsRestart
-       ,iconCls: 'sg-r'
-       ,handler: function(){
-            if(App.doRestartBackend)// request cmd_exit, respawn, recheck
-                return App.doRestartBackend()
-            throw new Error('OOPS: restricted code in frontend')
-       }
-    },'-',{
-        text: l10n.stsKill
-       ,iconCls: 'sg-k'
-       ,handler: function(){
-            if(App.doTerminateBackend)// spawn `terminate.wsh $PID`
-                return App.doTerminateBackend()
-            throw new Error('OOPS: restricted code in frontend')
-        }
-    }]
-})
-
 Ext.require('App.store.Status')
+Ext.require('App.view.desktop.BackendTools')
+
 Ext.define ('App.view.desktop.StatusGrid',{
     extend: 'Ext.grid.Panel',
     singleton: true,
@@ -204,9 +174,6 @@ Ext.define('App.view.desktop.Status',{
     draggable: true,
     resizable: true,
 
-    stateful: true,
-    stateId: 'dpsb',
-
     style: 'padding: 4px; box-shadow: 0px 10px 20px #111; text-align: center;',
     items: [{
         xtype: 'container'
@@ -224,10 +191,15 @@ Ext.define('App.view.desktop.Status',{
             }),
         {
             xtype: 'component'
-           ,html: l10n.stsMsg + '<b id="stscount">0/0</b><br>-= versions =-' +
-'\nnodejs,0.10.24\nextjs,4.2.1\nconnectjs:,2.9.2\nnode-webkit:,0.8.4'
-                .replace(/\n/g,'</b><br>').replace(/,/g, '<br><b>') +
-'<br><a href="' + (App.cfg.backend.url ? App.cfg.backend.url : '#TyT') +
+           ,html: (l10n.stsMsg + '<b id="stscount">0/0</b><br><div id="versions">' +
+'-= versions =-\n'+
+'extjs:,' + Ext.versions.extjs.version + '\n' +
+           (App.cfg.backend.url ?
+'nodejs:,' + App.cfg.backend.versions.node +
+'connectjs:,' + App.cfg.backend.versions.connectjs +
+'node-webkit:,'+ App.cfg.backend.versions.nw : '')
+            ).replace(/\n/g,'</b><br>').replace(/,/g, '<br><b>') +
+'</div><br><a href="' + (App.cfg.backend.url ? App.cfg.backend.url : '#TyT') +
 '">HTTP Remote Application</a>'
         }
         ]
@@ -241,8 +213,8 @@ Ext.define('App.view.shortcuts_Desktop', {
     xtype: 'app-shortcuts',
     style: 'background-color:transparent;background-image:none;'
 
-    ,stateId: 'dpss'
-    ,stateful: true
+    //,stateId: 'dpss'
+    //,stateful: true
 
     ,enableOverflow: true
     ,defaults: {
@@ -325,14 +297,15 @@ Ext.define('App.view.Bar',{
         for(var i = 0; i < 4; i++)  s[i] = {
             text: l10n.userStatuses[l[i]]
            ,itemId: l[i]
+           ,width: '100%'
            ,icon: 'css/user-' +  l[i] + '.png'
-           ,handler: onItemClick ,width: '100%'
+           ,handler: onItemClick
         }
         s[i] = { text: l10n.um.users ,scale: 'large' ,icon: 'css/um32x32.gif' }
         return s
-        function onItemClick(i ,j){
-           (j = i.up('button')).setIcon(i.icon)
-            j.hideMenu()
+        function onItemClick(item){
+            item.up('button').setIcon(item.icon).hideMenu()
+            Ext.globalEvents.fireEventArgs('userStatus', [ item ])
             //TODO: set state && sync state with backend
         }
     }
