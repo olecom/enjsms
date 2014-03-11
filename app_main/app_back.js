@@ -4,14 +4,14 @@ var cfg ,ctl
    ,text_plain = { 'Content-Type': 'text/plain; charset=utf-8' }
    ,app_json   = { 'Content-Type': 'application/json; charset=utf-8' }
 
-function log(m){ con.log(m) }
-function err(e){ con.error(e) }
+function _log(m){ con.log(m) }
+function _err(e){ con.error(e) }
 
     function run_backend(){
-        log('^ app is starting http @ port ' + cfg.backend.job_port + '\n' +
+        _log('^ app is starting http @ port ' + cfg.backend.job_port + '\n' +
                 new Date().toISOString()
         )
-        //err('error check')
+        //_err('error check')
         run_app()
     }
 
@@ -67,7 +67,7 @@ var utils  = require('connect/lib/utils.js')
             if(!err) return next()
             if (err.status) res.statusCode = err.status
             if (res.statusCode < 400) res.statusCode = 500
-            err(ipt(err) + ' (internal backend error)')
+            _err(ipt(err) + ' (internal backend error)')
             res.writeHead(res.statusCode, text_plain)
             return res.end(err.stack)//XXX frontend must wrap this in pretty UI
         })
@@ -86,7 +86,7 @@ var utils  = require('connect/lib/utils.js')
     }
 
    function app_is_up_and_running(){
-        log('^ app is up and running\n' +
+        _log('^ app is up and running\n' +
             new Date().toISOString()
         )
     }
@@ -129,11 +129,11 @@ var utils  = require('connect/lib/utils.js')
 ================================================================================*/
 
 process.on('uncaughtException', function(err){
-    log('Caught exception: ' + err.stack)
+    _log('Caught exception: ' + err.stack)
 })
 
 process.on('exit', function process_exit(){
-    log('$ backend process exit event')
+    _log('$ backend process exit event')
 })
 
 
@@ -149,7 +149,7 @@ function proc_ctl_http_serv(req, res){
 
     res.on('close', proc_ctl_res_unexpected_close)
 
-    log('ctl req url:' + req.url)
+    _log('ctl req url:' + req.url)
     if ('/sts_running' == req.url){
     } else if ('/cmd_exit' == req.url){
         process.nextTick(function(){
@@ -172,7 +172,7 @@ function proc_ctl_http_serv(req, res){
 ctl.on('listening',
 function proc_ctl_http_serv_listening(){
     ctl = new Date()// fill `ctl` as running flag
-    log(
+    _log(
         '^ backend http proc ctl @ http://127.0.0.1:' + cfg.backend.ctl_port + '\n' +
         ctl.toISOString()
     )
@@ -182,24 +182,24 @@ ctl.on('error',
 function proc_ctl_http_serv_error(e){
 // NOTE: net error handler must not be inside init(listen) callback!!!
     if('EADDRINUSE' == e.code){// 'EADDRNOTAVAIL'?
-        err(
+        _err(
             "!!! FATAL(ctl): can't listen host:port='127.0.0.1':" + cfg.backend.ctl_port +
             "\n" + ipt(e) +
             "\nNOTE: check config 'ctl_port' option collision"
         )
     } else {//FIXME: handle all fatal errors to unset `ctl` and process.exit()
-        err("! ERROR(ctl) controlling http channel: " + ipt(e))
+        _err("! ERROR(ctl) controlling http channel: " + ipt(e))
     }
     if (!ctl) process.exit(1)
 })
 
 ctl.on('clientError',
 function proc_ctl_client_error(e, sock){
-    err("! ERROR(ctl) in client connection: " + ipt(e))
+    _err("! ERROR(ctl) in client connection: " + ipt(e))
 })
 
 function proc_ctl_res_unexpected_close(){
-    err('! ERROR(ctl) aborted request')
+    _err('! ERROR(ctl) aborted request')
 }
 
 ctl.listen(cfg.backend.ctl_port ,'127.0.0.1' ,run_backend)
