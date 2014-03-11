@@ -67,9 +67,12 @@ var utils  = require('connect/lib/utils.js')
             if(!err) return next()
             if (err.status) res.statusCode = err.status
             if (res.statusCode < 400) res.statusCode = 500
-            _err(ipt(err) + ' (internal backend error)')
-            res.writeHead(res.statusCode, text_plain)
-            return res.end(err.stack)//XXX frontend must wrap this in pretty UI
+            _err('ErrorHandler:')
+            err.url = req.url
+            err = ipt(err, { depth: 4 })
+            _err(err)
+            res.writeHead(res.statusCode, res.ContentTypes.TextPlain)
+            return res.end(err)//XXX frontend must wrap this in pretty UI
         })
        .use(mwAssume404)// no middleware handled request
     .listen(cfg.backend.job_port ,app_is_up_and_running)
