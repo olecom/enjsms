@@ -47,10 +47,7 @@ var utils  = require('connect/lib/utils.js')
     app.use(mwPostTextPlain)
 
     /* backend static: for non localhost users */
-    app.use('/extjs/' ,connect['static'](__dirname + '/' + cfg.extjs.path))
-    cfg.extjs.path = 'extjs/'// switch local to external path
-    app.use('/' ,connect['static'](__dirname, { index: 'app.htm' }))
-    app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
+    remote_extjs_cfg()
     app.use('/app_back.js' ,mwAssume404)
 
     /* have `session` after `static`, to prevent needless work */
@@ -78,7 +75,17 @@ var utils  = require('connect/lib/utils.js')
     .listen(cfg.backend.job_port ,app_is_up_and_running)
     return
 
-    function app_is_up_and_running(){
+    function remote_extjs_cfg(){
+        var fs = require('fs')
+        if(cfg.extjs.pathFile){
+            cfg.extjs.path = fs.readFileSync(cfg.extjs.pathFile).toString().trim()
+        }
+        app.use('/extjs/' ,connect['static'](__dirname + '/' + cfg.extjs.path))
+        cfg.extjs.path = 'extjs/'// switch local to external path
+        app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
+    }
+
+   function app_is_up_and_running(){
         log('^ app is up and running\n' +
             new Date().toISOString()
         )

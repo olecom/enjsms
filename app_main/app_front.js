@@ -458,7 +458,10 @@ function check_extjs_path(){// find local ExtJS in and above cwd './'
             p = fs.statSync(extjs_path)
         } catch(ex){ }
         extjs_path = pe + extjs_path// add final level from `app_main` anyway
-        if(p) break
+        if(p){
+            fs.writeFileSync(ef, extjs_path)
+            break
+        }
     } while(--i)
 
     while(1){
@@ -486,7 +489,10 @@ function check_extjs_path(){// find local ExtJS in and above cwd './'
             extjs_path = pe + extjs_path
             if(p) break
         } while(--i)
-        if(p) break
+        if(p){
+            fs.writeFileSync(ef, extjs_path)
+            break
+        }
         d = l10n.extjsPathNotFound(ef, app.config.extjs.path)
         break
     }
