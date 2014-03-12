@@ -26,8 +26,8 @@ Ext.define('App.controller.Main',{
 
         me.listen({
             global:{
-               updateVersions: me.updateVersions
-              ,userStatus: me.handleUserStatus
+                updateVersions: me.updateVersions
+               ,userStatus: me.handleUserStatus
             },
             controller:{ },
             component:{ },

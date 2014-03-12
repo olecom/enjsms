@@ -1,8 +1,7 @@
 (function uglify_js_closure(con ,process){
 var cfg ,ctl
    ,ipt = require('util').inspect
-   ,text_plain = { 'Content-Type': 'text/plain; charset=utf-8' }
-   ,app_json   = { 'Content-Type': 'application/json; charset=utf-8' }
+   ,http = require('http')
 
 function _log(m){ con.log(m) }
 function _err(e){ con.error(e) }
@@ -15,7 +14,12 @@ function _err(e){ con.error(e) }
         run_app()
     }
 
-require('http').ServerResponse.prototype.json =
+http.ServerResponse.prototype.ContentTypes = {
+    AppJSON:   { 'Content-Type': 'application/json; charset=utf-8' },
+    TextPlain: { 'Content-Type': 'text/plain; charset=utf-8' }
+}
+
+http.ServerResponse.prototype.json =
 /*  res.json({ success: true })
  *  res.json('{ "success": true }')
  *  res.json(401, { msg: ' Authorization Required' })
@@ -27,18 +31,29 @@ function res_json(obj){
     }
     if('string' != typeof obj) obj = JSON.stringify(obj)
     this.setHeader('Content-Length', obj.length)
-    this.writeHead(this.statusCode, app_json)
+    this.writeHead(this.statusCode, this.ContentTypes.AppJSON)
     this.end(obj)
 }
+//TODO add to request user auth*n field
 
 /*`connect` for business logic as from node-webkit(local UI)
  * as from regular HTTP (localhost or any host)
  */
 
 function run_app(){
-var utils  = require('connect/lib/utils.js')
+var utils   = require('connect/lib/utils.js')
    ,connect = require('connect')
    ,app = connect()
+   ,api = { /* API setup */
+        /* methods */
+        app: app,
+        cfg: cfg,
+        con: con,
+        ipt: ipt
+        /* data
+        users: users,
+        roles: roles */
+    }
 
     /* Application middleware setup */
 
@@ -50,17 +65,17 @@ var utils  = require('connect/lib/utils.js')
     remote_extjs_cfg()
     app.use('/app_back.js' ,mwAssume404)
 
-    /* have `session` after `static`, to prevent needless work */
-    // TODO!!!: .use(require('connect.session')({secret: cfg.backend.sess_puzl}))
-    //,MongoStore = require('connect-mongo')(express)
+    app.use(connect.session({
+        secret: cfg.backend.sess_puzl
+       ,generate: function(req, res){
+            return req.url === '/login' //&& user not in store
+        }
+       //,store = require('connect-mongo')(app)
+    }))
 
-// TODO: require plugins here
-/* https://github.com/caulagi/sntd/blob/master/config/express.js */
-/*/ Bootstrap models
-    var models_path = __dirname + '/app/models'
-    fs.readdirSync(models_path).forEach(function (file) {
-        if (~file.indexOf('.js')) require(models_path + '/' + file)
-    })*/
+    app_modules(api)
+
+    app.use('/' ,connect['static'](__dirname, { index: 'app.htm' }))//TODO: no directory traversal, serv just app.htm
 
     /* Finally, error middleware setup */
     app.use(function mwErrorHandler(err, req, res, next){
@@ -75,7 +90,11 @@ var utils  = require('connect/lib/utils.js')
             return res.end(err)//XXX frontend must wrap this in pretty UI
         })
        .use(mwAssume404)// no middleware handled request
-    .listen(cfg.backend.job_port ,app_is_up_and_running)
+    .listen(cfg.backend.job_port ,function app_is_up_and_running(){
+        _log('^ app is up and running\n' +
+            new Date().toISOString()
+        )
+    })
     return
 
     function remote_extjs_cfg(){
@@ -88,14 +107,13 @@ var utils  = require('connect/lib/utils.js')
         app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
     }
 
-   function app_is_up_and_running(){
-        _log('^ app is up and running\n' +
-            new Date().toISOString()
-        )
+    /* Application module loader (can be in its own file) */
+    function app_modules(api){
+        //!view.desktop.BackendTools
     }
 
     function mwAssume404(req, res){
-        res.writeHead(res.statusCode = 404, text_plain)
+        res.writeHead(res.statusCode = 404, res.ContentTypes.TextPlain)
         return res.end(
             'URL: ' + req.originalUrl + '\n\n' +
             'Not found'
@@ -139,14 +157,13 @@ process.on('exit', function process_exit(){
     _log('$ backend process exit event')
 })
 
-
 try {
     cfg = JSON.parse(process.env.NODEJS_CONFIG)
 } catch(ex){
     cfg = (new Function('var config ; return ' + process.env.NODEJS_CONFIG))(ex)
 }
 
-ctl = require('http').createServer(
+ctl = http.createServer(
 function proc_ctl_http_serv(req, res){
     var body = ''
 
