@@ -71,3 +71,19 @@ Ext.define('App.controller.Main',{
         })
     }
 })
+
+Ext.define('App.back.Connection',{
+    singleton: true,
+    extend: 'Ext.data.Connection',
+    method: 'POST',
+    defaultHeaders:{
+        'Content-Type': 'text/plain; charset=utf-8'
+    }
+})
+
+//!!! TODO: if(req.session.user.can.js), load this
+App.back.JS = function run_js_code_on_backend(code, cb){
+   App.back.Connection.request({
+       url:'pingback.js', params: code, callback: cb
+   })
+}

@@ -24,6 +24,7 @@ config = {
            ,usersman:{
                 store: 'dummy' //dummy (internal ro default roles), json file, db
             }
+           ,pingback: true
         }
     },
     extjs:{

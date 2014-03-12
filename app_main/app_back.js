@@ -109,7 +109,33 @@ var utils   = require('connect/lib/utils.js')
 
     /* Application module loader (can be in its own file) */
     function app_modules(api){
+        if(cfg.app.modules.pingback){
+            pingback(api)
+        }
         //!view.desktop.BackendTools
+
+        function pingback(api){// run external text here
+            api.app.use('/pingback.js', function mwPingBack(req, res, next){
+                var ret = { success: false }
+                //!!! TODO: if(req.session.user.can.js)
+                if(req.body.plain_text) try {
+                    new Function(
+                       'ret, api, req, res, next', req.body.plain_text
+                    )(
+                        ret, api, req, res, next
+                    )
+                    if(ret.async){
+                        return
+                    }
+                    ret.success = true
+                } catch (ex){
+                    ret.err = ex
+                    next(ret)
+                    return
+                }
+                res.json(ret)
+            })
+        }
     }
 
     function mwAssume404(req, res){
