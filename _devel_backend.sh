@@ -74,5 +74,7 @@ Stop backend (y/n)? '
             }
         } || normal_exit
     }
-    _lftp_http 1 'cmd_exit' && $BACKEND 1>&7 2>&8 &
+
+    _lftp_http 1 'cmd_exit' || :
+    $BACKEND 1>&7 2>&8 &
 done
