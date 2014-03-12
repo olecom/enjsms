@@ -13,9 +13,9 @@ exit 0
 ' 0
 
 normal_exit(){
-    echo '
-Normal Exit (backend is running)
-'
+    echo "
+Normal Exit${1:-' (backend is running)'}
+"
     set +e
     trap '' 0
     exit 0
@@ -63,6 +63,16 @@ $BACKEND 1>&7 2>&8 &
 while echo 'Press "Enter" key to reload backend (CTRL+C || CTRL+D to stop)...
 '
 do
-   read A || normal_exit
-   _lftp_http 1 'cmd_exit' && $BACKEND 1>&7 2>&8 &
+    read A || {
+        echo '
+Stop backend (y/n)? '
+        read A && {
+            [ 'y' = "$A" ] && {
+                _lftp_http 1 'cmd_exit'
+                A='.'
+                normal_exit "$A"
+            }
+        } || normal_exit
+    }
+    _lftp_http 1 'cmd_exit' && $BACKEND 1>&7 2>&8 &
 done
