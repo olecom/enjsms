@@ -14,7 +14,7 @@ exit 0
 
 normal_exit(){
     echo "
-Normal Exit${1:-' (backend is running)'}
+Normal Exit${1:- (backend is running)}
 "
     set +e
     trap '' 0
