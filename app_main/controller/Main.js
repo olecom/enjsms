@@ -34,7 +34,6 @@ Ext.define('App.controller.Main',{
             store:{ }
         })
 
-        me.setupBackendEventsWaiting()
     }
    ,handleUserStatus: function handleUserStatus(item){
         App.sts(
