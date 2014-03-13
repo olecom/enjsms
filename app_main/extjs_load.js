@@ -2,11 +2,16 @@
  * common part for `nw` && `connectjs` front ends
  */
 
-var devel = true
-var con = window.console
-   ,app
+var app, extjs_load
 
-function extjs_load(doc ,w){
+(function gc_wrapper(con){
+var devel = true
+
+    extjs_load = extjs_load_gc_wrapped
+    return
+
+/* init stuff must be garbage collected */
+function extjs_load_gc_wrapped(doc ,w){
 var path, extjs
 
     path = app.config.extjs.path
@@ -25,6 +30,7 @@ var path, extjs
     extjs = setInterval(function waiting_extjs(){
         if(w.Ext){
             clearInterval(extjs)
+            extjs_load = null//mark for GC
             path = Ext.Loader.getPath('Ext')
             extjs = path + '/../locale/ext-lang-' + l10n.lang + '.js'
             Ext.Loader.loadScript({
@@ -112,6 +118,8 @@ function extjs_launch(){
             l10n.stsOK,
             app.config.backend.time
         )
+        app.config.extjs.launch = null
+        delete app.config.extjs.launch
         delete app.config.backend.op
         delete app.config.backend.msg
         delete app.config.backend.time
@@ -125,3 +133,4 @@ function extjs_launch(){
         delete app.backend_terminate
     }
 }
+})(window.console)
