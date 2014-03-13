@@ -1,5 +1,5 @@
-module.exports = function app_modules(api){
-    /* Application module loader (can be in its own file) */
+function app_modules(api){
+    /* Application module loader */
     try{
         if(api.cfg.app.modules.pingback){
             require('./pingback.js')(api)
@@ -9,3 +9,5 @@ module.exports = function app_modules(api){
     }
         //!view.desktop.BackendTools
 }
+
+module.exports = app_modules
