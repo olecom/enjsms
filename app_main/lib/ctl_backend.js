@@ -9,7 +9,7 @@
 ================================================================================
 */
 
-module.exports = function ctl_backend_uglify_js(cfg, run_backend, _log, _err){
+function ctl_backend_uglify_js(cfg, run_backend, _log, _err){
 var ipt  = require('util').inspect
    ,noop = function() {}
 
@@ -80,3 +80,5 @@ ctl.unref()// "allow the program to exit if this is the only active server in th
 ctl = null// setup is over, waiting for 'listening' event, `ctl` is running flag
 
 }
+
+module.exports = ctl_backend_uglify_js

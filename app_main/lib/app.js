@@ -3,10 +3,10 @@
  * and for browsers(remote UI)
  */
 
-module.exports = function run_app(){
+function runApp(){
 var connect = require('connect')
-   ,_404 = require('./middleware/404.js')
    ,sendFile = require('./middleware/sendFile.js')
+   ,_404 = require('./middleware/404.js')
    ,api  = require('./api.js')
    ,app  = api.app = connect()
    ,cfg  = api.cfg
@@ -57,3 +57,5 @@ var connect = require('connect')
         app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
     }
 }
+
+module.exports = runApp
