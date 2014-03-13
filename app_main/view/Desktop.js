@@ -281,9 +281,9 @@ Ext.define('App.view.Bar',{
         {
             iconCls: 'appbar-user-online'
            ,height:28
-           ,tooltip: l10n.userStatus + ': <b>' + App.user.id + '</b>'
-            ,text: '<i>' + App.user.name + '</i> (<b>' + App.user.role + '</b>)'
-            ,menu:{
+           //,tooltip: l10n.userStatus + ': <b>' + App.user.id + '</b>'
+           //,text: '<i>' + App.user.name + '</i> (<b>' + App.user.role + '</b>)'
+           ,menu:{
                 xtype: 'menu',
                 plain: true,
                 items:{

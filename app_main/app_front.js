@@ -1,14 +1,12 @@
 (function uglify_js_closure(con ,doc ,win ,l10n){
-var devel = true
-var app = { // configuration placeholders
-        config: null //{ db: null ,extjs:null }
-        ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
-        ,role: { va_permissions: null }
-        //,tools: { /*load_extjs: null*/ }
-    }
     /* two frontend parts: under `node-webkit` and `connectjs` in browser */
-
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
+        app = { // configuration placeholders
+            config: null //{ db: null ,extjs:null }
+//   ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
+//   ,role: { va_permissions: null }
+    //,tools: { /*load_extjs: null*/ }
+        }
         app.process = process
         app.c_p = require('child_process')
         app.tray = { obj: null ,stat: 'show' }
@@ -18,27 +16,8 @@ var app = { // configuration placeholders
         // start local ExtJS 'App'
         check_versions(node_webkit)
         return
-    } else {// 'nodejs + connectjs': XHR communication with backend (remote web browser)
-        var xhr = new XMLHttpRequest()
-        xhr.open('GET' ,'/app.config.extjs.json' ,true)
-        xhr.onreadystatechange = function(){
-            if(4 == xhr.readyState){
-                if(200 != xhr.status){
-                    con && con.error && con.error(l10n.errload_config_read)
-                    doc.write(l10n.errload_config_read)
-                    alert(l10n.errload_config_read)
-                } else {// start external/remote ExtJS 'App'
-                    app.config = { extjs: JSON.parse(xhr.responseText) }
-                    app.config.backend = {// record start time
-                        time: new Date,
-                        msg: l10n.stsBackendXHR,
-                        op: l10n.stsCheck
-                    }
-                    extjs_load(doc ,win)
-                }
-            }
-        }
-        xhr.send(null)
+    } else {
+        throw new Error('Wrong code execution attempt!')
     }
     return
 /*
@@ -114,7 +93,7 @@ function backend_is_running(res){
         app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port
         app.config.backend.op = l10n.stsCheck
 
-        get_remote_ip(extjs_load)
+        get_remote_ip()
         con.log('reload just extjs, backend is up and running already')
     })
 }
@@ -525,125 +504,5 @@ function setup_tray(t ,w){
     con.log('setup_tray: done')
 }
 }// nw
-
-/*
- * common tools for `nw` && `express` front ends
- */
-
-function extjs_load(doc ,w){
-var extjs, path
-    path = app.config.extjs.path
-    extjs = doc.createElement('link')
-    extjs.setAttribute('rel', 'stylesheet')
-    extjs.setAttribute('href', path + 'resources/css/ext-all.css')
-    doc.head.appendChild(extjs)
-
-    extjs = doc.createElement('script'),
-    extjs.setAttribute('type' ,'application/javascript')
-    extjs.setAttribute('charset' ,'utf-8')
-    extjs.setAttribute('src' ,path + 'ext-all' + (devel ? '-debug' : '') + '.js')
-    doc.head.appendChild(extjs)
-
-    path = '1234'
-    extjs = setInterval(function waiting_extjs(){
-        if('undefined' != typeof Ext){
-            clearInterval(extjs)
-            path = Ext.Loader.getPath('Ext')
-            extjs = path + '/../locale/ext-lang-' + l10n.lang + '.js'
-            Ext.Loader.loadScript({
-                url: extjs,
-                onError: function fail_load_locale(){
-                    throw new Error('Error loading locale file:\n' + extjs)
-                }
-            })
-            con.log(
-                'ExtJS version: ' + Ext.getVersion('extjs') + '\n' +
-                'ExtJS locale: ' + l10n.lang + '\n' +
-                'ExtJS is at <' + path + '>'
-            )
-            Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')
-            Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
-            app.config.extjs.launch = extjs_launch
-            Ext.application(app.config.extjs)
-            return
-        } else if('' == path){
-            clearInterval(extjs)
-            con.error(l10n.extjsNotFound)
-            doc.write(l10n.extjsNotFound)
-            w.alert(l10n.extjsNotFound)
-            return
-        }
-        path = path.slice(1)
-    }, 1024)
-    con.log('load_extjs: done, waiting for ExtJS')
-}
-
-function extjs_launch(){
-    var me = this
-    //Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
-    // handle errors raised by Ext.Error.raise()
-    Ext.Error.handle = function(err){
-        //TODO: error list, kebab's popup with extdesk gears to show them
-        return !con.warn(err)
-    }
-
-    //TODO: for each app.config.app.modules load module
-    //TODO: dynamic addition in toolbar or items/xtype construction
-    //global `App` object is available now
-    App.cfg = app.config ,App.user = app.user ,App.role = app.role
-    //TODO: events via long pooling from app_backend/express
-    //App.sync_clearTimeout = Ext.defer(App.sync_extjs_nodejs, 3777)
-
-    if(app.config.extjs.fading){
-        // very strange composition to get gears to fadeOut and viewport to fadeIn
-        var b = Ext.getBody()
-        b.fadeOut({duration:777 ,callback:
-            function(){
-                Ext.fly('startup').remove()
-                b.show()
-                Ext.create('App.view.Viewport')
-                b.fadeIn({easing:'easeIn' ,duration: 1024 ,callback: appRun })
-                con.log('extjs: faded In')
-            }
-        })
-    } else {
-        Ext.fly('startup').remove()
-        Ext.create('App.view.Viewport')
-        appRun()
-    }
-    //app.config.extjs = null// clear ref for GC
-    con.log('ExtJS + App launch: OK')
-
-    function appRun(){
-        /*dynamic controller for dynamic models
-         * this doesn't work due to curved loading: Controller first, not Model.
-           application.config: {
-                models: [ 'Base', 'BaseR', 'Status' ],
-                stores: [ 'Status' ],
-                controllers: [ 'Main' ]
-            }
-         **/
-        //me.viewport = Ext.ComponentQuery.query('viewport')[0]
-        me.getController('Main').init() /* dynamically loaded controller */
-
-        App.sts(// add first System Status message
-            app.config.backend.op,
-            app.config.backend.msg,
-            l10n.stsOK,
-            app.config.backend.time
-        )
-        delete app.config.backend.op
-        delete app.config.backend.msg
-        delete app.config.backend.time
-
-        App.doCheckBackend = app.backend_check
-        App.doRestartBackend = app.backend_restart
-        App.doTerminateBackend = app.backend_terminate
-
-        delete app.backend_check
-        delete app.backend_restart
-        delete app.backend_terminate
-    }
-}
 
 })(console ,document ,window ,l10n)

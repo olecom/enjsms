@@ -35,12 +35,13 @@
         w.addEventListener('load' ,function pre_onload(e){
             e.target.removeEventListener(e.type ,pre_onload)
             d.getElementById('startup').appendChild(b)
+            startup(true)// preload ExtJS stuff
             setTimeout(startup, 0)// schedule heavy loading after html && dom
         })
 
-        function startup(){
+        function startup(extjs){
             b = new XMLHttpRequest()
-            b.open('GET' ,'app_front.js' ,false)
+            b.open('GET', (extjs ? 'extjs_load.js' : 'app_front.js'), false)
             b.send()
             if(b.responseText){
                 d.head.removeChild(d.head.getElementsByTagName('script')[1])
@@ -49,7 +50,6 @@
                     .parentNode
                 b.setAttribute('type' ,'application/javascript')
                 b.setAttribute('charset' ,'utf-8')
-                //.setAttribute('src' ,'app_front.js')
                 d.head.appendChild(b)
             } else {
                 d.write(l10n.errload_no_app + '<br>' + l10n.errload)
