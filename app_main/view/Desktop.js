@@ -34,7 +34,7 @@ Ext.define('App.view.Desktop',{
                     })
 
                     ss.down('image').getEl().on({
-                        'dblclick': function(){
+                        'click': function(){
                             var r = me.getRegion()
                                ,s = ss.getRegion()
                             if(s.bottom - s.top < 100){//small 2 big
