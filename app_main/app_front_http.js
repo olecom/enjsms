@@ -13,17 +13,15 @@ xhr.onreadystatechange = function(){
             )
             alert(l10n.errload_config_read)
         } else {// start external/remote ExtJS 'App'
-            app = {
-                config:{
-                    extjs: JSON.parse(xhr.responseText),
-                    backend:{// record start time
-                        time: new Date,
-                        msg: l10n.stsBackendXHR,
-                        op: l10n.stsCheck
-                    }
+            app.config = {
+                extjs: JSON.parse(xhr.responseText),
+                backend:{// record start time
+                    time: new Date,
+                    msg: l10n.stsBackendXHR,
+                    op: l10n.stsCheck
                 }
             }
-            extjs_load(document, window)
+            app.extjs_load(document, window)
         }
     }
 }

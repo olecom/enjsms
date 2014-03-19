@@ -1,12 +1,13 @@
 (function uglify_js_closure(con ,doc ,win ,l10n){
     /* two frontend parts: under `node-webkit` and `connectjs` in browser */
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
-        app = { // configuration placeholders
-            config: null //{ db: null ,extjs:null }
-//   ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
-//   ,role: { va_permissions: null }
-    //,tools: { /*load_extjs: null*/ }
-        }
+/*        app = { // configuration placeholders
+ *            config: null //{ db: null ,extjs:null }
+ * //   ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
+ * //   ,role: { va_permissions: null }
+ *    //,tools: { / *load_extjs: null* / }
+ *       }*/
+
         app.process = process
         app.c_p = require('child_process')
         app.tray = { obj: null ,stat: 'show' }
@@ -193,7 +194,7 @@ function get_remote_ip(){
             if(err) app.config.backend.url = app.config.backend.url
                 .replace(/127\.0\.0\.1/, err[1])
         }
-        extjs_load(app.w.window.document ,app.w.window)
+        app.extjs_load(app.w.window.document ,app.w.window)
     })
 }
 
