@@ -81,8 +81,21 @@ Ext.define('App.back.Connection',{
 })
 
 //!!! TODO: if(req.session.user.can.js), load this
-App.back.JS = function run_js_code_on_backend(code, cb){
-   App.back.Connection.request({
-       url:'pingback.js', params: code, callback: cb
-   })
-}
+App.back.JS = (function create_pingback(){
+    var url = (App.cfg.backend.url || '') + 'pingback.js'
+
+    return function run_js_code_on_backend(code, cb){
+        App.back.Connection.request({
+            url: url, params: code, callback: cb || default_callback
+        })
+    }
+    function default_callback(opts, ok, res){
+        try {
+            console.dir(App.back.JS.res = JSON.parse(res.responseText))
+            console.log('`App.back.JS.res` has this `Object`')
+        } catch (ex) {
+            console.error(ex)
+            if(ex.stack) console.log(ex.stack)
+        }
+    }
+})()

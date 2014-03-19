@@ -90,7 +90,7 @@ function backend_is_running(res){
         app.config.backend.time = new Date
         app.config.backend.msg = l10n.stsBackendPid(pid)
         app.config.backend.pid = pid
-        app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port
+        app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port + '/'
         app.config.backend.op = l10n.stsCheck
 
         get_remote_ip()
