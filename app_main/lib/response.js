@@ -15,7 +15,7 @@ function res_json(obj){
         this.statusCode = obj
         obj = arguments[1]
     }
-    if('string' != typeof obj) obj = JSON.stringify(obj)
+    if('string' != typeof obj) obj = obj && JSON.stringify(obj) || '{"success": true}'
     this.setHeader('Content-Length', obj.length)
     this.writeHead(this.statusCode, this.ContentTypes.AppJSON)
     this.end(obj)
