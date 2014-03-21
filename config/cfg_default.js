@@ -21,7 +21,7 @@ config = {
                 config: 'config/cfg_procman_mongo_node_sms.js'
                ,autoSpawn: true
             }
-           ,usersman:{
+           ,userman:{
                 store: 'dummy' //dummy (internal ro default roles), json file, db
             }
            ,pingback: true

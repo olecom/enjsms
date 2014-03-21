@@ -13,7 +13,7 @@ function pingback(api){// run external text here
                 return// user code must do all further response processing
             }
             ret.success = true
-        } catch (ex){
+        } catch(ex){
             ret.err = ex
             next(ret)
             return

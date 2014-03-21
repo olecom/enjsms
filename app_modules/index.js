@@ -1,13 +1,30 @@
 function app_modules(api){
     /* Application module loader */
-    try{
-        if(api.cfg.app.modules.pingback){
-            require('./pingback.js')(api)
+    var m = '', err = '', cfg = ''
+       ,fs = require('fs')
+
+    for(m in api.cfg.app.modules){
+        try {// load: app_modules/userman/app_back_userman.js
+            if(fs.statSync(__dirname + '/' + m).isDirectory()){
+                cfg = api.cfg.app.modules[m]
+                m = './' + m + '/app_back_' + m + '.js'
+            }
+        } catch(ex){
+            err = err || 'Error load app module(s) from `config`:\n'// ':' is used
         }
-    } catch (ex){
-        _err('app modules: ' + api.ipt(ex))
+        if(!cfg){// load: app_modules/pingback.js
+            cfg = api.cfg.app.modules[m]
+            m = './' + m + '.js'
+        }
+        try {
+            require(m)(api, cfg)
+        } catch(ex){
+            err += m.replace(/[.]js/, '[.js]') + ' !!!' + ex + '\n'
+        }
+        cfg = ''
     }
-        //!view.desktop.BackendTools
+    if(':' != err[err.length - 2]) api._err(err)
+    //!view.desktop.BackendTools
 }
 
 module.exports = app_modules
