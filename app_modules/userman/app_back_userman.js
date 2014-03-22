@@ -3,7 +3,6 @@ function userman(api, cfg){
 
     app.use('/login', mwAuthenticate)
     app.use('/logout', mwLogout)
-//!!! check authentication, and `user.can` (authorization)
 //!!! static stufF: md5, login components connect = require('connect')
 
 /* Role setup example:
@@ -113,36 +112,59 @@ users = {// users db
 }
 
     function mwAuthenticate(req, res){
-        var ret = { success: false }
-           ,data = req.body.plain_text
+        var ret = { success: false, user: null, err: null }
+           ,data
            ,u ,r
 
-        if(data && req.session){
-            data = data.split('\n')//: 'user_id\npass_md5\nrole_name'
-            u = users[data[0]]
-            r = data[2]
-            // TODO: check pass in md5
-            // check password and role name in user's allowed roles list
-            ret.success = u && u.pass === data[1] && !!(
-                          r &&~u.roles.indexOf(r)
-                        )
+        if(req.session){
+            if((ret.user = req.session.user)){
+                ret.success = true
+                res.json(ret)
+                return// fast path
+            }
 
-            if(ret.success){
-                // generate session for user: compile roles, can
-                req.session.user = create_auth(u, r)
+            if((data = req.body.plain_text)){
+                data = data.split('\n')//: 'user_id\npass_md5\nrole_name'
+                u = users[data[0]]
+                r = data[2]
+                // TODO: check pass in md5
+                // check password and role name in user's allowed roles list
+                ret.success = u && u.pass === data[1] && !!(
+                              r &&~u.roles.indexOf(r)
+                            )
+
+                if(ret.success){
+                    // generate session for user: compile roles, can
+                    req.session.user = create_auth(u, r)
+                    res.json(ret)
+                    return// fast path
+                } else {
+                    ret.err = 'Bad user name, password, role'
+                }
             } else {
-                ret.err = 'Bad user name, password, role'
+                ret.err = 'No data available'
+            }
+
+            if(ret.err){
+                req.session.fail = req.session.fail ? ++req.session.fail : 1
+                if(4 == req.session.fail){
+                    req.session.user = true// stop auth check
+                    setTimeout((
+                        function prepare_allow_failer(failer){
+                            return function allow_failer(){
+                                failer.destroy()
+                            }
+                        })(req.session)
+                        , 1 << 22)// wait hour or so to allow next login
+                }
+                res.statusCode = 400
             }
         } else {
-            ret.err = 'No data available'
-        }
-        api._log('user:' + api.ipt(req.session.user))
-        if(ret.err){
-            req.session.destroy()
-            res.statusCode = 400
+            ret.err = 'Miscoding! No session'
         }
         res.json(ret)
     }
+    //!!! TODO: save/load MemoryStore with all sessions
 
     function mwLogout(req, res){
         req.session && req.session.destroy()
