@@ -1,8 +1,14 @@
 function userman(api, cfg){
     var app = api.app
 
-    app.use('/login', mwAuthenticate)
+    app.use('/login', mwLogin)// '/login creates `req.session`'
+    app.use('/auth', mwAuthenticate)
     app.use('/logout', mwLogout)
+
+    app.use(function(req, res, next){
+        console.log(req.url)
+        next()
+    })
 //!!! static stufF: md5, login components connect = require('connect')
 
 /* Role setup example:
@@ -110,6 +116,25 @@ users = {// users db
         can: null
     }
 }
+
+    function mwLogin(req, res){
+        var ret = { success: false, roles: [], err: null }
+           ,u
+
+        if(req.session && (u = req.body.plain_text)){
+            u = u.split('\n')[0]// user_id
+            if((u = users[u])){
+                ret.success = true
+                ret.roles = u
+                res.json(ret)
+                return// fast path
+            }
+            //if no user found, then auth will fail, don't tell it here
+        } else {
+            ret.err = 'Miscoding! No session and/or plain text username'
+        }
+        res.json(ret)
+    }
 
     function mwAuthenticate(req, res){
         var ret = { success: false, user: null, err: null }
