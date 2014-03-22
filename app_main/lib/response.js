@@ -16,7 +16,7 @@ function res_json(obj){
         obj = arguments[1]
     }
     if('string' != typeof obj) obj = obj && JSON.stringify(obj) || '{"success": true}'
-    this.setHeader('Content-Length', obj.length)
+    this.setHeader('Content-Length', Buffer.byteLength(obj))
     this.writeHead(this.statusCode, this.ContentTypes.AppJSON)
     this.end(obj)
 }
