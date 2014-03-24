@@ -1,15 +1,28 @@
+Can = {
+    backend:{
+        'App.view.desktop.BackendTools': true
+       ,'App.back.JS': true
+    }
+   ,order:{
+
+   }
+   ,warehouse:{
+   }
+   ,shop:{
+
+   }
+   ,Static: { }
+}
+
 function userman(api, cfg){
     var app = api.app
 
+    initAuthStatic()
+
+    app.use(mwBasicAuthorization)
     app.use('/login', mwLogin)// '/login creates `req.session`'
     app.use('/auth', mwAuthenticate)
     app.use('/logout', mwLogout)
-
-    app.use(function(req, res, next){
-        console.log(req.url)
-        next()
-    })
-//!!! static stufF: md5, login components connect = require('connect')
 
 /* Role setup example:
 
@@ -42,26 +55,47 @@ roles = {
 }
 */
 
-can = {
-    backend:{
-        'App.view.desktop.BackendTools': true
-       ,'App.back.JS': true
+    function initAuthStatic(){
+        var p, s = Can.Static
+        for(p in Can.backend){
+            //turn class name to backend url 'App.back.JS' - > '/back/JS'
+           s[p.slice(3).replace(/[.]/g, '/')] = false
+        }
     }
-   ,order:{
 
-   }
-   ,warehouse:{
-       income:{
+    function mwBasicAuthorization(req, res, next){
+        /* turn ExtJS Class URL into `Can.backend` index
+         /back/JS.js?_dc=1395638116367
+         /back/JS
+         */
+        var idx = req.url
+        idx = idx.slice(0, idx.indexOf('.js?'))
 
-       }
-   }
-   ,shop:{
+        if(req.session && req.session.user){// auth
+            if(!req.session.user.can.backend.hasOwnProperty(idx)){
+                next()// to `connect.static()`
+                return
+            }
+        // false must be in `req.session.user.can.backend[idx]
+        // fall thru
+        } else if(!Can.Static.hasOwnProperty(idx)){// no auth
+            next()
+            return
+        }
+        // false must be in `Can.Static`
+        /* crud reject (API calls):
+            res.statusCode = 401// 'Unauthorized'
+         * gracefull (compenents in ExtJS frontend code loaded from MVC files):
+            Ext.ns("App.view.desktop.BackendTools")
+            App.view.desktop.BackendTools = Ext.Component// Unauthorized
+        */
+        idx = 'App' + idx.replace(/[/]/g, '.')
+        res.json('Ext.ns("' + idx + '")\n' + idx + ' = Ext.Component// Unauthorized')
+        return
+    }
 
-   }
-}
-
-roles = {
-    'developer.local': [ can.backend ]// can do all from specified `can`
+Roles = {// 'role': new Array(of `can`s)
+    'developer.local': [ Can.backend ]// can do all from specified `can`
    ,'admin.local': [ 'App.view.desktop.BackendTools' ]// single true-permissions
    ,'developer': [ 'App.back.JS' ]
 }
@@ -81,12 +115,13 @@ roles = {
 
         if(u.can) return u
 
-        can = roles[role_name]
+        can = Roles[role_name] || { __name: 'null' ,backend: { } }
 
         if(Array.isArray(can)){// compile permissions from role setup
             roll = can
             can = {
                 __name: role_name
+               ,backend: { }
             }
             d = roll.length
             for(i = 0; i < d; i++){
@@ -99,19 +134,25 @@ roles = {
                     }
                 }
             }
-            roles[role_name] = can
+            Roles[role_name] = can
+        }
+        // compile ExtJS MVC component file access for `Can.backend` permission
+        for(p in Can.backend){
+            if(!can[p]){
+                //turn class name to backend url 'App.back.JS' - > '/back/JS'
+                can.backend[p.slice(3).replace(/[.]/g, '/')] = false
+            }
         }
         u.can = can
-
         return u
     }
 
-users = {// users db
+Users = {// users db
     olecom:{
         /* static changable data (for DB) */
         id: 'olecom',
         pass: 'passmd5',
-        roles: [ 'developer.local', 'admin.local' ],
+        roles: [ 'developer.local', 'admin.local', 'developer' ],
         name:'Олег Верич',
         can: null
     }
@@ -123,9 +164,9 @@ users = {// users db
 
         if(req.session && (u = req.body.plain_text)){
             u = u.split('\n')[0]// user_id
-            if((u = users[u])){
+            if((u = Users[u])){
                 ret.success = true
-                ret.roles = u
+                ret.roles = u.roles
                 res.json(ret)
                 return// fast path
             }
@@ -150,7 +191,7 @@ users = {// users db
 
             if((data = req.body.plain_text)){
                 data = data.split('\n')//: 'user_id\npass_md5\nrole_name'
-                u = users[data[0]]
+                u = Users[data[0]]
                 r = data[2]
                 // TODO: check pass in md5
                 // check password and role name in user's allowed roles list
