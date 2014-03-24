@@ -2,7 +2,8 @@ function postTextPlain(req, res, next){
     if (req._body) return next()
     var limit = require('connect').limit('4mb')
        ,utils = require('connect/lib/utils.js')
-    if('text/plain' == utils.mime(req))
+       ,mime = utils.mime(req)
+    if('text/plain' == mime || 'application/javascript' == mime)
         return limit(req, res
     ,function(err){
         if(err) return next(err)
