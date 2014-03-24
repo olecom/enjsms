@@ -115,7 +115,6 @@ Ext.define('App.view.Desktop',{
 })
 
 Ext.require('App.store.Status')
-Ext.require('App.view.desktop.BackendTools')
 
 Ext.define ('App.view.desktop.StatusGrid',{
     extend: 'Ext.grid.Panel',
@@ -155,9 +154,9 @@ Ext.define ('App.view.desktop.StatusGrid',{
                 }
             }
         ]
-    },{
-        xtype: 'sg-ct'
-    }],
+    },
+        Ext.create('App.view.desktop.BackendTools')
+    ],
     /* `columns` are going to be dynamicly configured, here is some experiment */
     columns: Ext.Array.merge(App.cfg.modelBase.fields, App.cfg.modelStatus.fields),
     store: App.store.Status
