@@ -1,7 +1,4 @@
-function process_uglify_js(_log, _err){
-
-    global._log = _log
-    global._err = _err
+function process_uglify_js(process){
 
     process.on('uncaughtException', function(err){
         _log('Caught exception: ' + err.stack)
