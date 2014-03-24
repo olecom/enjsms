@@ -3,7 +3,7 @@ function pingback(api){// run external text here
    ,function mwPingBack(req, res, next){
         var ret = { success: false }
 
-        if(req.session.user.can['App.back.JS'] &&
+        if(req.session && req.session.user.can['App.back.JS'] &&
            req.body.plain_text
         ) try {
             new Function(
@@ -16,8 +16,7 @@ function pingback(api){// run external text here
             }
             ret.success = true
         } catch(ex){
-            ret.err = ex
-            next(ret)
+            next(ex.stack)
             return
         }
         res.json(ret)
