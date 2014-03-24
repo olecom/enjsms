@@ -1,27 +1,14 @@
-Can = {
-    backend:{
-        'App.view.desktop.BackendTools': true
-       ,'App.back.JS': true
-    }
-   ,order:{
-
-   }
-   ,warehouse:{
-   }
-   ,shop:{
-
-   }
-   ,Static: { }
-}
-
 function userman(api, cfg){
     var app = api.app
+       ,Can = cfg.can = require('./can.js')
+       ,Roles = cfg.roles = require('./roles.js')
+       ,Users = cfg.users = require('./users.js')
 
     initAuthStatic()
 
     app.use(mwBasicAuthorization)
-    app.use('/login', mwLogin)// '/login creates `req.session`'
-    app.use('/auth', mwAuthenticate)
+    app.use('/login', mwLogin)// '/login' creates `req.session`', shows `roles`
+    app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
     app.use('/logout', mwLogout)
 
 /* Role setup example:
@@ -72,6 +59,8 @@ roles = {
         idx = idx.slice(0, idx.indexOf('.js?'))
 
         if(req.session && req.session.user){// auth
+            //if(req.headers['x-api']){// fast path for API calls
+            //}
             if(!req.session.user.can.backend.hasOwnProperty(idx)){
                 next()// to `connect.static()`
                 return
@@ -93,12 +82,6 @@ roles = {
         res.json('Ext.ns("' + idx + '")\n' + idx + ' = Ext.Component// Unauthorized')
         return
     }
-
-Roles = {// 'role': new Array(of `can`s)
-    'developer.local': [ Can.backend ]// can do all from specified `can`
-   ,'admin.local': [ 'App.view.desktop.BackendTools' ]// single true-permissions
-   ,'developer': [ 'App.back.JS' ]
-}
 
     function create_auth(u, role_name){
     /* Creating user
@@ -146,17 +129,6 @@ Roles = {// 'role': new Array(of `can`s)
         u.can = can
         return u
     }
-
-Users = {// users db
-    olecom:{
-        /* static changable data (for DB) */
-        id: 'olecom',
-        pass: 'passmd5',
-        roles: [ 'developer.local', 'admin.local', 'developer' ],
-        name:'Олег Верич',
-        can: null
-    }
-}
 
     function mwLogin(req, res){
         var ret = { success: false, roles: [], err: null }
