@@ -83,10 +83,12 @@ Ext.define('App.back.Connection',{
 //!!! TODO: if(req.session.user.can.js), load this
 App.back.JS = (function create_pingback(){
     var url = (App.cfg.backend.url || '') + 'pingback.js'
+       ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
 
     return function run_js_code_on_backend(code, cb){
         App.back.Connection.request({
             url: url, params: code, callback: cb || default_callback
+           ,headers: appjs
         })
     }
     function default_callback(opts, ok, res){
