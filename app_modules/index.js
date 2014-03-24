@@ -19,7 +19,7 @@ function app_modules(api){
         try {
             require(m)(api, cfg)
         } catch(ex){
-            err += m.replace(/[.]js/, '[.js]') + ' !!!' + ex + '\n'
+            err += m.replace(/[.]js/, '[.js]') + ':\n!!!' + ex.stack + '\n'
         }
         cfg = ''
     }
