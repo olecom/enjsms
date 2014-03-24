@@ -205,6 +205,10 @@ roles = {
     //!!! TODO: save/load MemoryStore with all sessions
 
     function mwLogout(req, res){
+        if(req.session && req.session.user){
+            req.session.user = null
+            req.session.user.can = null
+        }
         req.session && req.session.destroy()
         res.json()
     }

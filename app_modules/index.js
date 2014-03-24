@@ -24,7 +24,6 @@ function app_modules(api){
         cfg = ''
     }
     if(':' != err[err.length - 2]) api._err(err)
-    //!view.desktop.BackendTools
 }
 
 module.exports = app_modules
