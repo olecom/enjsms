@@ -3,7 +3,7 @@ function pingback(api){// run external text here
    ,function mwPingBack(req, res, next){
         var ret = { success: false }
 
-        if(req.session && req.session.user.can['App.back.JS'] &&
+        if(req.session && req.session.user.can['App.backdata.JS'] &&
            req.body.plain_text
         ) try {
             new Function(

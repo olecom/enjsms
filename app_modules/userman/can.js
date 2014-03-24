@@ -1,7 +1,7 @@
 var Can = {
     backend:{
         'App.view.desktop.BackendTools': true
-       ,'App.back.JS': true
+       ,'App.backdata.JS': true
     }
    ,order:{
 

@@ -16,7 +16,7 @@ function userman(api, cfg){
 can = {
     backend:{
         'App.view.desktop.BackendTools': true
-       ,'App.back.JS': true
+       ,'App.backdata.JS': true
     }
 }
 
@@ -27,7 +27,7 @@ can = {
 roles = {
     'developer.local': [ can.backend ]// can do all from specified `can`
    ,'admin.local': [ 'App.view.desktop.BackendTools' ]
-   ,'developer': [ 'App.back.JS' ]
+   ,'developer': [ 'App.backdata.JS' ]
 }
 
 // after compiler:
@@ -36,7 +36,7 @@ roles = {
         __name: 'developer.local'
        ,__what: l10n.um.roles['developer.local'] //on UI frontend
        ,'App.view.desktop.BackendTools': true
-       ,'App.back.JS': true
+       ,'App.backdata.JS': true
        ....
     }
 }
@@ -45,7 +45,7 @@ roles = {
     function initAuthStatic(){
         var p, s = Can.Static
         for(p in Can.backend){
-            //turn class name to backend url 'App.back.JS' - > '/back/JS'
+            //turn class name to backend url 'App.backback.JS' - > '/back/JS'
            s[p.slice(3).replace(/[.]/g, '/')] = false
         }
     }
@@ -90,7 +90,7 @@ roles = {
         // dynamic data; is filled in auth process
         can:{//compiled list of permissions from all roles in its *order*
             'App.view.desktop.BackendTools': true
-           ,'App.back.JS': true
+           ,'App.backback.JS': true
         }
     }
     */
@@ -122,7 +122,7 @@ roles = {
         // compile ExtJS MVC component file access for `Can.backend` permission
         for(p in Can.backend){
             if(!can[p]){
-                //turn class name to backend url 'App.back.JS' - > '/back/JS'
+                //turn class name to backend url 'App.backback.JS' - > '/backdata/JS'
                 can.backend[p.slice(3).replace(/[.]/g, '/')] = false
             }
         }
