@@ -1,7 +1,7 @@
 /*
  * Connection to backend
  */
-Ext.define('App.backdata.Connection',{
+Ext.define('App.backend.Connection',{
     singleton: true,
     extend: 'Ext.data.Connection',
     method: 'POST',
@@ -14,20 +14,20 @@ Ext.define('App.backdata.Connection',{
  * Users of Connection to backend
  */
 //!!! TODO: if(req.session.user.can.js), load this
-App.backdata.JS = (function create_pingback(){
+App.backend.JS = (function create_pingback(){
     var url = (App.cfg.backend.url || '') + 'pingback.js'
        ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
 
     return function run_js_code_on_backend(code, cb){
-        App.backdata.Connection.request({
+        App.backend.Connection.request({
             url: url, params: code, callback: cb || default_callback
            ,headers: appjs
         })
     }
     function default_callback(opts, ok, res){
         try {
-            console.dir(App.backdata.JS.res = JSON.parse(res.responseText))
-            console.log('`App.backdata.JS.res` has this `Object`')
+            console.dir(App.backend.JS.res = JSON.parse(res.responseText))
+            console.log('`App.backend.JS.res` has this `Object`')
         } catch (ex) {
             console.error(ex)
             if(ex.stack) console.log(ex.stack)

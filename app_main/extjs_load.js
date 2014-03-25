@@ -77,7 +77,7 @@ function extjs_launch(){
     }
 
     //TODO: events via long pooling from app_backend/connectjs
-    Ext.require('App.backdata.Connection')
+    Ext.require('App.backend.Connection')
 
     if(app.config.extjs.fading){
         // very strange composition to get gears to fadeOut and viewport to fadeIn
