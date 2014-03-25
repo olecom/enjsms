@@ -69,7 +69,8 @@ var path, extjs
 function extjs_launch(){
     var me = this
 
-    //Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
+    //`localStorage` doomed by local JSDuck's ExtJS docs
+    Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
     // handle errors raised by Ext.Error.raise()
     Ext.Error.handle = function(err){
         //TODO: error list, kebab's popup with extdesk gears to show them
