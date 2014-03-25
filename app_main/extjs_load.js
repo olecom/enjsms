@@ -77,6 +77,11 @@ function extjs_launch(){
     }
 
     //TODO: events via long pooling from app_backend/connectjs
+    //TODO: dynamic addition in toolbar or items/xtype construction
+    //TODO: for each app.config.app.modules load module's resources: css
+    //global `App` object is available now
+    App.cfg = app.config ,App.user = app.user ,App.role = app.role
+
     Ext.require('App.backend.Connection')
 
     if(app.config.extjs.fading){
