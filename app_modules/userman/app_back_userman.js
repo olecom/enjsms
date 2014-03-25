@@ -61,11 +61,11 @@ roles = {
         if(req.session && req.session.user){// auth
             //if(req.headers['x-api']){// fast path for API calls
             //}
-            if(!req.session.user.can.backend.hasOwnProperty(idx)){
+            if(!req.session.can.backend.hasOwnProperty(idx)){
                 next()// to `connect.static()`
                 return
             }
-        // false must be in `req.session.user.can.backend[idx]
+        // false must be in `req.session.can.backend[idx]
         // fall thru
         } else if(!Can.Static.hasOwnProperty(idx)){// no auth
             next()
@@ -83,7 +83,7 @@ roles = {
         return
     }
 
-    function create_auth(u, role_name){
+    function create_auth(session, role_name){
     /* Creating user
     req.session.user = {
         id: 'olecom' ,
@@ -96,7 +96,7 @@ roles = {
     */
         var can ,i ,j ,d ,p ,roll
 
-        if(u.can) return u
+        if(session.can) return
 
         can = Roles[role_name] || { __name: 'null' ,backend: { } }
 
@@ -126,8 +126,8 @@ roles = {
                 can.backend[p.slice(3).replace(/[.]/g, '/')] = false
             }
         }
-        u.can = can
-        return u
+        session.can = can
+        return
     }
 
     function mwLogin(req, res){
@@ -172,8 +172,8 @@ roles = {
                             )
 
                 if(ret.success){
-                    // generate session for user: compile roles, can
-                    req.session.user = create_auth(u, r)
+                    req.session.user = u// one user login per session
+                    create_auth(req.session, r)// permissions are in session
                     res.json(ret)
                     return// fast path
                 } else {
@@ -205,11 +205,13 @@ roles = {
     //!!! TODO: save/load MemoryStore with all sessions
 
     function mwLogout(req, res){
-        if(req.session && req.session.user){
-            req.session.user = null
-            req.session.user.can = null
+        if(req.session){// one user login per session
+            if(req.session.user){
+                req.session.user = null
+                req.session.can = null
+            }
+            req.session.destroy()
         }
-        req.session && req.session.destroy()
         res.json()
     }
 }
