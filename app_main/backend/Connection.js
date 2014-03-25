@@ -2,7 +2,6 @@
  * Connection to backend
  */
 Ext.define('App.backend.Connection',{
-    singleton: true,
     extend: 'Ext.data.Connection',
     method: 'POST',
     defaultHeaders:{
@@ -10,16 +9,24 @@ Ext.define('App.backend.Connection',{
     }
 })
 
-/* 
- * Users of Connection to backend
+/*
+ * Users of Connection Class
  */
+App.backend.req = (function create_backend(conn){
+    /* channel#1: request data from backend */
+    return function backend_request(opts){
+        return conn.request(opts)
+    }
+})(Ext.create('App.backend.Connection'))
+
 //!!! TODO: if(req.session.user.can.js), load this
 App.backend.JS = (function create_pingback(){
+    /* running JavaScript inside backend via App.backend.req() */
     var url = (App.cfg.backend.url || '') + 'pingback.js'
        ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
 
     return function run_js_code_on_backend(code, cb){
-        App.backend.Connection.request({
+        App.backend.req({
             url: url, params: code, callback: cb || default_callback
            ,headers: appjs
         })
