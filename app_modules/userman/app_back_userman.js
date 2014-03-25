@@ -172,6 +172,9 @@ roles = {
                             )
 
                 if(ret.success){
+                    if(req.session.fail){
+                        req.session.fail = 0
+                    }
                     req.session.user = u// one user login per session
                     create_auth(req.session, r)// permissions are in session
                     res.json(ret)
@@ -205,8 +208,8 @@ roles = {
     //!!! TODO: save/load MemoryStore with all sessions
 
     function mwLogout(req, res){
-        if(req.session){// one user login per session
-            if(req.session.user){
+        if(req.session && !req.session.fail){// disallow bruteforce check bypass
+            if(req.session.user){// one user login per session
                 req.session.user = null
                 req.session.can = null
             }
