@@ -29,6 +29,10 @@ Ext.define('App.controller.Main',{
             global:{
                 updateVersions: updateVersions
                ,userStatus: handleUserStatus
+               ,backendEvents: handleBackendEvents
+// messages:
+//auth ok: App.back.Connection.defaultHeaders['X-API'] = '1'
+//logout : delete App.back.Connection.defaultHeaders['X-API']
             },
             controller:{ },
             component:{ },
@@ -70,6 +74,15 @@ Ext.define('App.controller.Main',{
                     })
                 }
             })
+        }
+
+        function handleBackendEvents(success, res){
+            App.sts(
+                'backend events',
+                res.responseText,
+                success ? l10n.stsOK : l10n.stsHE + ' ' + res.statusText,
+                new Date
+            )
         }
     }// init()
 })
