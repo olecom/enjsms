@@ -5,7 +5,7 @@
         //WScript.Echo('Terminate PID: ' + WScript.Arguments(0))
         try{
             ps = GetObject("winmgmts:")
-                    .Get("Win32_Process.Handle='" + WScript.Arguments(0) + "'")
+                   .Get("Win32_Process.Handle='" + WScript.Arguments(0) + "'")
         } catch(ex){
             //WScript.Echo('Error PID: ' + WScript.Arguments(0))
         }
