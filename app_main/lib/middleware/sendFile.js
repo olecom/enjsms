@@ -1,8 +1,8 @@
-module.exports = function sendFile(name){
+module.exports = function sendFile(name, absolute){
     var fs = require('fs')
        ,api  = require('../api.js')
     return function sendFile(req, res){
-    var fstream = fs.createReadStream(__dirname + '/../../' + name)
+    var fstream = fs.createReadStream((absolute ? '' : __dirname + '/../../') + name)
         fstream.on('open', function(fd){
             try{
                 res.writeHead(200,{
@@ -17,7 +17,8 @@ module.exports = function sendFile(name){
         })
         fstream.on('error', function(err){
             api._err(api.ipt(err))
-            res.json('')
+            res.statusCode = 404
+            res.end()
         })
     }
 }
