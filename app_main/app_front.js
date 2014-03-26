@@ -1,13 +1,9 @@
 (function uglify_js_closure(con ,doc ,win ,l10n){
-    /* two frontend parts: under `node-webkit` and `connectjs` in browser */
+/*
+ * two frontend parts: under `node-webkit` (local) and `connectjs` in browser (http)
+ * front end: node-webkit part
+ */
     if(typeof process != 'undefined'){// `nodejs` runtime inside HTML (native desktop)
-/*        app = { // configuration placeholders
- *            config: null //{ db: null ,extjs:null }
- * //   ,user: { id: 'olecom' ,name:'Олег Верич' ,role:'склад' }//TODO:login
- * //   ,role: { va_permissions: null }
- *    //,tools: { / *load_extjs: null* / }
- *       }*/
-
         app.process = process
         app.c_p = require('child_process')
         app.tray = { obj: null ,stat: 'show' }
@@ -21,9 +17,7 @@
         throw new Error('Wrong code execution attempt!')
     }
     return
-/*
- * front end: node-webkit part
- */
+
 function check_versions(cb){
     app.c_p.exec('node --version',
     function(err, stdout){
