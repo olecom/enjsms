@@ -28,6 +28,7 @@ config = {
            ,pingback: true
         }
     },
+    lang: 'ru',
     extjs:{
         name: 'App',             // default
         appFolder: '.',          // default

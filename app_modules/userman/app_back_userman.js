@@ -4,9 +4,17 @@ function userman(api, cfg){
        ,Roles = cfg.roles = require('./roles.js')
        ,Users = cfg.users = require('./users.js')
        ,Waits = { }
+       ,n = ''
 
     initAuthStatic()
 
+    n += '/l10n/' + api.cfg.lang + '_userman'
+    api.cfg.extjs.require.push(n)
+    n += '.js'
+    app.use(
+        n
+        ,api.connect.sendFile(__dirname + n, true)
+    )
     app.use(mwBasicAuthorization)
 
     api.cfg.extjs.require.push('App.backend.waitEvents')
