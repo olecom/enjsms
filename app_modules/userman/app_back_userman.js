@@ -8,9 +8,15 @@ function userman(api, cfg){
     initAuthStatic()
 
     app.use(mwBasicAuthorization)
+
+    api.cfg.extjs.require.push('App.backend.waitEvents')
+    app.use('/wait_events', mwPutWaitEvents)
+    app.use(
+        '/backend/waitEvents.js'
+        ,api.connect.sendFile(__dirname + '/waitEvents.js', true)
+    )
     app.use('/login', mwLogin)// '/login' creates `req.session`', shows `roles`
     app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
-    app.use('/wait_events', mwPutWaitEvents)
     app.use('/logout', mwLogout)
 
 /* Role setup example:
