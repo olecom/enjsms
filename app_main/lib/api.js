@@ -1,8 +1,9 @@
 module.exports = { /* API setup */
     /* methods */
-    app: null,
+    app: null,// connect()
+    connect: null,// connectjs
     cfg: null,
-    con: null,
+    con: null,// console
     _log: null,
     _err: null,
 

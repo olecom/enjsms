@@ -4,13 +4,18 @@
  */
 
 function runApp(){
-var connect = require('connect')
+var api      = require('./api.js')
    ,sendFile = require('./middleware/sendFile.js')
-   ,_404 = require('./middleware/404.js')
-   ,api  = require('./api.js')
-   ,app  = api.app = connect()
-   ,cfg  = api.cfg
-   ,_log = api._log
+   ,_404     = require('./middleware/404.js')
+   ,connect = api.connect = require('connect')
+   ,app     = api.app = connect()
+   ,cfg     = api.cfg
+   ,_log    = api._log
+
+    /* Add own middlewares */
+
+    connect.sendFile = sendFile
+    connect._404 = _404
 
     /* Application middleware setup */
 
