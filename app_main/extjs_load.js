@@ -77,14 +77,13 @@ function extjs_launch(){
         return !con.warn(err)
     }
 
-    //TODO: events via long pooling from app_backend/connectjs
     //TODO: dynamic addition in toolbar or items/xtype construction
     //TODO: for each app.config.app.modules load module's resources: css
     //global `App` object is available now
     App.cfg = app.config ,App.user = app.user ,App.role = app.role
-
+    //TODO: move this in app module init
     Ext.require('App.backend.Connection')
-
+    //TODO: move to controller's events
     if(app.config.extjs.fading){
         // very strange composition to get gears to fadeOut and viewport to fadeIn
         var b = Ext.getBody()

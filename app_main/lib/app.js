@@ -24,6 +24,12 @@ var connect = require('connect')
     app.use('/app_back.js' , _404)// hide
     app.use('/app_front.js' , sendFile('app_front_http.js'))
 
+    /* TODO: save and load session info from files
+     *connect.session.MemoryStore.prototype.loadSync
+     *connect.session.MemoryStore.prototype.saveSync = function(path){
+     *   _log('this.sessions: ' + api.ipt(this.sessions) + '\n')
+    }*/
+
     app.use(connect.session({
         secret: cfg.backend.sess_puzl
        ,generate: function(req, res){
@@ -45,6 +51,7 @@ var connect = require('connect')
             new Date().toISOString()
         )
     })
+    .timeout = (1 << 23)// default timeout for long events waitings requests
     return
 
     function remote_extjs_cfg(){

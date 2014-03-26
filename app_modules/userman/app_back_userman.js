@@ -3,12 +3,14 @@ function userman(api, cfg){
        ,Can = cfg.can = require('./can.js')
        ,Roles = cfg.roles = require('./roles.js')
        ,Users = cfg.users = require('./users.js')
+       ,Waits = { }
 
     initAuthStatic()
 
     app.use(mwBasicAuthorization)
     app.use('/login', mwLogin)// '/login' creates `req.session`', shows `roles`
     app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
+    app.use('/wait_events', mwPutWaitEvents)
     app.use('/logout', mwLogout)
 
 /* Role setup example:
@@ -58,7 +60,8 @@ roles = {
         var idx = req.url
         idx = idx.slice(0, idx.indexOf('.js?'))
 
-        if(req.session && req.session.user){// auth
+        if(req.session && req.session.can){// auth
+            req.waits = Waits// put ref. to 'wait_events'
             //if(req.headers['x-api']){// fast path for API calls
             //}
             if(!req.session.can.backend.hasOwnProperty(idx)){
@@ -206,6 +209,29 @@ roles = {
         res.json(ret)
     }
     //!!! TODO: save/load MemoryStore with all sessions
+
+    function mwPutWaitEvents(req, res){
+        var w
+        if(req.session){
+            if((w = Waits[req.sessionID])){// release pending
+                w.statusCode = 503// 'Service Unavailable'
+                w.end()
+            }
+            res.on('close', (function create_on_res_close(sessionID){
+                return function on_res_close(){
+                    if(Waits[sessionID]){// mark as gone
+                        Waits[sessionID] = null
+                        api._log(sessionID + ': release')
+                    }
+                }
+            })(req.sessionID))
+            Waits[req.sessionID] = res
+            return
+        }
+        res.statusCode = 401// 'Unauthorized'
+        res.end()
+        return
+    }
 
     function mwLogout(req, res){
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
