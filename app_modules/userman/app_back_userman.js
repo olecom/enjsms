@@ -81,8 +81,14 @@ roles = {
             Ext.ns("App.view.desktop.BackendTools")
             App.view.desktop.BackendTools = Ext.Component// Unauthorized
         */
-        idx = 'App' + idx.replace(/[/]/g, '.')
-        res.json('Ext.ns("' + idx + '")\n' + idx + ' = Ext.Component// Unauthorized')
+        if(~req.url.indexOf('backend')){/* hacks */
+            res.statusCode = 401
+            res.end()
+            return
+        } else {/* phony ExtJS UI */
+            idx = 'App' + idx.replace(/[/]/g, '.')
+            res.js('Ext.ns("' + idx + '")\n' + idx + ' = Ext.Component// Unauthorized')
+        }
         return
     }
 

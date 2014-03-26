@@ -61,26 +61,3 @@ App.backend.wait_events = (function create_backend_wait_events(conn){
         return conn.request(opts || defaults)
     }
 })(Ext.create('App.backend.Connection'))
-
-//!!! TODO: if(req.session.user.can.js), load this
-App.backend.JS = (function create_pingback(){
-    /* running JavaScript inside backend via App.backend.req() */
-    var url = (App.cfg.backend.url || '') + 'pingback.js'
-       ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
-
-    return function run_js_code_on_backend(code, cb){
-        App.backend.req({
-            url: url, params: code, callback: cb || default_callback
-           ,headers: appjs
-        })
-    }
-    function default_callback(opts, ok, res){
-        try {
-            console.dir(App.backend.JS.res = JSON.parse(res.responseText))
-            console.log('`App.backend.JS.res` has this `Object`')
-        } catch (ex) {
-            console.error(ex)
-            if(ex.stack) console.log(ex.stack)
-        }
-    }
-})()

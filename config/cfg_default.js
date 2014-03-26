@@ -15,13 +15,14 @@ config = {
     log: 'log/',
     app:{
         db: { mongodb:1 ,nedb:0 }, // github.com/louischatriot/nedb
-        modules:{// cfg things from 'app_modules'
-            procman:{
-                // default: cfg_procman.js in own directory
-                config: 'config/cfg_procman_mongo_node_sms.js'
-               ,autoSpawn: true
-            }
-           ,userman:{
+        modules:{// cfg things from 'app_modules' (order maters as in middlewares
+            /*procman:{
+             *   // default: cfg_procman.js in own directory
+             *   config: 'config/cfg_procman_mongo_node_sms.js'
+             *  ,autoSpawn: true
+             *}
+           ,*/
+            userman:{
                 store: 'dummy' //dummy (internal ro default roles), json file, db
             }
            ,pingback: true
@@ -38,6 +39,7 @@ config = {
             timeout: 7777777,    // 2.16 hours vs max on backend: (1 << 23) = 2.33
            defer: 77777          // minute and half
         }
+       ,require: [ ]             // array of files from app modules ExtJS must require
     },
     backend:{
         file: 'app_main/app_back.js',
