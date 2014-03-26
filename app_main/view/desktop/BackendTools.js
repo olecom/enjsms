@@ -1,5 +1,4 @@
 Ext.define ('App.view.desktop.BackendTools',{
-//!!!auth*n:    extend: 'Ext.Component'
     extend: 'Ext.toolbar.Toolbar',
     xtype: 'sg-ct',
     dock: 'bottom',

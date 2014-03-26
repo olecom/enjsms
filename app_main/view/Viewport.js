@@ -1,12 +1,15 @@
-Ext.define('App.view.Viewport', {
+Ext.define('App.view.Viewport',{
     extend: 'Ext.container.Viewport',
-    requires: [ 'App.view.Desktop' ],
-    layout: {
+    requires:[
+        'App.view.Bar',
+        'App.view.Desktop'
+    ],
+    layout:{
         type: 'vbox'
-        ,align: 'stretch'
+       ,align: 'stretch'
     }
 
-    ,items: [
+    ,items:[
         { xtype: 'app-bar' },
         { xtype: 'desktop' }
     ]
