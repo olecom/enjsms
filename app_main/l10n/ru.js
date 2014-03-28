@@ -1,4 +1,4 @@
-var l10n = { lang: 'ru',
+var l10n = { lang: 'ru',//!!! локализация используется только в UI (для простоты обновления)
     loading: 'Загрузка...'
     ,errload: 'Загрузка прекращена из-за ошибок.'
     ,errload_no_app:
@@ -84,7 +84,7 @@ var l10n = { lang: 'ru',
     ,userStatus: 'Рабочий статус пользователя'
     ,userStatusMenu: 'Статусы<br/>пользователя'
     ,userStatuses: { 'online': 'Здесь','away': 'Нет на месте','busy':'Не беспокоить','offline':'Нету (совсем)' }
-    ,um:{// users manager
-        users: 'Пользователи'
-    }
+
+// места для модулей
+    ,um: null // user manager
 }
