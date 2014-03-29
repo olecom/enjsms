@@ -77,14 +77,31 @@ function extjs_launch(){
         return !con.warn(err)
     }
 
+    app.config.extjs.launch = null
+    delete app.config.extjs.launch
+    delete app.config.backend.op
+    delete app.config.backend.msg
+    delete app.config.backend.time
+    delete app.extjs_load
+
+    if(app.backend_check){
+        App.doCheckBackend = app.backend_check
+        App.doRestartBackend = app.backend_restart
+        App.doTerminateBackend = app.backend_terminate
+
+        delete app.backend_check
+        delete app.backend_restart
+        delete app.backend_terminate
+    }
+
     //TODO: dynamic addition in toolbar or items/xtype construction
     //TODO: for each app.config.app.modules load module's resources: css
     //global `App` object is available now
-    App.cfg = app.config ,App.user = app.user ,App.role = app.role
-    //TODO: move this in app module init
+    App.cfg = app.config
     Ext.require('App.backend.Connection')
+
     //TODO: move to controller's events
-    if(app.config.extjs.fading){
+    if(App.cfg.extjs.fading){
         // very strange composition to get gears to fadeOut and viewport to fadeIn
         var b = Ext.getBody()
         b.fadeOut({duration:777 ,callback:
@@ -116,25 +133,11 @@ function extjs_launch(){
         me.getController('Main').init() /* dynamically loaded controller */
 
         App.sts(// add first System Status message
-            app.config.backend.op,
-            app.config.backend.msg,
+            App.cfg.backend.op,
+            App.cfg.backend.msg,
             l10n.stsOK,
-            app.config.backend.time
+            App.cfg.backend.time
         )
-        app.config.extjs.launch = null
-        delete app.config.extjs.launch
-        delete app.config.backend.op
-        delete app.config.backend.msg
-        delete app.config.backend.time
-
-        App.doCheckBackend = app.backend_check
-        App.doRestartBackend = app.backend_restart
-        App.doTerminateBackend = app.backend_terminate
-
-        delete app.backend_check
-        delete app.backend_restart
-        delete app.backend_terminate
-        delete app.extjs_load
     }
 }
 })(window.console)
