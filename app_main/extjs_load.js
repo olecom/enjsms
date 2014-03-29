@@ -130,7 +130,7 @@ function extjs_launch(){
             }
          **/
         //me.viewport = Ext.ComponentQuery.query('viewport')[0]
-        me.getController('Main').init() /* dynamically loaded controller */
+        me.getController('Main') /* dynamically loaded controller */
 
         App.sts(// add first System Status message
             App.cfg.backend.op,

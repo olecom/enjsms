@@ -20,11 +20,6 @@ Ext.define('App.controller.Main',{
     init: function(){
         var me = this
 
-        if(me.inited){
-            return
-        }
-        me.inited = true
-
         me.listen({
             global:{
                 updateVersions: updateVersions
