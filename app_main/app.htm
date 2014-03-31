@@ -27,7 +27,8 @@
                 m + '</h2><div style="color:white;background-color:red">' +
                 errEvent.error.stack + '</div></pre>'
             )
-            alert(m)
+            w.alert && alert(m)
+            w.alert = null
         })
 
         b = d.createElement('b')

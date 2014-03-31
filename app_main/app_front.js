@@ -67,7 +67,8 @@ function node_webkit(app, con){
     app.process.on('uncaughtException' ,function(err){
         con.error('uncaughtException:', err)
         con.error(err.stack)
-        alert(l10n.uncaughtException  + err)
+        app.w.window.alert && alert(l10n.uncaughtException  + err)
+        app.w.window.alert = null
     })
 
     var gui = require('nw.gui')
