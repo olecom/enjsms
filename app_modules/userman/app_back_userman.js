@@ -190,6 +190,7 @@ roles = {
 
         if(req.session){
             if((ret.can = req.session.can)){
+                ret.user = req.session.user
                 ret.success = true
                 res.json(ret)
                 return// fast path

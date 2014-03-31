@@ -44,7 +44,11 @@ Ext.define('App.model.userman.User', {
             params: user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),
             callback: function auth_cb(_, success, res){
                 if(success){
-                    me.pes = Ext.decode(res.responseText).can
+                    res = Ext.decode(res.responseText)
+                    me.pes = res.can
+                    me.set('id', res.user.id)
+                    me.set('Username', res.user.name)
+                    me.set('Roles', res.user.roles)
                     me.login = me.auth = null// after login GC
                 }
                 callback && callback(success)
