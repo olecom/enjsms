@@ -24,7 +24,7 @@ Ext.define('App.view.userman.Login',{
 + l10n.loading +
 '</div><a href="/">' + l10n.reload + '</a></div>' +
 '<div id="login-view"' +
-' style="background: url(/css/userman/login.png) no-repeat right 68px;' +
+' style="background: url(css/userman/login.png) no-repeat right 68px;' +
 '  position:relative; top:-50px; height:244">' +
 '  <div id="login-dd" style="cursor: move;text-shadow: #CCC 2px 3px 0;font: 3em serif">'
 + l10n.app +
