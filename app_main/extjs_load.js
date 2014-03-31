@@ -5,8 +5,6 @@
 var app
 
 (function gc_wrapper(con){
-var devel = true
-
     app = {
         config: null,
         extjs_load: extjs_load_gc_wrapped
@@ -26,7 +24,7 @@ var path, extjs
     extjs = doc.createElement('script'),
     extjs.setAttribute('type' ,'application/javascript')
     extjs.setAttribute('charset' ,'utf-8')
-    extjs.setAttribute('src' ,path + 'ext-all' + (devel ? '-debug' : '') + '.js')
+    extjs.setAttribute('src' ,path + 'ext-all-nw.js')// fix of `loadScriptFile`
     doc.head.appendChild(extjs)
 
     path = '1234'
@@ -49,7 +47,24 @@ var path, extjs
             )
             Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')
             Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
+
+            if(app.config.backend.url){// `nw` context`
+                Ext.Loader.setPath(app.config.extjs.name, app.config.backend.url)
+                /*
+                 * patch ExtJS Loader to work from "file://" in `node-webkit`
+                 * also `debugSourceURL` removed in `ext-all-debug.js#loadScriptFile()`
+                 * it crushes `eval` there
+                 * */
+                Ext.Loader._getPath = Ext.Loader.getPath
+                Ext.Loader.getPath = function getPath(className){
+                    return '/' == className[0] ?
+                        app.config.backend.url + className + '.js' :
+                        Ext.Loader._getPath(className)
+                }
+            }
+
             app.config.extjs.launch = extjs_launch
+            app.config.extjs.controllers.push('Main')
             Ext.application(app.config.extjs)
             return
         } else if('' == path){
@@ -67,23 +82,15 @@ var path, extjs
 }
 
 function extjs_launch(){
-    var me = this
-
-    //`localStorage` doomed by local JSDuck's ExtJS docs
-    Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
-    // handle errors raised by Ext.Error.raise()
-    Ext.Error.handle = function(err){
-        //TODO: error list, kebab's popup with extdesk gears to show them
-        return !con.warn(err)
-    }
-
     app.config.extjs.launch = null
     delete app.config.extjs.launch
     delete app.config.backend.op
     delete app.config.backend.msg
     delete app.config.backend.time
+    app.config.createViewport = true// bunch `app.config` processing here
     delete app.extjs_load
 
+    //global `App` object is available now
     if(app.backend_check){
         App.doCheckBackend = app.backend_check
         App.doRestartBackend = app.backend_restart
@@ -93,51 +100,26 @@ function extjs_launch(){
         delete app.backend_restart
         delete app.backend_terminate
     }
+    App.cfg = app.config
+
+    //`localStorage` doomed by local JSDuck's ExtJS docs
+    Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
+    // handle errors raised by Ext.Error.raise()
+    Ext.Error.handle = function(err){
+        //TODO: error list, kebab's popup with extdesk gears to show them
+        return !con.warn(err)
+    }
 
     //TODO: dynamic addition in toolbar or items/xtype construction
     //TODO: for each app.config.app.modules load module's resources: css
-    //global `App` object is available now
-    App.cfg = app.config
-    Ext.require('App.backend.Connection')
-
-    //TODO: move to controller's events
-    if(App.cfg.extjs.fading){
-        // very strange composition to get gears to fadeOut and viewport to fadeIn
-        var b = Ext.getBody()
-        b.fadeOut({duration:777 ,callback:
-            function(){
-                Ext.fly('startup').remove()
-                b.show()
-                Ext.create('App.view.Viewport')
-                b.fadeIn({easing:'easeIn' ,duration: 1024 ,callback: appRun })
-                con.log('extjs: faded In')
-            }
-        })
-    } else {
-        Ext.fly('startup').remove()
-        Ext.create('App.view.Viewport')
-        appRun()
+    if(App.cfg.extjs.requireLaunch && App.cfg.extjs.requireLaunch.length){
+        Ext.syncRequire(App.cfg.extjs.requireLaunch)
+        App.cfg.extjs.requireLaunch = null// GC
     }
+    if(App.cfg.createViewport){//if no app module (e.g. userman auth) does that
+        Ext.globalEvents.fireEvent('createViewport')
+    }
+
     con.log('ExtJS + App launch: OK')
-
-    function appRun(){
-        /*dynamic controller for dynamic models
-         * this doesn't work due to curved loading: Controller first, not Model.
-           application.config: {
-                models: [ 'Base', 'BaseR', 'Status' ],
-                stores: [ 'Status' ],
-                controllers: [ 'Main' ]
-            }
-         **/
-        //me.viewport = Ext.ComponentQuery.query('viewport')[0]
-        me.getController('Main') /* dynamically loaded controller */
-
-        App.sts(// add first System Status message
-            App.cfg.backend.op,
-            App.cfg.backend.msg,
-            l10n.stsOK,
-            App.cfg.backend.time
-        )
-    }
 }
 })(window.console)

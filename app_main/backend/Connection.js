@@ -4,7 +4,7 @@
 Ext.define('App.backend.Connection',{
     extend: 'Ext.data.Connection',
     method: 'POST',
-    url: App.cfg.backend.url ? App.cfg.backend.url : '/',
+    url: App.cfg.backend.url ? App.cfg.backend.url : '',
     defaultHeaders:{
         'Content-Type': 'text/plain; charset=utf-8'
     }

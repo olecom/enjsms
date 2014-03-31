@@ -8,13 +8,7 @@ Ext.define('App.view.Desktop',{
     xtype: 'desktop'
    ,flex: 1
    ,items:[
-    {
-        xtype: 'app-shortcuts'
-       ,id: 'app-shortcuts-id'
-    }
-   ,{
-        xtype: 'useredit'
-    }
+        { xtype: 'app-shortcuts' /*,id: 'app-shortcuts-id'*/ }
     ]
     ,initComponent: function(){
         var me = this
@@ -116,52 +110,5 @@ Ext.define('App.view.Desktop',{
             }
         }})
         me.callParent(arguments)
-    }
-})
-
-
-Ext.define('App.view.user_Edit',{
-    extend: 'Ext.window.Window',
-    alias: 'widget.useredit',
-
-    title: 'Edit User',
-    layout: 'fit',
-    autoShow: true,//!!! doesn't work with fadeing viewport
-    constrain: true
-
-    ,stateId: 'vwue'
-    ,stateful: true,
-
-    initComponent: function() {
-        this.items = [
-            {
-                xtype: 'form',
-                items: [
-                    {
-                        xtype: 'textfield',
-                        name : 'name',
-                        fieldLabel: 'Name'
-                    },
-                    {
-                        xtype: 'textfield',
-                        name : 'email',
-                        fieldLabel: 'Email'
-                    }
-                ]
-            }
-        ]
-
-        this.buttons = [
-            {
-                text: 'Save',
-                action: 'save'
-            },
-            {
-                text: 'Cancel',
-                scope: this,
-                handler: this.close
-            }
-        ];
-        this.callParent(arguments);
     }
 })

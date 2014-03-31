@@ -141,3 +141,6 @@ css:
 
 .row-unread { background-image:url(css/itemunread.png); background-repeat: no-repeat; }
 .row-read { background-image:url(css/itemread.png); background-repeat: no-repeat; }
+
+.transparent > div { background: transparent!important; }
+.ok { background-image:url(css/ok.png)!important; }

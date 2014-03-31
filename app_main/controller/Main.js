@@ -17,12 +17,15 @@ Ext.define('App.controller.Main',{
             selector: '[xtype=app-bar]'
         }
     ],*/
-    init: function(){
+    init: function controllerMainInit(){
         var me = this
+           ,createViewport// function var for GC init
 
+        createViewport = handleCreateViewport
         me.listen({
             global:{
-                updateVersions: updateVersions
+                createViewport: createViewport
+               ,updateVersions: updateVersions
                ,userStatus: handleUserStatus
                ,backendEvents: handleBackendEvents
                ,backendWaitEvents: handleBackendWaitEvents
@@ -34,6 +37,7 @@ Ext.define('App.controller.Main',{
             component:{ },
             store:{ }
         })
+
         return
 
         function handleUserStatus(item){
@@ -87,6 +91,54 @@ Ext.define('App.controller.Main',{
                 msg,
                 l10n.stsOK,
                 new Date
+            )
+        }
+
+        function handleCreateViewport(){
+            if(App.cfg.extjs.fading){
+                // very strange composition to get gears to fadeOut and viewport to fadeIn
+                var b = Ext.getBody()
+                b.fadeOut({duration:777 ,callback:
+                    function fadingViewport(){
+                        Ext.fly('startup').remove()
+                        b.show()
+                        Ext.create('App.view.Viewport')
+                        b.fadeIn({
+                            easing: 'easeIn',
+                            duration: 1024,
+                            callback: appReady
+                        })
+                    }
+                })
+            } else {
+                Ext.fly('startup').remove()
+                Ext.create('App.view.Viewport')
+                appReady()
+            }
+        }
+
+        function appReady(){
+            /*dynamic controller for dynamic models
+             * this doesn't work due to curved loading: Controller first, not Model.
+               application.config: {
+                    models: [ 'Base', 'BaseR', 'Status' ],
+                    stores: [ 'Status' ],
+                    controllers: [ 'Main' ]
+                }
+             **/
+            //me.viewport = Ext.ComponentQuery.query('viewport')[0]
+            me.suspendEvent('createViewport')
+            if(createViewport) createViewport = null// GC init
+
+            if(App.cfg.extjs.require && App.cfg.extjs.require.length){
+                Ext.require(App.cfg.extjs.require)
+            }
+
+            App.sts(// add first System Status message
+                App.cfg.backend.op,
+                App.cfg.backend.msg,
+                l10n.stsOK,
+                App.cfg.backend.time
             )
         }
     }// init()

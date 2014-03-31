@@ -7,14 +7,12 @@ Ext.define('App.view.Viewport',{
     layout:{
         type: 'vbox'
        ,align: 'stretch'
-    }
-
-    ,items:[
+    },
+    items:[
         { xtype: 'app-bar' },
         { xtype: 'desktop' }
     ]
-
-/*    ,initComponent: function() {
+/*    ,initComponent: function dynamic_init() {
  *       var me = this
  *       me.items = [
  *           { xtype: 'app-bar' }

@@ -40,7 +40,7 @@ function pingback(api){// run external text here
     /* ExtJS code */
     ui = 'App.backend.JS = (' + (function create_pingback(){
     /* running JavaScript inside backend via App.backend.req() */
-    var url = (App.cfg.backend.url || '') + 'pingback.js'
+    var url = (App.cfg.backend.url || '') + '/pingback.js'
        ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
 
     return function run_js_code_on_backend(code, cb){

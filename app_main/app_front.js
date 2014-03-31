@@ -18,6 +18,20 @@
     }
     return
 
+function run_frontend(){
+    var fs = require('fs')
+       ,cfg
+    try {
+        (new Function(fs.readFileSync('app_main/app_front_http.js', 'utf8')))()
+    } catch(ex){
+        con.error('ERROR app_main/app_front_http.js:' + ex)
+        fs = l10n.errload_config_read + '\n' + ex.stack
+        doc.write(fs)
+        app.w.window.alert(fs)
+        return
+    }
+}
+
 function check_versions(cb){
     app.c_p.exec('node --version',
     function(err, stdout){
@@ -61,7 +75,6 @@ function node_webkit(app, con){
 
     app.w = gui.Window.get()
 
-    //if(devel) app.w.showDevTools()
     app.w.window.extjs_doc = function open_local_extjs_doc(){
         gui.Window.open('http://localhost:3007/extjs/docs/index.html')
     }
@@ -88,7 +101,7 @@ function backend_is_running(res){
         app.config.backend.time = new Date
         app.config.backend.msg = l10n.stsBackendPid(pid)
         app.config.backend.pid = pid
-        app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port + '/'
+        app.config.backend.url = 'http://127.0.0.1:' + app.config.backend.job_port
         app.config.backend.op = l10n.stsCheck
 
         get_remote_ip()
@@ -186,12 +199,12 @@ function spawn_backend(app, restart){
 function get_remote_ip(){
     app.c_p.exec('ipconfig',
     function(err, stdout){
-        if(!err){
+        if(!err){// NOTE: RE can be specific to Russion MS Windows
             err = stdout.match(/^[\s\S]*IPv4-[^:]*: ([^\n]*)\n/)
             if(err) app.config.backend.url = app.config.backend.url
                 .replace(/127\.0\.0\.1/, err[1])
         }
-        app.extjs_load(app.w.window.document ,app.w.window)
+        run_frontend()
     })
 }
 

@@ -3,26 +3,30 @@ function userman(api, cfg){
        ,Can = cfg.can = require('./can.js')
        ,Roles = cfg.roles = require('./roles.js')
        ,Users = cfg.users = require('./users.js')
-       ,Waits = { }
-       ,n = ''
+       ,Waits = { }// pool of waiting server events `req`uests from UI
+       ,n = '' , files = [
+            '/l10n/' + api.cfg.lang + '_userman',
+            /* true M V C loading */
+            '/model/User',
+            '/view/Login',
+            '/controller/Userman'
+       ]
 
     initAuthStatic()
 
-    n += '/l10n/' + api.cfg.lang + '_userman'
-    api.cfg.extjs.require.push(n)
-    n += '.js'
-    app.use(
-        n
-        ,api.connect.sendFile(__dirname + n, true)
-    )
-    app.use(mwBasicAuthorization)
+    for(n in files){
+        n = files[n]
+        api.cfg.extjs.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
+        n += '.js'// for backend
+        app.use(n, api.connect.sendFile(__dirname + n, true))
+    }
 
+    app.use(mwBasicAuthorization)
     api.cfg.extjs.require.push('App.backend.waitEvents')
     app.use('/wait_events', mwPutWaitEvents)
-    app.use(
-        '/backend/waitEvents.js'
-        ,api.connect.sendFile(__dirname + '/waitEvents.js', true)
-    )
+    n = '/backend/waitEvents.js'
+    app.use(n, api.connect.sendFile(__dirname + n, true))
+
     app.use('/login', mwLogin)// '/login' creates `req.session`', shows `roles`
     app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
     app.use('/logout', mwLogout)
@@ -200,7 +204,9 @@ roles = {
                     }
                     req.session.user = u// one user login per session
                     create_auth(req.session, r)// permissions are in session
+                    ret.can = req.session.can
                     res.json(ret)
+                    ret.can = null
                     return// fast path
                 } else {
                     ret.err = 'Bad user name, password, role'
@@ -211,7 +217,7 @@ roles = {
 
             if(ret.err){
                 req.session.fail = req.session.fail ? ++req.session.fail : 1
-                if(4 == req.session.fail){
+                if(4 == req.session.fail){// brute force preventer
                     req.session.user = true// stop auth check
                     setTimeout((
                         function prepare_allow_failer(failer){

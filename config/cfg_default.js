@@ -32,15 +32,19 @@ config = {
     extjs:{
         name: 'App',             // default
         appFolder: '.',          // default
-        launch: null             // default
+        launch: null,            // default
+        controllers: [ ],        // default
+        requireLaunch: [ ],      // components to require in Applicaion.launch()
+        require: [ ]             // array of files from app modules ExtJS must require
+
+        /* removable / changable items */
        ,pathFile: 'extjs.txt'
        ,path: 'ext-4.2.1.883/'   // search extjs.txt or this above './'; 'extjs/' is for HTML
-       ,fading:!true             // visual effects for content appearance
+       ,fading: true             // visual effects for content appearance
        ,wait_events:{
             timeout: 7777777,    // 2.16 hours vs max on backend: (1 << 23) = 2.33
            defer: 77777          // minute and half
         }
-       ,require: [ ]             // array of files from app modules ExtJS must require
     },
     backend:{
         file: 'app_main/app_back.js',
