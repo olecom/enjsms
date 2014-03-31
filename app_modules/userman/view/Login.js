@@ -103,11 +103,15 @@ Ext.define('App.view.userman.Login',{
             cls: 'transparent',
             margin: '20px 0 0 0',
             items: [{
-                xtype: 'textfield',
+                xtype: 'triggerfield',
+                //triggerCls: 'login-shutdown',
                 name: 'user',
                 emptyText: l10n.um.loginUserBlank,
                 width: 177,
-                allowBlank: true
+                allowBlank: true,
+                enableKeyEvents: true,
+                hideTrigger: true
+                //onTriggerClick: see controller
             },{
                 //the width of this field in the HBox layout is set directly
                 //the other 2 items are given flex: 1, so will share the rest of the space

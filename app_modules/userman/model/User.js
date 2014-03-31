@@ -60,8 +60,6 @@ Ext.define('App.model.userman.User', {
         return this.pes.indexOf(perm)
     },
     logout: function logout(){
-        this.destroy()
         App.backend.req({ url: '/logout' })
-        //TODO: on logout event from server, do: `window.location = '/'`
     }
 })

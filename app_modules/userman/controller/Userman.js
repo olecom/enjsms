@@ -25,6 +25,23 @@ Ext.define('App.controller.Userman', {
 
         User = App.model.userman.User// must be required first from app module
 
+        user.onTriggerClick = function onSessionShutdownClick(){
+            role.reset()
+            auth.disable()
+            auth.setText(l10n.um.loginOk)
+            user.focus()
+            user.setHideTrigger(true)
+            Ext.Msg.alert({
+                icon: Ext.Msg.INFO,
+                buttons: Ext.Msg.OK,
+                title: l10n.um.logoutTitle,
+                msg: l10n.um.logoutMsg(user.emptyText)
+            })
+            user.emptyText = l10n.um.loginUserBlank
+            user.reset()
+            User.logout()
+        }
+
         user.focus()
         user.on({
             /* using `ref`s, but this is equivalent to:
@@ -197,7 +214,8 @@ Ext.define('App.controller.Userman', {
                 auth.focus()
             }
         }
-        function enablePass(){
+        function enablePass(_, value){
+            user.setHideTrigger(value.length == 0)
             pass.enable()
         }
         function enableAuth(){
