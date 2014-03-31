@@ -27,8 +27,6 @@ Ext.define('App.controller.Main',{
                 createViewport: createViewport
                ,updateVersions: updateVersions
                ,userStatus: handleUserStatus
-               ,backendEvents: handleBackendEvents
-               ,backendWaitEvents: handleBackendWaitEvents
 // messages:
 //auth ok: App.back.Connection.defaultHeaders['X-API'] = '1'
 //logout : delete App.back.Connection.defaultHeaders['X-API']
@@ -74,24 +72,6 @@ Ext.define('App.controller.Main',{
                     })
                 }
             })
-        }
-
-        function handleBackendEvents(success, res){
-            App.sts(
-                'backend events',
-                res.responseText || res.statusText,
-                success ? l10n.stsOK : l10n.stsHE,
-                new Date
-            )
-        }
-
-        function handleBackendWaitEvents(msg){
-            App.sts(
-                'backend events',
-                msg,
-                l10n.stsOK,
-                new Date
-            )
         }
 
         function handleCreateViewport(){

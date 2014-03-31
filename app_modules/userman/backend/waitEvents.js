@@ -8,7 +8,6 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
     defaults = {
         autoAbort: true,// backend has only one `req.session.wait_events_req()`
         callback: function backend_events(options, success, res){
-//console.log(res)
             Ext.globalEvents.fireEventArgs('backendEvents', [ success, res ])
             if(conn.defer) clearTimeout(conn.defer)
             if(success){

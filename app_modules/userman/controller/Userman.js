@@ -73,9 +73,35 @@ Ext.define('App.controller.Userman', {
             }
         })
 
+        me.listen({
+            global:{
+                backendWaitEvents: handleBackendWaitEvents,
+                backendEvents: handleBackendEvents
+            }
+        })
+
         return
 
-        // data actions
+        //
+        function handleBackendEvents(success, res){
+            App.sts(
+                'backend events',
+                res.responseText || res.statusText,
+                success ? l10n.stsOK : l10n.stsHE,
+                new Date
+            )
+        }
+
+        function handleBackendWaitEvents(msg){
+            App.sts(
+                'backend events',
+                msg,
+                l10n.stsOK,
+                new Date
+            )
+        }
+
+        // auth data actions
         function reqRole(field, newUserId){
             if(defer) clearTimeout(defer)
             if(newUserId){
@@ -134,8 +160,8 @@ Ext.define('App.controller.Userman', {
             me.destroy()// GC logout reloads page
             Ext.globalEvents.fireEvent('createViewport')
         }
-        // UI actions
 
+        // auth UI actions
         function loadDesktop(){
     //requires:[
 //        'App.view.Bar',
@@ -179,7 +205,7 @@ Ext.define('App.controller.Userman', {
         }
 
     },
-   destroy: function destroy(){
+    destroy: function destroy(){
         this.callParent(arguments)
         App.view.userman.Login.destroy()
         App.getApplication().controllers.removeAtKey('Userman')
