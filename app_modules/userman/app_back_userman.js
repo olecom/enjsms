@@ -6,6 +6,7 @@ function userman(api, cfg){
        ,Waits = { }// pool of waiting server events `req`uests from UI
        ,n = '' , files = [
             '/l10n/' + api.cfg.lang + '_userman',
+            '/crypto/SHA1',
             /* true M V C loading */
             '/model/User',
             '/view/Login',
@@ -123,8 +124,6 @@ roles = {
     */
         var can ,i ,j ,d ,p ,roll
 
-        if(session.can) return
-
         can = Roles[role_name] || { __name: 'null' ,backend: { } }
 
         if(Array.isArray(can)){// compile permissions from role setup
@@ -162,8 +161,16 @@ roles = {
            ,u
 
         if(req.session && (u = req.body.plain_text)){
+            if(req.session.can){// auth-d show permissions list - "can"
+                ret.success = true
+                ret.can = req.session.can
+                ret.user = req.session.user
+                res.json(ret)
+                return// fast path
+            }
+
             u = u.split('\n')[0]// user_id
-            if((u = Users[u])){
+            if((u = Users[u])){// pre auth shows roles
                 ret.success = true
                 ret.roles = u.roles
                 res.json(ret)
@@ -177,32 +184,33 @@ roles = {
     }
 
     function mwAuthenticate(req, res){
-        var ret = { success: false, user: null, err: null }
+        var ret = { success: false, user: null, err: null, can: null }
            ,data
            ,u ,r
 
         if(req.session){
-            if((ret.user = req.session.user)){
+            if((ret.can = req.session.can)){
                 ret.success = true
                 res.json(ret)
                 return// fast path
             }
-
-            if((data = req.body.plain_text)){
-                data = data.split('\n')//: 'user_id\npass_md5\nrole_name'
+            /* check user *iff* there is no one in `req.session` */
+            if(!req.session.user && (data = req.body.plain_text)){
+                data = data.split('\n')//: 'user_id\nrole_name\npass_sha1'
                 u = Users[data[0]]
-                r = data[2]
-                // TODO: check pass in md5
+                r = data[1]
                 // check password and role name in user's allowed roles list
-                ret.success = u && u.pass === data[1] && !!(
-                              r &&~u.roles.indexOf(r)
-                            )
-
+                ret.success = u && u.pass === data[2] && !!(
+                              r &&~u.roles.indexOf(r))
                 if(ret.success){
                     if(req.session.fail){
                         req.session.fail = 0
                     }
-                    req.session.user = u// one user login per session
+                    ret.user = req.session.user = {// user data for UI (no pass)
+                        id: u.id,
+                        name: u.name,
+                        roles: u.roles
+                    }
                     create_auth(req.session, r)// permissions are in session
                     ret.can = req.session.can
                     res.json(ret)
@@ -227,11 +235,11 @@ roles = {
                         })(req.session)
                         , 1 << 22)// wait hour or so to allow next login
                 }
-                res.statusCode = 400
             }
         } else {
             ret.err = 'Miscoding! No session'
         }
+        res.statusCode = 400
         res.json(ret)
     }
     //!!! TODO: save/load MemoryStore with all sessions

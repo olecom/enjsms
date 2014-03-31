@@ -60,6 +60,19 @@ Ext.define('App.controller.Userman', {
             //,controller: { }
             //,store: {}
         })
+
+        User.login('?', function getSessionInfo(ret){
+            if(ret.can){
+                user.emptyText = ret.user.id
+                user.applyEmptyText()
+
+                role.setValue(l10n.um.roles[ret.can.__name] || ret.can.__name)
+                auth.setText(l10n.um.loginCurrentSession)
+                auth.enable()
+                return// auth is ok in this session
+            }
+        })
+
         return
 
         // data actions
@@ -68,14 +81,19 @@ Ext.define('App.controller.Userman', {
             if(newUserId){
                 defer = setTimeout(function deferReqRoles(){
                     defer = 0
-                    User.login(newUserId, function getRoles(roles){
-                        if(!roles.length)
+                    User.login(newUserId, function getSessionInfo(ret){
+                        if(ret.can){
+                            App.view.userman.Login.fadeOut(createViewportAuth)
+                            return// auth is ok in this session
+                        }
+
+                        if(!ret.roles.length)
                             return
-                        var models = new Array(roles.length)
+                        var models = new Array(ret.roles.length)
                            ,i = 0, r
 
-                        for(; i < roles.length; i++){
-                            r = roles[i]
+                        for(; i < ret.roles.length; i++){
+                            r = ret.roles[i]
                             models[i] = { role: l10n.um.roles[r] || r, '=': r }
                         }
                         role.store.loadData(models, false)
@@ -111,10 +129,10 @@ Ext.define('App.controller.Userman', {
                     App.view.userman.Login.fadeOutProgress()
                 }
             }
-            function createViewportAuth(){
-                me.destroy()// GC logout reloads page
-                Ext.globalEvents.fireEvent('createViewport')
-            }
+        }
+        function createViewportAuth(){
+            me.destroy()// GC logout reloads page
+            Ext.globalEvents.fireEvent('createViewport')
         }
         // UI actions
 

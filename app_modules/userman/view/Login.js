@@ -8,7 +8,7 @@ Ext.define('App.view.userman.Login',{
     /* draggable: true, by 'login-dd' in constructor() */
     floating: true, shadow: false
     ,style: 'opacity: 0; background-color: #FFFFFF;'
-          + 'padding: 14px; width: 344px; height: 288px;'
+          + 'padding: 14px; width: 354px; height: 288px;'
           + 'box-shadow:0px 10px 20px #111;'
     ,items: [{
         xtype: 'component'
@@ -67,6 +67,7 @@ Ext.define('App.view.userman.Login',{
         me.fadeOut = function(cb){
             if(cb) d.callback = cb
             me.getEl().fadeOut(d)
+            d.callback = null
         }
 
         login = Ext.get('login')
@@ -76,6 +77,7 @@ Ext.define('App.view.userman.Login',{
             a.height = 99
             if(cb) a.callback = cb
             login.animate(a)
+            a.callback = null
         }
 
         me.fadeOutProgress = function(cb){
@@ -84,6 +86,7 @@ Ext.define('App.view.userman.Login',{
             a.height = 277
             if(cb) a.callback = cb
             login.animate(a)
+            a.callback = null
         }
 
         me.form = Ext.widget({// build login form
@@ -103,14 +106,14 @@ Ext.define('App.view.userman.Login',{
                 xtype: 'textfield',
                 name: 'user',
                 emptyText: l10n.um.loginUserBlank,
-                width: 167,
-                allowBlank:false
+                width: 177,
+                allowBlank: true
             },{
                 //the width of this field in the HBox layout is set directly
                 //the other 2 items are given flex: 1, so will share the rest of the space
                 xtype:          'combo',
                 name:           'role',
-                width:          167,
+                width:          177,
                 queryMode:      'local',
                 value:          l10n.um.role,
                 triggerAction:  'all',
@@ -127,13 +130,13 @@ Ext.define('App.view.userman.Login',{
                 xtype: 'textfield',
                 name: 'pass',
                 emptyText: '*******',
-                width: 123,
+                width: 133,
                 inputType: 'password',
                 allowBlank:false,
                 disabled: true
             },{
                 xtype: 'button',
-                width: 123,
+                width: 133,
                 //anchor: '-111',
                 iconCls: 'ok',
                 itemId: 'ok',
