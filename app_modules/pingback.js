@@ -35,7 +35,7 @@ function pingback(api){// run external text here
         }
         res.js(component)
     })
-    api.cfg.extjs.require.push('App.backend.JS')
+    api.cfg.extjs.load.require.push('App.backend.JS')
 
     /* ExtJS code */
     ui = 'App.backend.JS = (' + (function create_pingback(){

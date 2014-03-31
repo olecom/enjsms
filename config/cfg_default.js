@@ -34,9 +34,11 @@ config = {
         appFolder: '.',          // default
         launch: null,            // default
         controllers: [ ],        // default
-        requireLaunch: [ ],      // components to require in Applicaion.launch()
-        require: [ ]             // array of files from app modules ExtJS must require
-
+        load:{
+            requireLaunch: [ ],  // components to require in Applicaion.launch()
+            require: [ ],        // array of files from app modules ExtJS must require
+            css: [ ]
+        }
         /* removable / changable items */
        ,pathFile: 'extjs.txt'
        ,path: 'ext-4.2.1.883/'   // search extjs.txt or this above './'; 'extjs/' is for HTML

@@ -16,13 +16,13 @@ function userman(api, cfg){
 
     for(n in files){
         n = files[n]
-        api.cfg.extjs.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
+        api.cfg.extjs.load.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
         n += '.js'// for backend
         app.use(n, api.connect.sendFile(__dirname + n, true))
     }
 
     app.use(mwBasicAuthorization)
-    api.cfg.extjs.require.push('App.backend.waitEvents')
+    api.cfg.extjs.load.require.push('App.backend.waitEvents')
     app.use('/wait_events', mwPutWaitEvents)
     n = '/backend/waitEvents.js'
     app.use(n, api.connect.sendFile(__dirname + n, true))

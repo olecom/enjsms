@@ -112,9 +112,8 @@ function extjs_launch(){
 
     //TODO: dynamic addition in toolbar or items/xtype construction
     //TODO: for each app.config.app.modules load module's resources: css
-    if(App.cfg.extjs.requireLaunch && App.cfg.extjs.requireLaunch.length){
-        Ext.syncRequire(App.cfg.extjs.requireLaunch)
-        App.cfg.extjs.requireLaunch = null// GC
+    if(App.cfg.extjs.load.requireLaunch.length){
+        Ext.syncRequire(App.cfg.extjs.load.requireLaunch)
     }
     if(App.cfg.createViewport){//if no app module (e.g. userman auth) does that
         Ext.globalEvents.fireEvent('createViewport')

@@ -130,8 +130,9 @@ Ext.define('App.controller.Main',{
             me.suspendEvent('createViewport')
             if(createViewport) createViewport = null// GC init
 
-            if(App.cfg.extjs.require && App.cfg.extjs.require.length){
-                Ext.require(App.cfg.extjs.require)
+            if(App.cfg.extjs.load.require.length){
+                Ext.require(App.cfg.extjs.load.require)
+                App.cfg.extjs.load = null// GC loading is done
             }
 
             App.sts(// add first System Status message

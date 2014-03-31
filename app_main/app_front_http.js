@@ -30,8 +30,7 @@ var xhr = new XMLHttpRequest
                         }
                     }
                 } else {// `nw` context
-                    app.config.extjs.require = extjs_config.require
-                    app.config.extjs.requireLaunch = extjs_config.requireLaunch
+                    app.config.extjs.load = extjs_config.load
                 }
                 app.extjs_load(document, window)
             }
