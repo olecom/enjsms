@@ -73,6 +73,19 @@ Ext.define('App.controller.Userman', {
         me.listen({
             global:{
                 /* runApp: Login widget is `singleton: true` and runs already */
+                logout: function(){
+                    Ext.Msg.alert({
+                        icon: Ext.Msg.INFO,
+                        buttons: Ext.Msg.OK,
+                        title: l10n.um.logoutTitle,
+                        msg: l10n.um.logoutMsg(user.emptyText),
+                        fn: function(){
+                            User.logout(function(){
+                                location.reload(true)
+                            })
+                        }
+                    })
+                }
             }
             //,controller: { }
             //,store: {}

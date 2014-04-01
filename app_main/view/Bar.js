@@ -66,8 +66,11 @@ Ext.define('App.view.Bar',{
         }*/
         ,{
             iconCls: 'appbar-shutdown'
-            ,height:28 ,width:28
-            ,tooltip: l10n.shutdown
+           ,height:28 ,width:28
+           ,tooltip: l10n.shutdown
+           ,handler: function(){
+                Ext.globalEvents.fireEventArgs('logout')
+            }
         }
     ]
 })

@@ -59,7 +59,7 @@ Ext.define('App.model.userman.User', {
     can: function can(perm){
         return this.pes.indexOf(perm)
     },
-    logout: function logout(){
-        App.backend.req({ url: '/logout' })
+    logout: function logout(cb){
+        App.backend.req({ url: '/logout', callback: cb })
     }
 })
