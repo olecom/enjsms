@@ -130,8 +130,14 @@ Ext.define('App.controller.Userman', {
                             return// auth is ok in this session
                         }
 
-                        if(!ret.roles.length)
+                        if(!ret.roles.length){
+                            if(!role.disabled){
+                                role.store.removeAll(true)
+                                role.reset()
+                                role.disable()
+                            }
                             return
+                        }
                         var models = new Array(ret.roles.length)
                            ,i = 0, r
 
@@ -146,8 +152,11 @@ Ext.define('App.controller.Userman', {
                         }
                     })
                 }, 512)
-                return// fast path
-            } else {
+                return
+            }
+            if(!role.disabled){
+                role.store.removeAll(true)
+                role.reset()
                 role.disable()
             }
         }
