@@ -12,15 +12,23 @@ var app
     return
 
 /* init stuff must be garbage collected */
+
 function extjs_load_gc_wrapped(doc ,w){
+    function css_load(url, backend){
+        var el = doc.createElement('link')
+        el.setAttribute('rel', 'stylesheet')
+        el.setAttribute('href', (backend ? backend : '') + url)
+        doc.head.appendChild(el)
+    }
 var path, extjs
 
+    if(app.config.extjs.load.css.length){
+        for(path in app.config.extjs.load.css){
+            css_load(app.config.extjs.load.css[path], app.config.backend.url)
+        }
+    }
     path = app.config.extjs.path
-    extjs = doc.createElement('link')
-    extjs.setAttribute('rel', 'stylesheet')
-    extjs.setAttribute('href', path + 'resources/css/ext-all.css')
-    doc.head.appendChild(extjs)
-
+    css_load(path + 'resources/css/ext-all.css')
     extjs = doc.createElement('script'),
     extjs.setAttribute('type' ,'application/javascript')
     extjs.setAttribute('charset' ,'utf-8')

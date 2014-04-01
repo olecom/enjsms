@@ -23,10 +23,8 @@ Ext.define('App.view.userman.Login',{
 '  <div style="text-shadow: #CCC 2px 3px 0;font: 2.2em serif;margin-bottom:22px;">'
 + l10n.um.auth +
 '</div><a href="/">' + l10n.reload + '</a></div>' +
-'<div id="login-view"' +
-' style="background: url(css/userman/login.png) no-repeat right 68px;' +
-'  position:relative; top:-50px; height:244">' +
-'  <div id="login-dd" style="cursor: move;text-shadow: #CCC 2px 3px 0;font: 3em serif">'
+'<div id="login-view">' +
+'  <div id="login-dd">'
 + l10n.app +
 '</div>'
 + l10n.welcome +
@@ -104,7 +102,7 @@ Ext.define('App.view.userman.Login',{
             margin: '20px 0 0 0',
             items: [{
                 xtype: 'triggerfield',
-                //triggerCls: 'login-shutdown',
+                triggerCls: 'login-shutdown',
                 name: 'user',
                 emptyText: l10n.um.loginUserBlank,
                 width: 177,

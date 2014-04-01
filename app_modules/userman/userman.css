@@ -1,0 +1,17 @@
+#login-view {
+    background: url(login.png) no-repeat right 68px;
+    position: relative; top: -50px; height: 244px;
+}
+
+#login-dd {
+ cursor: move;
+ text-shadow: #CCC 2px 3px 0;
+ font: 3em serif;
+}
+
+.login-shutdown {
+    background: url(shutdown.png) no-repeat !important;/* +hover trigger */
+    border: 0 !important;
+    width: 22px!important;
+    height: 22px!important;
+}

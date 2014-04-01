@@ -28,6 +28,11 @@ function userman(api, cfg){
     n = '/backend/waitEvents.js'
     app.use(n, api.connect.sendFile(__dirname + n, true))
 
+    n = '/css/userman/css'
+    api.cfg.extjs.load.css.push(n)
+    app.use(n, api.connect.sendFile(__dirname + '/userman.css', true))
+    app.use('/css/userman/' ,api.connect['static'](__dirname + '/css/'))
+
     app.use('/login', mwLogin)// '/login' creates `req.session`', shows `roles`
     app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
     app.use('/logout', mwLogout)

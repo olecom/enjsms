@@ -82,7 +82,7 @@ Ext.define('App.controller.Userman', {
             if(ret.can){
                 user.emptyText = ret.user.id
                 user.applyEmptyText()
-
+                user.setHideTrigger(false)
                 role.setValue(l10n.um.roles[ret.can.__name] || ret.can.__name)
                 auth.setText(l10n.um.loginCurrentSession)
                 auth.enable()
@@ -215,7 +215,6 @@ Ext.define('App.controller.Userman', {
             }
         }
         function enablePass(_, value){
-            user.setHideTrigger(value.length == 0)
             pass.enable()
         }
         function enableAuth(){
