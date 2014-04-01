@@ -20,15 +20,20 @@
 
 function run_frontend(){
     var fs = require('fs')
-       ,cfg
+
+    try {
+        fs.statSync(app.config.extjs.path + 'ext-all-nw.js')
+    } catch(ex){
+        throw new Error(l10n.extjsNotFound)
+    }
+
     try {
         (new Function(fs.readFileSync('app_main/app_front_http.js', 'utf8')))()
     } catch(ex){
-        con.error('ERROR app_main/app_front_http.js:' + ex)
-        fs = l10n.errload_config_read + '\n' + ex.stack
-        doc.write(fs)
-        app.w.window.alert(fs)
-        return
+        throw new Error(
+            'ERROR app_main/app_front_http.js\n' +
+            l10n.errload_config_read + '\n' + ex.stack
+        )
     }
 }
 

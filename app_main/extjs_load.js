@@ -35,9 +35,8 @@ var path, extjs
     extjs.setAttribute('src' ,path + 'ext-all-nw.js')// fix of `loadScriptFile`
     doc.head.appendChild(extjs)
 
-    path = '1234'
     extjs = setInterval(function waiting_extjs(){
-        if(w.Ext){
+        if(w.Ext){// xhr HEAD check is done, thus just wating
             clearInterval(extjs)
             app.extjs_load = null//mark for GC
             path = Ext.Loader.getPath('Ext')
@@ -75,15 +74,7 @@ var path, extjs
             app.config.extjs.controllers.push('Main')
             Ext.application(app.config.extjs)
             return
-        } else if('' == path){
-            clearInterval(extjs)
-            con.error(l10n.extjsNotFound)
-            doc.write(l10n.extjsNotFound)
-            w.alert(l10n.extjsNotFound)
-            return
         }
-        con.log(path)
-        path = path.slice(1)
     }, 1024)
     con.log('extjs_load: done, waiting for ExtJS')
     return

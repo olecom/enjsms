@@ -9,18 +9,20 @@ var xhr = new XMLHttpRequest
         ,(url ? url : '') + '/app.config.extjs.json'
         ,true
     )
-    xhr.onreadystatechange = function(){
+    xhr.onreadystatechange = function(res){
         var extjs_config
-        if(4 == xhr.readyState){
-            if(200 != xhr.status){
-                document.write(l10n.errload_config_read)
-                window.console && console.error && console.error(
-                    l10n.errload_config_read
-                )
-                alert(l10n.errload_config_read)
+        if(4 == res.target.readyState){
+            if(200 != res.target.status){
+                throw new Error(xhr ? l10n.errload_config_read : l10n.extjsNotFound)
             } else {
-                extjs_config = JSON.parse(xhr.responseText)
-                if(!url){// `browser` context
+                if(xhr){
+                    extjs_config = JSON.parse(xhr.responseText)
+                    if(url){// `nw` context
+                        app.config.extjs.load = extjs_config.load
+                        app.extjs_load(document, window)
+                        return
+                    }
+                    // `browser` context
                     app.config = {
                         extjs: extjs_config,
                         backend:{// record start time
@@ -29,10 +31,16 @@ var xhr = new XMLHttpRequest
                             op: l10n.stsCheck
                         }
                     }
-                } else {// `nw` context
-                    app.config.extjs.load = extjs_config.load
+                    xhr.open(// check for network availability of ExtJS
+                        'HEAD'
+                       ,(url ? url : '') + app.config.extjs.path + 'ext-all-nw.js'
+                       ,true
+                    )
+                    xhr.send()
+                    xhr = null
+                } else {
+                    app.extjs_load(document, window)
                 }
-                app.extjs_load(document, window)
             }
         }
     }
