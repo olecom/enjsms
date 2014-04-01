@@ -1,7 +1,7 @@
 #!/bin/sh
 
 set -e
-PATH=bin:$PATH
+PATH=.:bin:$PATH
 
 trap 'echo "
 Unexpected Script Error! Use /bin/sh -x $0 to trace it.
@@ -55,12 +55,13 @@ cd http://127.0.0.1:'"$BACKEND_PORT"'/ && cat '"$2"' && exit 0 || exit 1
     return $?
 }
 
-BACKEND='./node ./app_main/app_back.js'
+BACKEND='node ./app_main/app_back.js'
 exec 7>&1 8>&2
 
 $BACKEND 1>&7 2>&8 &
 
-while echo 'Press "Enter" key to reload backend (CTRL+C || CTRL+D to stop)...
+while echo '
+Press "Enter" key to reload, "CTRL+D" stop backend || CTRL+C to break...
 '
 do
     read A || {
