@@ -22,7 +22,7 @@ function run_frontend(){
     var fs = require('fs')
 
     try {
-        fs.statSync(app.config.extjs.path + 'ext-all-nw.js')
+        fs.statSync(app.config.extjs.path.slice(3) + 'ext-all-nw.js')
     } catch(ex){
         throw new Error(l10n.extjsNotFound)
     }
@@ -494,7 +494,7 @@ function check_extjs_path(){// find local ExtJS in and above cwd './'
     }
     if(!d){
         app.config.extjs.path = extjs_path
-        con.log('ExtJS path found: "' + extjs_path + '"')
+        con.log('ExtJS path found: "' + extjs_path + '" (for "app_main/app.htm")')
         return true
     }
     con.error('ExtJS path not found')
