@@ -226,7 +226,7 @@ Ext.define('App.controller.Userman', {
         }
         function gotoRoles(_, ev){
             if(ev.getKey() == ev.ENTER){
-                role.focus()
+                (role.disabled ? auth : role).focus()
             }
         }
         function gotoPass(_, ev){
