@@ -56,7 +56,7 @@ var path, extjs
             Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
 
             if(app.config.backend.url){// `nw` context`
-                Ext.Loader.setPath(app.config.extjs.name, app.config.backend.url)
+                app.config.extjs.appFolder = app.config.backend.url
                 /*
                  * patch ExtJS Loader to work from "file://" in `node-webkit`
                  * also `debugSourceURL` removed in `ext-all-debug.js#loadScriptFile()`
