@@ -121,6 +121,9 @@ Ext.define('App.controller.Main',{
                 l10n.stsOK,
                 App.cfg.backend.time
             )
+            delete App.cfg.backend.op
+            delete App.cfg.backend.msg
+            delete App.cfg.backend.time
         }
     }// init()
 })

@@ -16,19 +16,16 @@
             return d.write(b) && alert(b)
 
         w.addEventListener('error' ,function(errEvent){
-            var m
             c && c.error(errEvent)
-            m = l10n.uncaughtException  +
-                errEvent.message + '\nfilename:"' +
-                (errEvent.filename ? errEvent.filename : 'app_front.js') +
-                '", line:' + errEvent.lineno
             // show any errors early
-            d.write('<pre><h2>' +
-                m + '</h2><div style="color:white;background-color:red">' +
-                errEvent.error.stack + '</div></pre>'
+            d.write(
+'<pre><div style="color:white;background-color:red;">' +
+'filename: "' + (errEvent.filename || 'app_front.js" or "extjs_load.js') + '"\n' +
+                 errEvent.error.stack.replace(/</g, '&lt;') +
+'</div></pre>'
             )
-            w.alert && alert(m)
-            w.alert = null
+            w.alert && alert(l10n.uncaughtException  + errEvent.message)
+            w.alert = null// show fatal error once
         })
 
         b = d.createElement('b')
@@ -60,7 +57,7 @@
     })(window, document, l10n, console, alert)
     </script>
 </head>
-<body style="color:black;background-color:white">
+<body style="color:black;background-color:white;margin:0;">
 <center id='startup'>
 <noscript><br/>
 <h2 style="color:red">

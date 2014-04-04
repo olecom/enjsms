@@ -83,9 +83,6 @@ var path, extjs
 function extjs_launch(){
     app.config.extjs.launch = null
     delete app.config.extjs.launch
-    delete app.config.backend.op
-    delete app.config.backend.msg
-    delete app.config.backend.time
     app.config.createViewport = true// bunch `app.config` processing here
     delete app.extjs_load
 
