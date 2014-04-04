@@ -188,11 +188,14 @@ Ext.define('App.controller.Userman', {
                     callbackAuth
                 )
             }
-            function callbackAuth(success){
+            function callbackAuth(success, res){
                 if(success){
                     App.User = User
                     App.view.userman.Login.fadeOut(createViewportAuth)
                 } else {
+                    // reload if no session (e.g. backend reloaded)
+                    (res.status && 402 === res.status) && location.reload(true)
+                    // continue (e.g. wrong password)
                     user.selectText()
                     App.view.userman.Login.fadeOutProgress()
                 }

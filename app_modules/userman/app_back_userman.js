@@ -242,10 +242,11 @@ roles = {
                         , 1 << 22)// wait hour or so to allow next login
                 }
             }
+            res.statusCode = 400
         } else {
+            res.statusCode = 402
             ret.err = 'Miscoding! No session'
         }
-        res.statusCode = 400
         res.json(ret)
     }
     //!!! TODO: save/load MemoryStore with all sessions

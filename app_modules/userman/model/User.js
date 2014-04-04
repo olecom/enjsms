@@ -51,7 +51,7 @@ Ext.define('App.model.userman.User', {
                     me.set('Roles', res.user.roles)
                     me.login = me.auth = null// after login GC
                 }
-                callback && callback(success)
+                callback && callback(success, res)
             }
         })
     },
