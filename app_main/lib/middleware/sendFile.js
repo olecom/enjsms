@@ -6,7 +6,7 @@ module.exports = function sendFile(name, absolute){
         fstream.on('open', function(fd){
             try{
                 res.writeHead(200,{
-'Content-Type': name.indexOf('css') ? 'text/css' : 'application/javascript',
+'Content-Type': ~name.indexOf('css') ? 'text/css' : 'application/javascript',
 'Content-Length': fs.fstatSync(fd).size
                 })
                 fstream.pipe(res)
