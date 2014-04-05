@@ -3,8 +3,8 @@ function userman(api, cfg){
        ,Can = cfg.can = require('./can.js')
        ,Roles = cfg.roles = require('./roles.js')
        ,Users = cfg.users = require('./users.js')
-       ,Waits = { }// pool of waiting server events `req`uests from UI
-       ,n = '' , files = [
+       ,wes = require('./lib/wait_events.js')(api)
+       ,n = '', f = 0, files = [
             '/l10n/' + api.cfg.lang + '_userman',
             '/crypto/SHA1',
             /* true M V C loading */
@@ -15,8 +15,8 @@ function userman(api, cfg){
 
     initAuthStatic()
 
-    for(n in files){
-        n = files[n]
+    for(f = 0; f < files.length; f++){
+        n = files[f]
         api.cfg.extjs.load.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
         n += '.js'// for backend
         app.use(n, api.connect.sendFile(__dirname + n, true))
@@ -24,7 +24,7 @@ function userman(api, cfg){
 
     app.use(mwBasicAuthorization)
     api.cfg.extjs.load.require.push('App.backend.waitEvents')
-    app.use('/wait_events', mwPutWaitEvents)
+    app.use('/wait_events', wes.mwPutWaitEvents)
     n = '/backend/waitEvents.js'
     app.use(n, api.connect.sendFile(__dirname + n, true))
 
@@ -85,7 +85,6 @@ roles = {
         idx = idx.slice(0, idx.indexOf('.js?'))
 
         if(req.session && req.session.can){// auth
-            req.waits = Waits// put ref. to 'wait_events'
             //if(req.headers['x-api']){// fast path for API calls
             //}
             if(!req.session.can.backend.hasOwnProperty(idx)){
@@ -129,7 +128,7 @@ roles = {
     */
         var can ,i ,j ,d ,p ,roll
 
-        can = Roles[role_name] || { __name: 'null' ,backend: { } }
+        can = Roles[role_name] || { __name: 'no role name' ,backend: { } }
 
         if(Array.isArray(can)){// compile permissions from role setup
             roll = can
@@ -198,6 +197,7 @@ roles = {
                 ret.user = req.session.user
                 ret.success = true
                 res.json(ret)
+                wes.broadcast('login', ret, 'OK')
                 return// fast path
             }
             /* check user *iff* there is no one in `req.session` */
@@ -220,6 +220,7 @@ roles = {
                     create_auth(req.session, r)// permissions are in session
                     ret.can = req.session.can
                     res.json(ret)
+                    wes.broadcast('auth', ret, 'OK')
                     ret.can = null
                     return// fast path
                 } else {
@@ -245,38 +246,18 @@ roles = {
             res.statusCode = 400
         } else {
             res.statusCode = 402
-            ret.err = 'Miscoding! No session'
+            ret.err = 'No session'
         }
         res.json(ret)
+        wes.broadcast('auth', ret.err, 'ERR')
     }
     //!!! TODO: save/load MemoryStore with all sessions
-
-    function mwPutWaitEvents(req, res){
-        var w
-        if(req.session){
-            if((w = Waits[req.sessionID])){// release pending
-                w.statusCode = 503// 'Service Unavailable'
-                w.end()
-            }
-            res.on('close', (function create_on_res_close(sessionID){
-                return function on_res_close(){
-                    if(Waits[sessionID]){// mark as gone
-                        Waits[sessionID] = null
-                        api._log(sessionID + ': release')
-                    }
-                }
-            })(req.sessionID))
-            Waits[req.sessionID] = res
-            return
-        }
-        res.statusCode = 401// 'Unauthorized'
-        res.end()
-        return
-    }
 
     function mwLogout(req, res){
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
             if(req.session.user){// one user login per session
+                wes.cleanup(req.sessionID)
+                wes.broadcast('out', req.session.user.id)
                 req.session.user = null
                 req.session.can = null
             }
