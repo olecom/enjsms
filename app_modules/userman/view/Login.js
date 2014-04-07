@@ -8,7 +8,7 @@ Ext.define('App.view.userman.Login',{
     /* draggable: true, by 'login-dd' in constructor() */
     floating: true, shadow: false
     ,style: 'opacity: 0; background-color: #FFFFFF;'
-          + 'padding: 14px; width: 354px; height: 288px;'
+          + 'padding: 14px; width: 354px; height: 313px;'
           + 'box-shadow:0px 10px 20px #111;'
     ,items: [{
         xtype: 'component'
@@ -31,6 +31,10 @@ Ext.define('App.view.userman.Login',{
 '<div id="login-form"></div>'
 + l10n.um.loginInfo +
 '<br/><br/>&copy; 2014 olecom@gmail.com' +
+'<br/><div id="l10n" style="background-color: #D3D3D3; padding-top: 4px; margin-top: 4px;">' +
+'&nbsp;<span class="ru">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' +
+'&nbsp;<span class="en">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>' +
+'</div>' +
 '</div>' //login
     }]
 

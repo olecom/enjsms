@@ -28,7 +28,7 @@ config = {
            ,pingback: true
         }
     },
-    lang: 'ru',
+    lang: 'ru',// base localization, must be provided by any module as fallback
     extjs:{
         name: 'App',             // default
         appFolder: '.',          // default

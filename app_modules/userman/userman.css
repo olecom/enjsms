@@ -15,3 +15,12 @@ border: 0 !important;
 width: 22px !important;
 height: 22px !important;
 }
+.ru{
+background: url(flags/ru.gif) no-repeat;
+cursor: pointer;
+}
+
+.en{
+background: url(flags/us.gif) no-repeat;
+cursor: pointer;
+}
