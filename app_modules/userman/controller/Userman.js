@@ -17,27 +17,9 @@ Ext.define('App.controller.Userman', {
            ,User, user, role, pass, auth
 
         Ext.select("#l10n > span").each(function l10n_changers(el){
-            el.dom.onclick = function l10n_set_and_change(){
-                if('l10n-reset' == this.className){
-                    if(localStorage.l10n){
-                        delete localStorage.l10n
-                        Ext.Msg.alert({
-                            icon: Ext.Msg.INFO,
-                            buttons: Ext.Msg.OK,
-                            title: l10n.um.l10n,
-                            msg: l10n.um.l10nReset,
-                            callback: function l10n_reload(){
-                                location.reload(true)
-                            }
-                        })
-                    }
-                    return
-                }
-                if(0 == this.className.indexOf(l10n.lang))
-                    return
-                localStorage.l10n = this.className.slice(0, 2)// first two
-                location.reload(true)
-            }
+            return (0 == el.dom.className.indexOf(l10n.lang)) ?
+                    el.dom.style.opacity = 0.5 :// fade out current flag
+                    el.dom.onclick = l10n_set_and_change// install changer
         })
 
         App.cfg.createViewport = false// tell `Main`, this will fire `createViewport`
@@ -97,6 +79,28 @@ Ext.define('App.controller.Userman', {
         })
 
         return
+
+        function l10n_set_and_change(){
+            if('l10n-reset' == this.className){
+                if(localStorage.l10n){
+                    delete localStorage.l10n
+                    Ext.Msg.alert({
+                        icon: Ext.Msg.INFO,
+                        buttons: Ext.Msg.OK,
+                        title: l10n.um.l10n,
+                        msg: l10n.um.l10nReset,
+                        callback: reload
+                    })
+                }
+                return
+            }
+            localStorage.l10n = this.className.slice(0, 2)// first two
+            reload()
+        }
+
+        function reload(){
+            location.reload(true)
+        }
 
         function getSessionInfo(ret){
             if(ret.can){
@@ -279,9 +283,7 @@ Ext.define('App.controller.Userman', {
                 title: l10n.um.logoutTitle,
                 msg: l10n.um.logoutMsg(User.get('id')),
                 fn: function(){
-                    User.logout(function(){
-                        location.reload(true)
-                    })
+                    User.logout(reload)
                 }
             })
         }
