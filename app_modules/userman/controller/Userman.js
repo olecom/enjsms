@@ -16,6 +16,30 @@ Ext.define('App.controller.Userman', {
            ,defer = 0
            ,User, user, role, pass, auth
 
+        Ext.select("#l10n > span").each(function l10n_changers(el){
+            el.dom.onclick = function l10n_set_and_change(){
+                if('l10n-reset' == this.className){
+                    if(localStorage.l10n){
+                        delete localStorage.l10n
+                        Ext.Msg.alert({
+                            icon: Ext.Msg.INFO,
+                            buttons: Ext.Msg.OK,
+                            title: l10n.um.l10n,
+                            msg: l10n.um.l10nReset,
+                            callback: function l10n_reload(){
+                                location.reload(true)
+                            }
+                        })
+                    }
+                    return
+                }
+                if(0 == this.className.indexOf(l10n.lang))
+                    return
+                localStorage.l10n = this.className.slice(0, 2)// first two
+                location.reload(true)
+            }
+        })
+
         App.cfg.createViewport = false// tell `Main`, this will fire `createViewport`
 
         user = me.getUser()

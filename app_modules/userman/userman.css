@@ -15,6 +15,7 @@ border: 0 !important;
 width: 22px !important;
 height: 22px !important;
 }
+
 .ru{
 background: url(flags/ru.gif) no-repeat;
 cursor: pointer;
@@ -22,5 +23,10 @@ cursor: pointer;
 
 .en{
 background: url(flags/us.gif) no-repeat;
+cursor: pointer;
+}
+.l10n-reset{
+background: url(l10n-reset.png) no-repeat;
+background-size: 11px;
 cursor: pointer;
 }

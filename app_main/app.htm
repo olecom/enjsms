@@ -3,49 +3,65 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="google" value="notranslate" />
-    <title>ENJSMS v030.02.01.2014 &copy; 2012-2014</title>
-    <link rel="shortcut icon" type="image/ico" href="css/favicon.ico" />
+    <title>SUPro v001&copy;2014-04-08</title>
+    <!-- "Yellow dollar sign" from Feifei http://www.favicon.cc/?action=icon&file_id=586714 -->
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAAAAABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/lDo/lDo6izRPqkyFhYU9DQA9DQAAAAAAAAAsdiYobSEyfiwAAAAAAAAAAAA+kTlAlTtXu1U9kDc6gzSFhYU9DQA9DQA4ijI+kzkMNgFCADMbwhYAAAAAAAAAAAA/lDo/lDo1gi5CEAE9DQA9DQA9DQA9DQA9DQA9DQBCEAE4ijImniEgeBsqliY9kTc/kzo1gi5CEAE9DQAH+vIH+vI9DQAH+vIH+vIEz949DQAuCgA4ijJZg1EWmxM9kTc5eTJCEAE9DQAH+vJPEgEH+vI9DQAH+vIH+vIH+vI4DQE4DQGhoaExjiwWmxMycis9kTehoaE9DQAICAg9kTeFhYU9DQA9DQCHh4cH+vIH+vI9DQBCEAE1gi4yky1CnT49kTc9kTc9kTc9kTc9kTeFhYU9DQBHR0c5iTSHh4cH+vIFBQVCEAE1gi5AkDs9kTdFnT9ImkM4ijLU0s89DQA9DQA9DQA9DQCHh4cH+vIH+vI9DQChoaEthygulCo9kTc9kTc1gi5CEAE9DQAH+vIH+vIH+vIH+vIH+vIH+vIEz95CEAE4ijI2izEA1wA9kTcAAAChoaE9DQAEz94H+vKHh4c9DQA9DQA9DQA9DQBCEAE4ijI7kzYviyp6gnI9kTc1gi4uCgA9DQAH+vIFAQA1gi49DQA9DQA5iTQ/jDo8ijdXUU83bjE2ezA5iTQ9kTc1gi4uCgA9DQAH+vIFAQAAAAA9DQA9DQBCEAHU0s9CEAF9e3o1gi4AAAA9jzc9kTcAAAChoaE9DQBCEAEH+vKHh4c9DQBCEAEH+vIH+vIFBQVCEAGFhYUAAAAyfCw9kTc9kTcoeCFCEAE9DQAH+vIH+vI9DQBCEAEH+vIH+vIFBQU9DQA1gi4ANAAzfi0ANAA9kTcbaBNNnkpCEAE9DQA9DQA9DQA9DQA9DQA9DQBCEAE1gi40fy8+kzoxeysqdyMkcR0ANAAANAAANAA1gi4uCgA9DQA9DQA4ijI4ijIANAAANAAANAA+kTkAAAD8fwAA/H8AAPAPAADgBwAAwAMAAMQDAAD8QwAA8AMAAOAHAADADwAAwn8AAMIHAADAAwAA4AcAAPAPAAD8fwAA" />
     <link rel="stylesheet" href="app.css" />
     <!-- l10n can be configured and/or changed by server side view engine and template
          for now it's static: -->
     <script type="text/javascript" src="l10n/ru.js" charset="utf-8"></script>
     <script type="text/javascript">(
-    function pre_load(w ,d ,l10n ,c ,alert){
-        var b = "FATAL ERROR: no language! File './l10n/ru.js' or similar."
-        if('undefined' == typeof l10n)
-            return d.write(b) && alert(b)
+    function pre_load(w, d ,l10n, c){
+        var b, s = "FATAL ERROR: no language! File './l10n/ru.js' or similar."
+        if(!l10n)
+            return d.write(s) && alert(s)
 
-        w.addEventListener('error' ,function(errEvent){
+        w.addEventListener('error' ,function(errEvent){// show any errors early
             c && c.error(errEvent)
-            // show any errors early
             d.write(
 '<pre><div style="color:white;background-color:red;">' +
 'filename: "' + (errEvent.filename || 'app_front.js" or "extjs_load.js') + '"\n' +
                  errEvent.error.stack.replace(/</g, '&lt;') +
 '</div></pre>'
             )
-            w.alert && alert(l10n.uncaughtException  + errEvent.message)
+            w.alert && w.alert(l10n.uncaughtException  + errEvent.message)
             w.alert = null// show fatal error once
         })
 
-        b = d.createElement('b')
-        b.innerHTML = l10n.loading
-        w.addEventListener('load' ,function pre_onload(e){
-            e.target.removeEventListener(e.type ,pre_onload)
-            d.getElementById('startup').appendChild(b)
-            startup(true)// preload ExtJS stuff
-            setTimeout(startup, 0)// schedule heavy loading after html && dom
-        })
+        if(!(s = localStorage.l10n) || l10n.lang == s)
+            return load_front()
+
+        b = d.head.getElementsByTagName('script')
+        d.head.removeChild(b[1])
+        d.head.removeChild(b[0])
+        b = d.createElement('script')
+        b.setAttribute('type' ,'application/javascript')
+        b.setAttribute('charset' ,'utf-8')
+        b.setAttribute('src' ,'l10n/' + s + '.js')
+        d.head.appendChild(b)
+
+        return setTimeout(load_front, 1)
+
+        function load_front(){
+            b = d.createElement('b')
+            w.addEventListener('load' ,function pre_onload(e){
+                e.target.removeEventListener(e.type ,pre_onload)
+                b.innerHTML = l10n.loading
+                d.getElementById('startup').appendChild(b)
+                startup(true)// preload ExtJS stuff
+                setTimeout(startup, 0)// schedule heavy loading after html && dom
+            })
+        }
 
         function startup(extjs){
             b = new XMLHttpRequest()
             b.open('GET', (extjs ? 'extjs_load.js' : 'app_front.js'), false)
             b.send()
             if(b.responseText){
-                d.head.removeChild(d.head.getElementsByTagName('script')[1])
+                d.head.removeChild(d.head.getElementsByTagName('script')[0])
                 b = d.createElement('script')
-                    .appendChild(d.createTextNode(b.responseText))
-                    .parentNode
+                     .appendChild(d.createTextNode(b.responseText))
+                     .parentNode
                 b.setAttribute('type' ,'application/javascript')
                 b.setAttribute('charset' ,'utf-8')
                 d.head.appendChild(b)
@@ -54,7 +70,7 @@
             }
             b = null// mark for GC
         }
-    })(window, document, l10n, console, alert)
+    })(window, document, window.l10n, window.console)
     </script>
 </head>
 <body style="color:black;background-color:white;margin:0;">
