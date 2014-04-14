@@ -9,14 +9,19 @@ var xhr = new XMLHttpRequest
         ,(url ? url : '') + '/app.config.extjs.json'
         ,true
     )
-    xhr.onreadystatechange = function(res){
-        var extjs_config
-        if(4 == res.target.readyState){
-            if(200 != res.target.status){
+    xhr.onreadystatechange = onreadystatechange
+    xhr.send()
+    return
+
+    function onreadystatechange(res){
+    var extjs_config, req = res.target
+        if(4 == req.readyState){
+            if(200 != req.status){
                 throw new Error(xhr ? l10n.errload_config_read : l10n.extjsNotFound)
             } else {
                 if(xhr){
-                    extjs_config = JSON.parse(xhr.responseText)
+                    xhr = null
+                    extjs_config = JSON.parse(req.responseText)
                     if(url){// `nw` context
                         app.config.extjs.load = extjs_config.load
                         app.extjs_load(document, window)
@@ -31,18 +36,16 @@ var xhr = new XMLHttpRequest
                             op: l10n.stsCheck
                         }
                     }
-                    xhr.open(// check for network availability of ExtJS
+                    req.open(// check for network availability of ExtJS
                         'HEAD'
                        ,(url ? url : '') + app.config.extjs.path + 'ext-all-nw.js'
                        ,true
                     )
-                    xhr.send()
-                    xhr = null
+                    req.send()
                 } else {
                     app.extjs_load(document, window)
                 }
             }
         }
     }
-    xhr.send()
 })(app.config && app.config.backend.url)
