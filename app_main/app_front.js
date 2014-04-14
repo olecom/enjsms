@@ -205,10 +205,18 @@ function spawn_backend(app, restart){
 function get_remote_ip(){
     app.c_p.exec('ipconfig',
     function(err, stdout){
-        if(!err){// NOTE: RE can be specific to Russion MS Windows
+    var url
+        if(!err){// NOTE: RE can be specific to Russian MS Windows
             err = stdout.match(/^[\s\S]*IPv4-[^:]*: ([^\n]*)\n/)
-            if(err) app.config.backend.url = app.config.backend.url
-                .replace(/127\.0\.0\.1/, err[1])
+            if(err){
+                url = app.config.backend.url
+                app.config.backend.url = app.config.backend.url
+                   .replace(/127\.0\.0\.1/, err[1])
+                if('DIRECT' != gui.App.getProxyForURL(app.config.backend.url)){
+                    app.w.window.alert(l10n.via_proxy(app.config.backend.url))
+                    app.config.backend.url = url// restore 'localhost'
+                }
+            }
         }
         run_frontend()
     })

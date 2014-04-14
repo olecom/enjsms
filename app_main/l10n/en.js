@@ -25,6 +25,11 @@ l10n = { lang: 'en',
         ,wininv: 'SUPRO window is hidden'
     }
 
+    ,via_proxy:function(url){ return ''+
+'Server address for remote users goes via PROXY!' + '\n' +
+'There may be problems connecting from the network.\nURL = ' + url
+    }
+
     ,extjsNotFound:
         'Fail to load "ExtJS" (UI framework).\n' +
         'Check of application configuration is needed.'
