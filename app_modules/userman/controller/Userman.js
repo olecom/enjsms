@@ -23,14 +23,14 @@ Ext.define('App.controller.Userman', {
         })
 
         App.cfg.createViewport = false// tell `Main`, this will fire `createViewport`
-
+        // UI refs
         user = me.getUser()
         role = me.getRole()
         pass = me.getPass()
         auth = me.getAuth()
-
+        // data
         User = App.model.userman.User// must be required first from app module
-
+        // action
         user.onTriggerClick = onSessionShutdownClick
         user.focus()
         user.on({
@@ -63,6 +63,8 @@ Ext.define('App.controller.Userman', {
         me.listen({
             global:{
                 /* runApp: Login widget is `singleton: true` and runs already */
+                backendWaitEvents: handleBackendWaitEvents,
+                backendEvents: handleBackendEvents,
                 logout: logout
             }
             //,controller: { }
@@ -70,13 +72,6 @@ Ext.define('App.controller.Userman', {
         })
 
         User.login('?', getSessionInfo)// ask backend for current session
-
-        me.listen({
-            global:{
-                backendWaitEvents: handleBackendWaitEvents,
-                backendEvents: handleBackendEvents
-            }
-        })
 
         return
 
@@ -291,6 +286,11 @@ Ext.define('App.controller.Userman', {
     destroy: function destroy(){
         this.callParent(arguments)
         App.view.userman.Login.destroy()
+        /*
+         * NOTE: this controller is still referenced by EventBus via `me.listen()`
+         * TODO: in case of logout event from backend, this may show
+         *       `view.userman.Login` again without reloading of all Viewport
+         */
         App.getApplication().controllers.removeAtKey('Userman')
         App.controller.Userman = App.view.userman.Login = null
     }

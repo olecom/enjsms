@@ -15,17 +15,18 @@ config = {
     log: 'log/',
     app:{
         db: { mongodb:1 ,nedb:0 }, // github.com/louischatriot/nedb
-        modules:{// cfg things from 'app_modules' (order maters as in middlewares
+        modules:{// cfg things from 'app_modules'
+        // order matters as in middlewares
+            userman:{// authentication and authorization
+                store: 'dummy' //dummy (internal ro default roles), json file, db
+            }
+           ,pingback: true// execute JS in backend
             /*procman:{
              *   // default: cfg_procman.js in own directory
              *   config: 'config/cfg_procman_mongo_node_sms.js'
              *  ,autoSpawn: true
              *}
-           ,*/
-            userman:{
-                store: 'dummy' //dummy (internal ro default roles), json file, db
-            }
-           ,pingback: true
+            ,*/
         }
     },
     lang: 'ru',// base localization, must be provided by any module as fallback

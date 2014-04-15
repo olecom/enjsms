@@ -2,7 +2,6 @@ Ext.define('App.view.userman.Login',{
     xtype: 'app-login',
     extend: 'Ext.container.Container',
     layout: 'fit',
-    //align: 'stretch',
     singleton: true,
     constrain: true,
     /* draggable: true, by 'login-dd' in constructor() */
@@ -95,7 +94,6 @@ Ext.define('App.view.userman.Login',{
         me.form = Ext.widget({// build login form
             renderTo: 'login-form',
             xtype: 'form',
-            //layout: 'form',
             url: '',
             frame:false,
             width: '100%',
@@ -106,6 +104,7 @@ Ext.define('App.view.userman.Login',{
             cls: 'transparent',
             margin: '20px 0 0 0',
             items: [{
+                /* ExtJS 5 deprecated: 'Ext.form.field.Text'.triggers */
                 xtype: 'triggerfield',
                 triggerCls: 'login-shutdown',
                 name: 'user',
@@ -114,37 +113,34 @@ Ext.define('App.view.userman.Login',{
                 allowBlank: true,
                 enableKeyEvents: true,
                 hideTrigger: true
-                //onTriggerClick: see controller
+                //onTriggerClick: logic is in controller
             },{
                 //the width of this field in the HBox layout is set directly
                 //the other 2 items are given flex: 1, so will share the rest of the space
-                xtype:          'combo',
-                name:           'role',
-                width:          177,
-                queryMode:      'local',
-                value:          l10n.um.role,
-                triggerAction:  'all',
-                //forceSelection: true,
-                editable:       false,
-                //fieldLabel:     'Title',
-                displayField:   'role',
-                valueField:     '=',
-                disabled: true,
-                store:          Ext.create('Ext.data.Store',{
-                    fields : [ 'role', '=' ]
-                 })
+                xtype: 'combo',
+                name: 'role',
+                width: 177,
+                queryMode: 'local',
+                value: l10n.um.role,
+                triggerAction: 'all',
+                editable: false,
+                displayField: 'role',
+                valueField: '=',
+                store: Ext.create('Ext.data.Store',{
+                    fields: [ 'role', '=' ]
+                }),
+                disabled: true
             },{
                 xtype: 'textfield',
                 name: 'pass',
                 emptyText: '*******',
                 width: 133,
                 inputType: 'password',
-                allowBlank:false,
+                allowBlank: false,
                 disabled: true
             },{
                 xtype: 'button',
                 width: 133,
-                //anchor: '-111',
                 iconCls: 'ok',
                 itemId: 'ok',
                 text: l10n.um.loginOk,

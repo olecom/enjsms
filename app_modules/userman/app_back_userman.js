@@ -1,3 +1,7 @@
+/*
+ * user authentication and resource authorization
+ * provide frontend UI files and backend logic
+ */
 function userman(api, cfg){
     var app = api.app
        ,Can = cfg.can = require('./can.js')
@@ -10,14 +14,14 @@ function userman(api, cfg){
             '/model/User',// + client's requested `l10n`
             '/view/Login',
             '/controller/Userman'
-       ]
+        ]
 
-    initAuthStatic()
+    initAuthStatic()// default authorization for `backend` permissions
 
     for(f = 0; f < files.length; f++){// provide [files]
         n = files[f]
         api.cfg.extjs.load.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
-        n += '.js'// for backend
+        n += '.js'// for this backend
         app.use(n, api.connect.sendFile(__dirname + n, true))
     }
 
@@ -41,10 +45,10 @@ function userman(api, cfg){
     return
 
     function mwL10n(req, res, next){
-        var q, s
-        if(!~req.url.indexOf('userman.js')){
+        var q, s, postfix = '_userman.js'
+        if(!~req.url.indexOf(postfix)){
             next()
-            return
+            return// l10n is not for this module
         }
         if((q = req.url.indexOf('?')) >= 0){
             s = req.url.slice(0, q)
@@ -54,7 +58,10 @@ function userman(api, cfg){
             require('fs').statSync(s)
             api.connect.sendFile(s, true)(req, res)
         } catch(ex){// or fallback
-            api.connect.sendFile(__dirname + '/l10n/' + api.cfg.lang + '_userman.js', true)(req, res)
+            api.connect.sendFile(
+                __dirname + '/l10n/' + api.cfg.lang + postfix,
+                true// absolute path is provided
+            )(req, res)
         }
     }
 
@@ -90,17 +97,18 @@ roles = {
 */
 
     function initAuthStatic(){
+    // any `backend` permissions must be false by default to all roles
         var p, s = Can.Static
         for(p in Can.backend){
-            //turn class name to backend url 'App.backback.JS' - > '/back/JS'
-           s[p.slice(3).replace(/[.]/g, '/')] = false
+            //turn class name to backend url e.g. 'App.backend.JS' - > '/backend/JS'
+            s[p.slice(3).replace(/[.]/g, '/')] = false
         }
     }
 
     function mwBasicAuthorization(req, res, next){
         /* turn ExtJS Class URL into `Can.backend` index
-         /back/JS.js?_dc=1395638116367
-         /back/JS
+         * /backend/JS.js?_dc=1395638116367
+         * /backend/JS
          */
         var idx = req.url
         idx = idx.slice(0, idx.indexOf('.js?'))
@@ -147,7 +155,7 @@ roles = {
         }
     }
     */
-        var can ,i ,j ,d ,p ,roll
+        var can ,d ,j ,p ,i ,roll
 
         can = Roles[role_name] || { __name: 'no role name' ,backend: { } }
 
@@ -173,7 +181,7 @@ roles = {
         // compile ExtJS MVC component file access for `Can.backend` permission
         for(p in Can.backend){
             if(!can[p]){
-                //turn class name to backend url 'App.backback.JS' - > '/backend/JS'
+                //turn class name to backend url 'App.backend.JS' - > '/backend/JS'
                 can.backend[p.slice(3).replace(/[.]/g, '/')] = false
             }
         }
