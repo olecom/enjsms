@@ -13,6 +13,7 @@ function userman(api, cfg){
             /* true M V C loading */
             '/model/User',// + client's requested `l10n`
             '/view/Login',
+            '/view/items_Bar',
             '/controller/Userman'
         ]
 

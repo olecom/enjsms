@@ -14,7 +14,7 @@ Ext.define('App.model.userman.User', {
             persist: false
         },
         {
-            name: 'Username',
+            name: 'name',
             type: 'string',
             persist: false
         },
@@ -49,7 +49,7 @@ Ext.define('App.model.userman.User', {
                     res = Ext.decode(res.responseText)
                     me.pes = res.can
                     me.set('id', res.user.id)
-                    me.set('Username', res.user.name)
+                    me.set('name', res.user.name)
                     me.set('Roles', res.user.roles)
                     me.login = me.auth = null// after login GC
                 }

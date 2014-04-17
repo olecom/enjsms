@@ -225,31 +225,26 @@ Ext.define('App.controller.Userman', {
             }
         }
         function createViewportAuth(){
+        var bar = App.view.items_Bar, i = 0, f
+
             me.destroy()// GC logout reloads page
+
+            for(; i < bar.length; ++i){// search user status item
+                f = bar[i]
+                if('appbar-user-online' == f.iconCls){
+                    f.tooltip = l10n.userStatus + ':<br><b>' + App.User.get('id') + '</b>'
+                    f.text = (
+                        '<i>' +
+                            App.User.get('name') +
+                        '</i> (<b>' + App.User.pes.__name + '</b>)'
+                    )
+                    break
+                }
+            }
+
             Ext.globalEvents.fireEvent('createViewport')
         }
 
-        // auth UI actions
-        function loadDesktop(){
-    //requires:[
-//        'App.view.Bar',
-      //  'App.view.Desktop'
-    //],
-
-/*    ,items:[
-//        { xtype: 'app-bar' },
-        { xtype: 'desktop' }
-    ]*/
-
-/*    ,initComponent: function() {
- *       var me = this
- *       me.items = [
- *           { xtype: 'app-bar' }
- *          ,{ xtype: 'desktop' }
- *       ]
- *       me.callParent(arguments)
- *   }*/
-        }
         function gotoRoles(_, ev){
             if(ev.getKey() == ev.ENTER){
                 (role.disabled ? auth : role).focus()

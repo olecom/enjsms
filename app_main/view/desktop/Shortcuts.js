@@ -28,7 +28,7 @@ Ext.define('App.view.desktop.Shortcuts',{
 
         ,{
             text: '<img height=64 width=64 src="css/usersman_shortcut.png"/><br/><br/>' +
-                  l10n.um.users + '<br/>'
+                  (l10n.um && l10n.um.users) + '<br/>'
             ,height:110 ,minWidth:92
             ,tooltip: 'Управление пользователями, правами доступа и т.п.'
         }

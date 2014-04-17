@@ -20,7 +20,6 @@ height: 22px !important;
 background: url(flags/ru.gif) no-repeat;
 cursor: pointer;
 }
-
 .en{
 background: url(flags/us.gif) no-repeat;
 cursor: pointer;
@@ -29,4 +28,34 @@ cursor: pointer;
 background: url(l10n-reset.png) no-repeat;
 background-size: 11px;
 cursor: pointer;
+}
+
+.userman {
+background-image: url(um32x32.gif);
+}
+
+.appbar-shutdown {
+background-image: url(shutdown.png);
+width: 22px!important;
+height: 22px!important;
+}
+.appbar-user-online {
+background-image: url(user-online.png);
+width: 22px!important;
+height: 22px!important;
+}
+.appbar-user-offline {
+background-image: url(user-offline.png);
+width: 22px!important;
+height: 22px!important;
+}
+.appbar-user-busy {
+background-image: url(user-busy.png);
+width: 22px!important;
+height: 22px!important;
+}
+.appbar-user-away {
+background-image: url(user-away.png);
+width: 22px!important;
+height: 22px!important;
 }
