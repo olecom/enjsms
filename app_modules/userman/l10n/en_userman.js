@@ -1,5 +1,6 @@
 l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
    ,modname: "User management"
+   ,tooltip: "User management, permissions, etc."
    ,user: "User"
    ,users: "Users"
    ,role: "Role/Position"
@@ -7,13 +8,16 @@ l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
 
    ,auth: "Accessing..."
    ,loginInfo:
-'<b>Access needs:</b><br/>user id, password<br/>' +
+'<b>Access requisits:</b><br/>user id, password<br/>' +
 'role/position - if needed'
    ,loginUserBlank: 'user id'
    ,loginOk: 'Enter the system'
    ,loginCurrentSession: 'Continue session'
    ,logoutTitle: 'Session'
    ,logoutMsg: function(id){ return 'Current session of user <b>"' + id + '"</b> is closed' }
+
+   ,l10n: 'Localization setup'
+   ,l10nReset: 'Use default configured localization'
 
    ,roles:{
         'admin.local':  "Administrator with full access to the application"

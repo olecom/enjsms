@@ -14,6 +14,7 @@ function userman(api, cfg){
             '/model/User',// + client's requested `l10n`
             '/view/Login',
             '/view/items_Bar',
+            '/view/items_Shortcuts',
             '/controller/Userman'
         ]
 

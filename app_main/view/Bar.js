@@ -23,7 +23,7 @@ Ext.define('App.view.Bar',{
                     //,toggleHandler: onItemToggle
                    ,pressed: true
                 }
-               ,{ text: '<img height=16 width=16 src="css/usersman_shortcut.png"/>' }
+               ,{ text: '<img height=16 width=16 src="'+ App.cfg.backend.url + '/css/userman/userman_shortcut.png"/>' }
                 ]
             }
             ]
