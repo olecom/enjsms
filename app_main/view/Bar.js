@@ -31,5 +31,6 @@ Ext.define('App.view.Bar',{
         )
 
         me.callParent(arguments)
+        delete App.view.items_Bar
     }
 })
