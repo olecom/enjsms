@@ -1,6 +1,11 @@
 /*
  * user authentication and resource authorization
  * provide frontend UI files and backend logic
+ *
+ * `backend.waitEvents`: per-user/session division allows UI to receive events
+ * from backend via long pooling (i.e. XHR with long timeout)
+ *
+ * otherwise UI must do XHR frequently
  */
 function userman(api, cfg){
     var app = api.app
@@ -12,15 +17,13 @@ function userman(api, cfg){
             '/crypto/SHA1',
             /* true M V C loading */
             '/model/User',// + client's requested `l10n`
-            '/view/Login',
-            '/view/items_Bar',
-            '/view/items_Shortcuts',
+            '/view/Login', '/view/items_Bar', '/view/items_Shortcuts',
             '/controller/Userman'
         ]
 
     initAuthStatic()// default authorization for `backend` permissions
 
-    for(f = 0; f < files.length; f++){// provide [files]
+    for(f = 0; f < files.length; f++){// provide [files] w/o auth
         n = files[f]
         api.cfg.extjs.load.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
         n += '.js'// for this backend
@@ -28,6 +31,7 @@ function userman(api, cfg){
     }
 
     app.use(mwBasicAuthorization)
+
     api.cfg.extjs.load.require.push('App.backend.waitEvents')
     app.use('/wait_events', wes.mwPutWaitEvents)
     n = '/backend/waitEvents.js'
