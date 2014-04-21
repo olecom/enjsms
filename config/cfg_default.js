@@ -20,6 +20,7 @@ config = {
             userman:{// authentication and authorization
                 store: 'dummy' //dummy (internal ro default roles), json file, db
             }
+           ,enjsms: true
            ,pingback: true// execute JS in backend
             /*procman:{
              *   // default: cfg_procman.js in own directory
