@@ -4,13 +4,10 @@ Ext.define('App.view.Viewport',{
         'App.view.Bar',
         'App.view.Desktop'
     ],
-    layout:{
-        type: 'vbox'
-       ,align: 'stretch'
-    },
+    layout: 'border',
     items:[
-        { xtype: 'app-bar' },
-        { xtype: 'desktop' }
+        { xtype: 'app-bar' },//uses    `App.view.items_Shortcuts`
+        { xtype: 'desktop' } //deletes `App.view.items_Shortcuts`
     ]
 /*    ,initComponent: function dynamic_init() {
  *       var me = this

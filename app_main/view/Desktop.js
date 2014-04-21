@@ -5,8 +5,10 @@ Ext.require([
 
 Ext.define('App.view.Desktop',{
     extend: 'Ext.Container',
+    id: 'desk',
     xtype: 'desktop'
-   ,flex: 1
+   ,region: 'center'//border
+   ,border: false
    ,items:[
         { xtype: 'app-shortcuts' /*,id: 'app-shortcuts-id'*/ }
     ]
