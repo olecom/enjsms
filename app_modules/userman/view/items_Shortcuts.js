@@ -8,5 +8,14 @@ l10n.um.users +
 '<br/>'
    ,height:110 ,minWidth:92
    ,tooltip: l10n.um.tooltip
+   ,handler:
+    function open_enjsms(){
+    var tb = Ext.getCmp('wm').items.getByKey('Userman')
+        if(tb){
+            tb.toggle(true)
+        } else {
+            Ext.create('App.view.Userman', { renderTo: Ext.getCmp('desk').getEl() })
+        }
+    }
 }
 ])

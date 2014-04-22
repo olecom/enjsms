@@ -23,7 +23,19 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
            ,iconCls: 'appbar-user-' + l[i]
            ,handler: onItemClick
         }
-        s[i] = { text: l10n.um.users ,scale: 'large' ,iconCls: 'userman' }
+        s[i] = { text: l10n.um.users ,scale: 'large' ,iconCls: 'userman'
+            ,handler: function open_userman_from_bar(){
+                var tb = Ext.getCmp('wm').items.getByKey('Userman')
+                if(tb){
+                    //debugger
+                    //tb.toggle(true)
+                    tb.onWMToggle()
+                } else {
+                    Ext.create('App.view.Userman', { renderTo: Ext.getCmp('desk').getEl() })
+                }
+                this.up('button').hideMenu()
+            }
+        }
         return s
 
         function onItemClick(item){

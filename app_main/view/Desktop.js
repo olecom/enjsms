@@ -7,10 +7,11 @@ Ext.define('App.view.Desktop',{
     extend: 'Ext.Container',
     id: 'desk',
     xtype: 'desktop'
-   ,region: 'center'//border
+   ,region: 'center'// border layout
+   ,style: 'overflow: hidden;'
    ,border: false
    ,items:[
-        { xtype: 'app-shortcuts' /*,id: 'app-shortcuts-id'*/ }
+        { xtype: 'app-shortcuts' }
     ]
     ,initComponent: function init_Desktop(){
         var me = this
