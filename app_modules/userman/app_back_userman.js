@@ -18,7 +18,7 @@ function userman(api, cfg){
             /* true M V C loading */
             '/model/User',// + client's requested `l10n`
             '/view/Login', '/view/items_Bar', '/view/items_Shortcuts', '/view/Userman',
-            '/controller/Userman'
+            '/controller/Login'
         ]
 
     initAuthStatic()// default authorization for `backend` permissions

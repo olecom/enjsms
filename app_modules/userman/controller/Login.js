@@ -1,4 +1,4 @@
-Ext.define('App.controller.Userman', {
+Ext.define('App.controller.Login', {
     extend: 'App.controller.Base',
 
     views: [
@@ -11,7 +11,7 @@ Ext.define('App.controller.Userman', {
 
         { ref: 'auth', selector: 'button[iconCls=ok]' }
     ],
-    init: function controllerUsermanInit(){
+    init: function controllerLoginInit(){
         var me = this
            ,defer = 0
            ,User, user, role, pass, auth
@@ -286,9 +286,9 @@ Ext.define('App.controller.Userman', {
          * TODO: in case of logout event from backend, this may show
          *       `view.userman.Login` again without reloading of all Viewport
          */
-        App.getApplication().controllers.removeAtKey('Userman')
-        App.controller.Userman = App.view.userman.Login = null
+        App.getApplication().controllers.removeAtKey('Login')
+        App.controller.Login = App.view.userman.Login = null
     }
 })
 
-App.getApplication().getController('Userman')/* dynamically load && init */
+App.getApplication().getController('Login')/* dynamically load && init */
