@@ -19,6 +19,9 @@ l10n = { lang: 'en',
 'Error! Backend of the system has started but there is no HTTP access to it!\n' +
 'Possibly firewall or antivirus is blocking TCP/IP.\n\n' +
 "Assistance is needed: system administrator's or developer's."
+    ,errun_title: 'ERROR in program execution'
+    ,errun_file: 'File: '
+    ,errun_stack: 'Error and call stack: '
     ,tray:{
         title: 'SUPRO'
         ,winvis: 'SUPRO window is visible'
