@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# any param "$1" will redirect node's output: 1>>log/stdout 2>>log/stderr
+
 set -e
 PATH=.:bin:$PATH
 
@@ -54,10 +56,18 @@ cd http://127.0.0.1:'"$BACKEND_PORT"'/ && cat '"$2"' && exit 0 || exit 1
     } 0</dev/null
     return $?
 }
-
-BACKEND='node ./app_main/app_back.js'
-exec 7>&1 8>&2
-
+A='app_back'
+BACKEND="node ./app_main/${A}.js"
+[ "$1" ] && {
+    echo 'Logging in "./log/"'
+    [ -d './log/' ] || {
+        echo 'Creating "./log/"'
+        mkdir log
+    }
+    exec 7>>log/${A}_stdout.txt 8>>log/${A}_stderr.txt
+} || {
+    exec 7>&1 8>&2
+}
 $BACKEND 1>&7 2>&8 &
 
 while echo '
