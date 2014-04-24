@@ -13,7 +13,8 @@ function userman(api, cfg){
        ,Roles = cfg.roles = require('./roles.js')
        ,Users = cfg.users = require('./users.js')
        ,wes = require('./lib/wait_events.js')(api)
-       ,n = '', f = 0, files = [
+       ,n = '', f, m
+       ,files = [
             '/crypto/SHA1',
             /* true M V C loading */
             '/model/User',// + client's requested `l10n`
@@ -24,10 +25,10 @@ function userman(api, cfg){
     initAuthStatic()// default authorization for `backend` permissions
 
     for(f = 0; f < files.length; f++){// provide [files] w/o auth
-        n = files[f]
+        n = '/um' + (m = files[f])// apply own namespace
         api.cfg.extjs.load.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
         n += '.js'// for this backend
-        app.use(n, api.connect.sendFile(__dirname + n, true))
+        app.use(n, api.connect.sendFile(__dirname + (m += '.js'), true))
     }
 
     app.use(mwBasicAuthorization)
