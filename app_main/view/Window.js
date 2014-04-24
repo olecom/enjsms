@@ -10,11 +10,22 @@ Ext.define('App.view.Window',{
         type:'refresh',
         tooltip: 'view developent: load new version',
         callback: function reload_devel_view(panel, tool, event){
-            panel.close()
+            var to = { renderTo: Ext.getCmp('desk').getEl() }
+               ,wmId = panel.wmId
+
+            panel.destroy()
             Ext.Loader.loadScript({
-                url: (App.cfg.backend.url || '') + '/view/' + panel.wmId + '.js'
-               ,onLoad: function(){
-                    Ext.create('App.view.' + panel.wmId, { renderTo: Ext.getCmp('desk').getEl() })
+                url: (App.cfg.backend.url || '') + '/view/' + wmId + '.js'
+               ,onLoad: function view_loaded(){
+                    Ext.Loader.loadScript({
+                        url: (App.cfg.backend.url || '') + '/controller/' + wmId + '.js'
+                       ,onLoad: function ctl_loaded(){
+                            App.create('controller.' + wmId, null, to)
+                        }
+                       ,onError: function ctl_not_loaded(){
+                            App.create('view.' + wmId, null, to)
+                        }
+                    })
                 }
             })
         }

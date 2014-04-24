@@ -99,12 +99,21 @@ function extjs_launch(){
     App.cfg = app.config
 
     App.create = function create(ns, btn, cfg){// fast init
-        btn.setLoading(true)
-        Ext.define(ns, App.cfg[ns], function run_module(){
-            Ext[(~ns.indexOf('.app.')) ? 'application' : 'create'](ns, cfg)
-            btn.setLoading(false)
+        btn && btn.setLoading(true)
+
+        if(!ns.indexOf('controller.')){
+            App.cfg.extjs.load = btn
+            App.getApplication().getController(ns.slice(11))
+        } else Ext.define(ns, App.cfg[ns], function run_module(){
+            delete App.cfg[ns]
+            if(~ns.indexOf('.app.')){
+                Ext.application(ns)
+                btn && btn.setLoading(false)
+            } else {
+                Ext.create('App.' + ns, cfg)
+                btn && btn.setLoading(false)
+            }
         })
-        delete App.cfg[ns]
     }
 
     //`localStorage` doomed by local JSDuck's ExtJS docs
