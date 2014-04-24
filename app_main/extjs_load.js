@@ -98,6 +98,15 @@ function extjs_launch(){
     }
     App.cfg = app.config
 
+    App.create = function create(ns, btn, cfg){// fast init
+        btn.setLoading(true)
+        Ext.define(ns, App.cfg[ns], function run_module(){
+            Ext[(~ns.indexOf('.app.')) ? 'application' : 'create'](ns, cfg)
+            btn.setLoading(false)
+        })
+        delete App.cfg[ns]
+    }
+
     //`localStorage` doomed by local JSDuck's ExtJS docs
     Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
     // handle errors raised by Ext.Error.raise()
@@ -106,7 +115,13 @@ function extjs_launch(){
     }
 
     if(App.cfg.extjs.load.requireLaunch.length){
-        Ext.syncRequire(App.cfg.extjs.load.requireLaunch)
+        var j
+           ,i = 0
+           ,l = Ext.fly('startup').dom.lastChild
+        do{
+            Ext.syncRequire([j = App.cfg.extjs.load.requireLaunch[i]])
+            l.innerHTML += '<br>' + j
+        } while(++i < App.cfg.extjs.load.requireLaunch.length)
     }
     if(App.cfg.createViewport){//if no app module (e.g. userman auth) does that
         Ext.globalEvents.fireEvent('createViewport')
