@@ -35,9 +35,15 @@ function userman(api, cfg){
 
     api.cfg.extjs.load.require.push('App.backend.waitEvents')
     app.use('/wait_events', wes.mwPutWaitEvents)
-    n = '/backend/waitEvents.js'
-    app.use(n, api.connect.sendFile(__dirname + n, true))
+    app.use(n = '/backend/waitEvents.js', api.connect.sendFile(__dirname + n, true))
 
+    // high priority
+    app.use('/chat', require('./lib/chat.js'))// backend API && MVC UI:
+    app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
+    app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
+    app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))
+
+    // low priority stuff:
     n = '/css/userman/css'
     api.cfg.extjs.load.css.push(n)
     app.use(n, api.connect.sendFile(__dirname + '/userman.css', true))

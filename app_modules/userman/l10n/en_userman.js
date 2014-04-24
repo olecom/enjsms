@@ -6,6 +6,14 @@ l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
    ,role: "Role/Position"
    ,pass: "Password"
 
+   ,chat:{
+        title: "Chat",
+        users: "Users",
+        messages: "== Messages ==",
+        tooltip: "Open Chat Window",
+        send: "send"
+   }
+
    ,auth: "Accessing..."
    ,loginInfo:
 '<b>Access requisits:</b><br/>user id, password<br/>' +
