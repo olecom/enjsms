@@ -6,6 +6,25 @@ Ext.define('App.view.Window',{
     constrainHeader: true,// doesn't work properly
     autoShow: true,
     maximizable: true,
+    tools:[{
+        type:'refresh',
+        tooltip: 'view developent: load new version',
+        callback: function reload_devel_view(panel, tool, event){
+            panel.close()
+            Ext.Loader.loadScript({
+                url: (App.cfg.backend.url || '') + '/view/' + panel.wmId + '.js'
+               ,onLoad: function(){
+                    Ext.create('App.view.' + panel.wmId, { renderTo: Ext.getCmp('desk').getEl() })
+                }
+            })
+        }
+    },
+    {
+        type:'help',
+        tooltip: 'Get Help',
+        callback: function(panel, tool, event){
+        }
+    }],
     initComponent:
     function dynamic_init_window(){
     var me = this
