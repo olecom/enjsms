@@ -1,14 +1,17 @@
-Ext.define('App.controller.Chat', {
-    extend: 'App.controller.Base',
-
+(// support reloading for development
+function(override){
+var id = 'App.controller.Chat'
+   ,cfg = {
+    extend:'App.controller.Base',
+    __name: id,
     models:[
         'chatUser'
     ],
-    views: [
+    views:[
         'Chat'
     ],
-    refs: [
-        //{ ref: 'auth', selector: 'button[iconCls=ok]' }
+    refs:[
+        { ref: 'Chat', selector: '[wmId=Chat]' }
     ],
     init: function controllerChatInit(){
         var me = this
@@ -21,25 +24,29 @@ Ext.define('App.controller.Chat', {
         var chat = me.getView('Chat').create()
 
         chat.on({ destroy: destroyChat })
-        App.cfg.extjs.load && App.cfg.extjs.load.setLoading(false)
+
         return
 
         function destroyChat(){
+        var s, ev
+           ,bus = me.application.eventbus.bus
+           ,i = me.refs.length - 1
+
+            do {
+                s = me.refs[i].selector
+                for(ev in bus){
+                    bus[ev][s] && delete bus[ev][s]
+                }
+            } while(i--)
+            console.log('destroyController')
+
             me.application.controllers.removeAtKey('Chat')
-
-            /*
-            TODO: clear if selectors:
-        for(var i=0,len=controller.selectors.length;i<len;i++){
-			var obj = controller.selectors[i];
-			for(var s in obj){
-				for(var ev in obj[s]){
-					//remove selectors from event bus
-					delete me.eventbus.bus[ev][s];
-				}
-
-			}
-		}
-            */
+            me.destroy()
         }
     }
-})
+}
+if(override) cfg.override = id
+
+Ext.define(id, cfg)
+
+})(App.controller.Chat)

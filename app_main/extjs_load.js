@@ -101,18 +101,27 @@ function extjs_launch(){
     App.create = function create(ns, btn, cfg){// fast init
         btn && btn.setLoading(true)
 
-        if(!ns.indexOf('controller.')){
-            App.cfg.extjs.load = btn
-            App.getApplication().getController(ns.slice(11))
-        } else Ext.define(ns, App.cfg[ns], function run_module(){
-            delete App.cfg[ns]
+        if(!(~ns.indexOf('.app.'))){
+            ns = 'App.' + ns
+            if(App.hasOwnProperty(ns)) redef = true// && def['__name']) def['override'] = def['__name']
+            Ext.syncRequire(ns)
+        }
+
+        if(~ns.indexOf('.controller.')){
+            App.getApplication().getController(ns.slice(15))
+            btn && btn.setLoading(false)
+            return
+        }
+
+        Ext.define(ns, App.cfg[ns], function run_module(){
             if(~ns.indexOf('.app.')){
                 Ext.application(ns)
-                btn && btn.setLoading(false)
             } else {
-                Ext.create('App.' + ns, cfg)
-                btn && btn.setLoading(false)
+                Ext.create(ns, cfg)
             }
+
+            App.cfg[ns] = null
+            btn && btn.setLoading(false)
         })
     }
 
