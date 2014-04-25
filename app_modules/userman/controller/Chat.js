@@ -21,7 +21,9 @@ var id = 'App.controller.Chat'
             //,controller: { }
             //,store: {}
         //})
-        var chat = me.getView('Chat').create()
+           ,chat = me.getView('Chat').create({
+            renderTo: Ext.getCmp('desk').getEl()
+        })
 
         chat.on({ destroy: destroyChat })
 
@@ -35,7 +37,7 @@ var id = 'App.controller.Chat'
             do {
                 s = me.refs[i].selector
                 for(ev in bus){
-                    bus[ev][s] && delete bus[ev][s]
+                    (s = bus[ev][s]) && s.Chat && delete s.Chat
                 }
             } while(i--)
             console.log('destroyController')

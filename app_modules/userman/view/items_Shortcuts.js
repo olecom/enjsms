@@ -37,9 +37,7 @@ l10n.um.chat.title +
             tb.toggle(true)
         } else {
             if(!App.getApplication().controllers.getByKey(id)) App.create(
-                'controller.' + id, btn,{
-                    renderTo: Ext.getCmp('desk').getEl()
-                }
+                'controller.' + id, btn
             )
         }
     }
