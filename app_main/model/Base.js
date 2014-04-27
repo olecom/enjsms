@@ -65,3 +65,21 @@ Ext.define('App.model.BaseR',{
     extend: 'Ext.data.Model',
     fields: App.cfg.modelBase.fields
 })
+
+Ext.define('App.model.BaseCRUD',{
+    extend: 'Ext.data.Model',
+    requires: [
+        'App.proxy.CRUD'
+    ],
+    idProperty: '_id',
+    url: null,
+
+    constructor: function(cfg){
+        cfg.url && (cfg.proxy = {
+            type: 'crud',
+            url: (App.cfg.backend.url || '') + cfg.url
+        })
+
+        me.callParent([cfg])
+    }
+})
