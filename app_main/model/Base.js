@@ -32,15 +32,28 @@ App.cfg.modelBase = {
     //,defaultProxyType : String ; Defaults to 'ajax'.
     //,hasMany : String/Object/String[]/Object[]
     //,idProperty : String/Object/Ext.data.Field; Defaults to 'id'.
-    //,idgen : String/Object
+    ,idgen:{
+        getRecId: function(rec){
+            return '' + rec.internalId
+        }
+    }
     //,proxy : String/Object/Ext.data.proxy.Proxy
     //         every model defines proxy with own `url` and `reader.root`
     //,validations : Object[]
+
+   ,c9r: function constructorModelBase(cfg){
+    var me = this
+        me.idgen.getRecId = App.cfg.modelBase.idgen.getRecId
+        me.callParent([cfg])
+    }
 }
 
 Ext.define('App.model.Base',{
     extend: 'Ext.data.Model',
     fields: Ext.Array.clone(App.cfg.modelBase.fields)
+   ,constructor: function(cfg){
+        App.cfg.modelBase.c9r.call(this, cfg)
+    }
 })
 
 Ext.Array.insert(
@@ -80,6 +93,6 @@ Ext.define('App.model.BaseCRUD',{
             url: (App.cfg.backend.url || '') + cfg.url
         })
 
-        me.callParent([cfg])
+        App.cfg.modelBase.c9r.call(this, cfg)
     }
 })
