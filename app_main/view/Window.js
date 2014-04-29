@@ -12,17 +12,21 @@ Ext.define('App.view.Window',{
         callback: function reload_devel_view(panel, tool, event){
             var to = { renderTo: Ext.getCmp('desk').getEl() }
                ,wmId = panel.wmId
+               ,url
 
             panel.destroy()
             Ext.Loader.loadScript({
-                url: (App.cfg.backend.url || '') + '/view/' + wmId + '.js'
+                url: url = (App.cfg.backend.url || '') + '/view/' + wmId + '.js'
                ,onLoad: function view_loaded(){
+                    Ext.Loader.removeScriptElement(url)
                     Ext.Loader.loadScript({
-                        url: (App.cfg.backend.url || '') + '/controller/' + wmId + '.js'
+                        url: url = (App.cfg.backend.url || '') + '/controller/' + wmId + '.js'
                        ,onLoad: function ctl_loaded(){
+                            Ext.Loader.removeScriptElement(url)
                             App.create('controller.' + wmId, null, to)
                         }
                        ,onError: function ctl_not_loaded(){
+                            Ext.Loader.removeScriptElement(url)
                             App.create('view.' + wmId, null, to)
                         }
                     })
