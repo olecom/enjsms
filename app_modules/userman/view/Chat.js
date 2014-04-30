@@ -31,20 +31,8 @@ Ext.define('App.view.Chat',{
         layout: 'fit',
         collapsible: true,
         split: true,
-        width: 150,
-        items:[
-        {
-            xtype: 'grid',
-            header: false,
-            hideHeaders: true,
-            columns: App.cfg.modelChatUser.fields,
-            store:{
-                xtype: 'store',
-                model: App.model.userman.chatUser,
-                data:[{id:'olecom@12312312|'}, {id:'o2lecom@12312312|' }]
-            }
-        }
-        ]
+        width: 150
+        //items: with dynamic stuff are filled by the controller
     },{
         region: 'center',
         autoScroll: true,

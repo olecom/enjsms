@@ -13,19 +13,36 @@ var id = 'App.controller.Chat'
     refs:[
         { ref: 'Chat', selector: '[wmId=Chat]' }
     ],
-    init: function controllerChatInit(){
-        var me = this
-        //me.listen({
-        //    global:{
-        //    }
-            //,controller: { }
-            //,store: {}
-        //})
-           ,chat = me.getView('Chat').create({
+    chat: null,
+    init:
+    function controllerChatInit(){
+    var me = this
+       ,sid = 'chatUsers'
+       ,users, chat
+
+        chat = me.getView('Chat').create({
             renderTo: Ext.getCmp('desk').getEl()
         })
 
-        chat.on({ destroy: destroyChat })
+        chat.on({
+            destroy: destroyChat
+        })
+
+        chat.down('[title=' + l10n.um.chat.users + ']').add(
+        {
+            xtype: 'grid',
+            header: false,
+            hideHeaders: true,
+            columns: App.cfg.modelChatUser.fields,
+            store: users = Ext.StoreManager.lookup(sid) || Ext.create('App.store.CRUD',
+            {
+                storeId: sid,
+                url: App.cfg.modelChatUser.url,
+                model: App.model.userman.chatUser
+            })
+        })
+
+        me.chat = chat
 
         return
 
@@ -33,6 +50,8 @@ var id = 'App.controller.Chat'
         var s, ev
            ,bus = me.application.eventbus.bus
            ,i = me.refs.length - 1
+
+            Ext.StoreManager.lookup(sid).destroyStore()
 
             do {
                 s = me.refs[i].selector
