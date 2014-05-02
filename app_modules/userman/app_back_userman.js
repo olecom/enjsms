@@ -38,7 +38,7 @@ function userman(api, cfg){
     app.use(n = '/backend/waitEvents.js', api.connect.sendFile(__dirname + n, true))
 
     // high priority
-    app.use('/chat', require('./lib/chat.js'))// backend API && MVC UI:
+    app.use('/um/lib/chat', require('./lib/chat.js'))// backend API && MVC UI:
     app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))
