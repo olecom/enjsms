@@ -105,6 +105,10 @@ Ext.define('App.controller.Login', {
                 role.suspendEvents()// prevent e.g. pass.enable()
                 role.setValue(l10n.um.roles[ret.can.__name] || ret.can.__name)
                 role.resumeEvents()
+                if('developer.local' == ret.can.__name){
+                    authenticate()// fast pass in
+                    return
+                }
                 auth.setText(l10n.um.loginCurrentSession)
                 auth.enable()
                 return// auth is ok in this session
@@ -199,8 +203,14 @@ Ext.define('App.controller.Login', {
                 auth.disable()
             }
         }
-        function authenticate(field, ev){
-            App.view.userman.Login.fadeInProgress(auth)
+        function authenticate(){
+            if(arguments.length){// from button call arguments: `field, ev`
+                App.view.userman.Login.fadeInProgress(auth)
+            } else {// from direct call
+                App.cfg.extjs.fading = false
+                auth()// fast `developer.local`
+            }
+
             return
 
             function auth(){
