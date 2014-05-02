@@ -3,24 +3,38 @@ Ext.define('App.store.CRUD', {
     requires: [
         'App.proxy.CRUD'
     ],
-    url: null,
+    //url: required; is used to configure proxy
 
     constructor: function(cfg){
     var me = this
 
-        cfg = Ext.apply(
+        if(!cfg.url) throw new Error('OOPS: `App.store.CRUD` has no `url` config')
+
+        cfg = Ext.applyIf(cfg || { },
             {
                 storeId: 'CRUD',
                 remoteSort: true,
                 remoteFilter: true,
                 remoteGroup: true
             }
-            ,cfg || { }
         )
-        cfg.url && (cfg.proxy = {
-            type: 'crud',
-            url: (App.cfg.backend.url || '') + cfg.url
-        })
+
+        cfg.proxy = Ext.apply(cfg.proxy || { },
+            {
+                type: 'crud',
+                url: (App.cfg.backend.url || '') + cfg.url
+            }
+        )
+
+        Ext.applyIf(cfg.proxy,
+            {// this proxy defaults
+                idParam: '_id'// mongodb's
+               ,startParam: undefined
+               ,pageParam: undefined
+               ,limitParam: undefined
+            }
+        )
+
         me.callParent([cfg])
     }
 })
