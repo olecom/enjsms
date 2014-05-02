@@ -37,14 +37,16 @@ var Waits = {// pool of waiting server events `req`uests from UI
                 var sessionID = rq.sessionID, id = rq.session.user.id// closure
                 api._log(sessionID + ': close init')
                 return function on_res_close(){
+                    var wn
                     api._log(sessionID + ': release 1')
-                    if((w = Waits[sessionID])){// mark as gone
-                        w.timer && clearTimeout(w.timer)
-                        w.timer = 00
-                        w.res = null
+                    if((wn = Waits[sessionID])){// mark as gone
+                        wn.timer && clearTimeout(wn.timer)
+                        wn.timer = 00
+                        wn.res = null
                         broadcast('close', id)
                         api._log(sessionID + ': release 2')
                     }
+                    sessionID = id = null
                 }
             })(req))
             return
