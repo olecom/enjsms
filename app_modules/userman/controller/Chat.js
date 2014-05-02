@@ -44,6 +44,13 @@ var id = 'App.controller.Chat'
 
         me.chat = chat
 
+        // some developer friendly stuff
+        chat.down('[type=help]').el.dom.setAttribute(
+'data-qtip',
+'dev info, app module: <b>userman</b>;<br>' +
+'classes:<br><b>`model.userman.chatUser`<br>`view.Chat`<br>`controller.Chat`</b>'
+        )
+
         return
 
         function destroyChat(){
