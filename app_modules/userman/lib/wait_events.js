@@ -35,16 +35,16 @@ var Waits = {// pool of waiting server events `req`uests from UI
             }
             res.on('close', (function create_on_res_close(rq){
                 var sessionID = rq.sessionID, id = rq.session.user.id// closure
-                api._log(sessionID + ': close init')
+api._log(sessionID + ': close init')
                 return function on_res_close(){
                     var wn
-                    api._log(sessionID + ': release 1')
+api._log(sessionID + ': release 1')
                     if((wn = Waits[sessionID])){// mark as gone
                         wn.timer && clearTimeout(wn.timer)
                         wn.timer = 00
                         wn.res = null
-                        broadcast('close', id)
-                        api._log(sessionID + ': release 2')
+                        broadcast('endwes@um', id)
+api._log(sessionID + ': release 2')
                     }
                     sessionID = id = null
                 }
@@ -80,9 +80,9 @@ var Waits = {// pool of waiting server events `req`uests from UI
         }
     }
 
-    function broadcast(op, msg){
+    function broadcast(ev, json){
         for(var id in Waits){
-            queue_event(Waits[id], { op:op, msg:msg })
+            queue_event(Waits[id],{ ev:ev, json:json })
         }
     }
 }

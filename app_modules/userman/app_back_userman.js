@@ -239,7 +239,7 @@ roles = {
                 ret.user = req.session.user
                 ret.success = true
                 res.json(ret)
-                wes.broadcast('login', ret, 'OK')
+                wes.broadcast('login@um', ret, 'OK')
                 return// fast path
             }
             /* check user *iff* there is no one in `req.session` */
@@ -262,7 +262,7 @@ roles = {
                     create_auth(req.session, r)// permissions are in session
                     ret.can = req.session.can
                     res.json(ret)
-                    wes.broadcast('auth', ret, 'OK')
+                    wes.broadcast('auth@um', ret, 'OK')
                     ret.can = null
                     return// fast path
                 } else {
@@ -291,7 +291,7 @@ roles = {
             ret.err = 'No session'
         }
         res.json(ret)
-        wes.broadcast('auth', ret.err, 'ERR')
+        wes.broadcast('auth@um', ret.err, 'ERR')
     }
     //!!! TODO: save/load MemoryStore with all sessions
 
@@ -299,7 +299,7 @@ roles = {
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
             if(req.session.user){// one user login per session
                 wes.cleanup(req.sessionID)
-                wes.broadcast('out', req.session.user.id)
+                wes.broadcast('out@um', req.session.user.id)
                 req.session.user = null
                 req.session.can = null
             }
