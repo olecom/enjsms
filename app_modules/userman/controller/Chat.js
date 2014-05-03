@@ -59,7 +59,8 @@ var id = 'App.controller.Chat'
            ,i = me.refs.length - 1
 
             Ext.StoreManager.lookup(sid).destroyStore()
-
+            Ext.Ajax.request({ url: '/um/lib/chat/deve' })// reload backend api
+            // models, stores, etc can be reloaded here
             do {
                 s = me.refs[i].selector
                 for(ev in bus){
