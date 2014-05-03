@@ -13,6 +13,7 @@ Ext.define('App.store.CRUD', {
         cfg = Ext.applyIf(cfg || { },
             {
                 storeId: 'CRUD',
+                //batchUpdateMode: 'complete',
                 remoteSort: true,
                 remoteFilter: true,
                 remoteGroup: true
@@ -21,17 +22,8 @@ Ext.define('App.store.CRUD', {
 
         cfg.proxy = Ext.apply(cfg.proxy || { },
             {
-                type: 'crud',
+                type: 'crud',// apply this store proxy
                 url: (App.cfg.backend.url || '') + cfg.url
-            }
-        )
-
-        Ext.applyIf(cfg.proxy,
-            {// this proxy defaults
-                idParam: '_id'// mongodb's
-               ,startParam: undefined
-               ,pageParam: undefined
-               ,limitParam: undefined
             }
         )
 
