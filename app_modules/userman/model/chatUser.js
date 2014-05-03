@@ -1,5 +1,5 @@
 App.cfg.modelChatUser = {
-    url: '/um/lib/chat',
+    url: '/um/lib/chat/user',
     fields:[{
         name: 'id',
         type: 'string',
@@ -11,7 +11,7 @@ App.cfg.modelChatUser = {
     }]
 }
 
-Ext.define('App.model.userman.chatUser', {
+Ext.define('App.model.userman.chatUser',{
     extend: 'App.model.BaseCRUD',
     url: App.cfg.modelChatUser.url,
     fields: App.cfg.modelChatUser.fields
