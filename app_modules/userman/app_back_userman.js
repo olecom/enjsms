@@ -239,6 +239,7 @@ roles = {
                 ret.user = req.session.user
                 ret.success = true
                 res.json(ret)
+                ret.can = null//security: don't show permissions to others
                 wes.broadcast('login@um', ret)
                 return// fast path
             }
@@ -260,10 +261,10 @@ roles = {
                         roles: u.roles
                     }
                     create_auth(req.session, r)// permissions are in session
-                    ret.can = req.session.can
+                    ret.can = req.session.can// permissions for UI
                     res.json(ret)
+                    ret.can = null//security: don't show permissions to others
                     wes.broadcast('auth@um', ret)
-                    ret.can = null
                     return// fast path
                 } else {
                     ret.err = 'Bad user name, password, role'
