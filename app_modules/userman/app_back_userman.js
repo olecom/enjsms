@@ -239,7 +239,7 @@ roles = {
                 ret.user = req.session.user
                 ret.success = true
                 res.json(ret)
-                wes.broadcast('login@um', ret, 'OK')
+                wes.broadcast('login@um', ret)
                 return// fast path
             }
             /* check user *iff* there is no one in `req.session` */
@@ -262,7 +262,7 @@ roles = {
                     create_auth(req.session, r)// permissions are in session
                     ret.can = req.session.can
                     res.json(ret)
-                    wes.broadcast('auth@um', ret, 'OK')
+                    wes.broadcast('auth@um', ret)
                     ret.can = null
                     return// fast path
                 } else {
@@ -291,7 +291,7 @@ roles = {
             ret.err = 'No session'
         }
         res.json(ret)
-        wes.broadcast('auth@um', ret.err, 'ERR')
+        wes.broadcast('auth@um', ret)
     }
     //!!! TODO: save/load MemoryStore with all sessions
 
