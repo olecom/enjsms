@@ -85,10 +85,10 @@ Ext.define('App.model.BaseCRUD',{
         'App.proxy.CRUD'
     ],
     idProperty: '_id',
-    url: null,
+    //url: null,// is defined in cfg to operate sole models
 
     constructor: function(cfg){
-        cfg.url && (cfg.proxy = {
+        cfg && cfg.url && (cfg.proxy = {
             type: 'crud',
             url: (App.cfg.backend.url || '') + cfg.url
         })
