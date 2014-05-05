@@ -24,27 +24,10 @@ Ext.define('App.store.CRUD', {
         cfg.proxy = Ext.apply(cfg.proxy || { },
             {
                 type: 'crud',// apply this store proxy
-                url: cfg.url,
-                listeners:{
-                    exception: crud_exception
-                }
+                url: cfg.url
             }
         )
 
         me.callParent([cfg])
-
-        return
-
-        function crud_exception(proxy, res, op){
-            console.error(arguments)
-            Ext.Msg.show({
-               title: l10n.errun_title,
-               buttons: Ext.Msg.OK,
-               icon: Ext.Msg.ERROR,
-               msg: '<b>CRUD Proxy (or Reader or Model) exception!<br><br>operation ' +
-                    (op.error ? 'error: ' + op.error  : 'success: ' + op.success) +
-                    '</b>'
-            })
-        }
     }
 })
