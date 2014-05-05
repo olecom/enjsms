@@ -41,10 +41,10 @@ App.cfg.modelBase = {
     //         every model defines proxy with own `url` and `reader.root`
     //,validations : Object[]
 
-   ,c9r: function constructorModelBase(cfg){
+   ,c9r: function constructorModelBase(){
     var me = this
         me.idgen.getRecId = App.cfg.modelBase.idgen.getRecId
-        me.callParent([cfg])
+        me.callParent(arguments)
     }
 }
 
@@ -81,18 +81,23 @@ Ext.define('App.model.BaseR',{
 
 Ext.define('App.model.BaseCRUD',{
     extend: 'Ext.data.Model',
-    requires: [
+    requires:[
         'App.proxy.CRUD'
     ],
     idProperty: '_id',
-    //url: null,// is defined in cfg to operate sole models
+    //???clientIdProperty???
+    //url(abstract): is defined by inherited Models to operate on its own (without store)
 
-    constructor: function(cfg){
-        cfg && cfg.url && (cfg.proxy = {
-            type: 'crud',
-            url: (App.cfg.backend.url || '') + cfg.url
-        })
+    constructor: function(){
+        if(this.url){
+            // NOTE: Model's proxy doesn't play role in Store setup
+            App.cfg.backend.url && (this.url = App.cfg.backend.url + this.url)
+            this.setProxy({
+                type: 'crud',
+                url: this.url
+            })
+        }
 
-        App.cfg.modelBase.c9r.call(this, cfg)
+        App.cfg.modelBase.c9r.apply(this, arguments)// use short view ids
     }
 })

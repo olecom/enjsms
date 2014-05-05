@@ -1,7 +1,7 @@
-Ext.define('App.proxy.CRUD', {
+Ext.define('App.proxy.CRUD',{
     extend: 'Ext.data.proxy.Rest',
     alias: 'proxy.crud',
-    url: null,// is defined by Store || Model
+    //url: is defined by Store || Model
 
     // proxy defaults can be overriden by store's constructor
     idParam: '_id',// mongodb's
@@ -20,5 +20,6 @@ Ext.define('App.proxy.CRUD', {
         type: 'json'
        ,idProperty: '_id'
        ,root: 'data'
+       //,totalProperty: '#'// by default it is the length of the data array
     }
 })

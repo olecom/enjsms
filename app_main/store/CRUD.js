@@ -20,10 +20,11 @@ Ext.define('App.store.CRUD', {
             }
         )
 
+        App.cfg.backend.url && (cfg.url = App.cfg.backend.url + cfg.url)
         cfg.proxy = Ext.apply(cfg.proxy || { },
             {
                 type: 'crud',// apply this store proxy
-                url: (App.cfg.backend.url || '') + cfg.url,
+                url: cfg.url,
                 listeners:{
                     exception: crud_exception
                 }
