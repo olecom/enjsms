@@ -33,7 +33,7 @@ var id = 'App.controller.Chat'
             xtype: 'grid',
             header: false,
             hideHeaders: true,
-            columns: App.cfg.modelChatUser.fields,
+            columns: App.cfg.modelChatUser.columns,
             store: users = Ext.StoreManager.lookup(sid) || Ext.create('App.store.CRUD',
             {
                 storeId: sid,

@@ -1,14 +1,18 @@
 App.cfg.modelChatUser = {
     url: '/um/lib/chat/user',
-    fields:[{
+    fields:[
+    {
         name: 'id',
         type: 'string',
-        persist: false,
-
+        persist: false
+    }
+    ],
+    columns:[
+    {
         dataIndex:'id',
         flex: 1
-
-    }]
+    }
+    ]
 }
 
 Ext.define('App.model.userman.chatUser',{
