@@ -207,7 +207,7 @@ roles = {
         var ret = { success: false, roles: [], err: null }
            ,u
 
-        if(req.session && (u = req.body.plain_text)){
+        if(req.session && (u = req.txt)){
             if(req.session.can){// auth-d show permissions list - "can"
                 ret.success = true
                 ret.can = req.session.can
@@ -251,7 +251,7 @@ roles = {
                 return// fast path
             }
             /* check user *iff* there is no one in `req.session` */
-            if(!req.session.user && (data = req.body.plain_text)){
+            if(!req.session.user && (data = req.txt)){
                 data = data.split('\n')//: 'user_id\nrole_name\npass_sha1'
                 u = Users[data[0]]
                 r = data[1]

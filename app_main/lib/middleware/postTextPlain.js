@@ -11,7 +11,7 @@ function postTextPlain(req, res, next){
         req.setEncoding('utf8')
         req.on('data', function(chunk){ buf += chunk })
         req.on('end', function(){
-            req.body = { plain_text: buf }
+            req.txt = buf
             next()
         })
         return req._body = true
