@@ -119,11 +119,27 @@ roles = {
     }
 
     function mwBasicAuthorization(req, res, next){
+    var idx = req.url
+
+        /* protect namespace of the module */
+        if(0 == idx.indexOf('/um/')){// TODO: configure other protected namespaces
+            do {
+                if(req.session){
+                    if(req.session.user){
+                        break
+                    }
+                }
+                res.statusCode = 401// no auth
+                req.session || res.statusCode++// no session
+                res.end()
+                return
+            } while(0)
+        }
+
         /* turn ExtJS Class URL into `Can.backend` index
          * /backend/JS.js?_dc=1395638116367
          * /backend/JS
          */
-        var idx = req.url
         idx = idx.slice(0, idx.indexOf('.js?'))
 
         if(req.session && req.session.can){// auth
