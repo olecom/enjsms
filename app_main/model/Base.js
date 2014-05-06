@@ -1,6 +1,7 @@
 /**
- * Base {@link Ext.data.Model} from which all other models can/will extend
- * BaseR {@link Ext.data.Model} for grids with 'viewed' field
+ * `Base` from which all other models can/will extend
+ * `BaseR` for grids with 'viewed' field
+ * `BaseCRUD` for all models from backend
  */
 
 /* this is kind of breakable toy to try some hybrid config for Model and Grid
@@ -12,18 +13,23 @@ Ext.util.Format.status_created = Ext.util.Format.dateRenderer('H:i:s Y-m-d')
 App.cfg.modelBase = {
     fields: [
     {
-       name: 'created',
-       type: 'date'
-       //,type: [ auto(Default, no conversion), string, int, float, boolean, date ]
-      ,persist: false
-       //,defaultValue: ""
-       //,mapping: "data.option"
-       //,serialize: Function
-       //,sortDir: "ASC"
-       //,sortType : Function/String(Ext.data.SortTypes:[asText, asUCString, asUCText, asDate, asFloat, asInt])
-       //,useNull : Boolean
-      ,text: l10n.time, dataIndex:'created'
-      ,renderer: 'status_created', width: 84
+        name: 'created',
+        type: 'date'
+        //,type: [ auto(Default, no conversion), string, int, float, boolean, date ]
+       ,persist: false
+        //,defaultValue: ""
+        //,mapping: "data.option"
+        //,serialize: Function
+        //,sortDir: "ASC"
+        //,sortType : Function/String(Ext.data.SortTypes:[asText, asUCString, asUCText, asDate, asFloat, asInt])
+        //,useNull : Boolean
+
+        /* NOTE: Model constructor creates accessors for all this,
+         * TODO: split columns from fields, in this config object it will be OK,
+         *       see `App.cfg.modelChatUser`
+         * */
+       ,text: l10n.time, dataIndex:'created'
+       ,renderer: 'status_created', width: 84
     }
     ]
     //,associations : Object[]
