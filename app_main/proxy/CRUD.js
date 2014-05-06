@@ -70,7 +70,7 @@ Ext.define('App.proxy.CRUD',{
                     Model = me.model
                     do {
                         data = (root[mo] = new Model(root[mo]))
-                        if(!data.phantom){
+                        if(data.phantom){
                             data.phantom = false// if no IDs from the server
                         }
                     } while(++mo < root.length)
