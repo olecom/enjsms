@@ -49,7 +49,7 @@ App.cfg.modelBase = {
 }
 
 Ext.define('App.model.Base',{
-    extend: 'Ext.data.Model',
+    extend: Ext.data.Model,
     fields: Ext.Array.clone(App.cfg.modelBase.fields)
    ,constructor: function(cfg){
         App.cfg.modelBase.c9r.call(this, cfg)
@@ -75,12 +75,12 @@ Ext.Array.insert(
 )
 
 Ext.define('App.model.BaseR',{
-    extend: 'Ext.data.Model',
+    extend: Ext.data.Model,
     fields: App.cfg.modelBase.fields
 })
 
 Ext.define('App.model.BaseCRUD',{
-    extend: 'Ext.data.Model',
+    extend: Ext.data.Model,
     requires:[
         'App.proxy.CRUD'
     ],

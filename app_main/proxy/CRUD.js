@@ -1,5 +1,5 @@
 Ext.define('App.proxy.CRUD',{
-    extend: 'Ext.data.proxy.Rest',
+    extend: Ext.data.proxy.Rest,
     alias: 'proxy.crud',
     //url(abstract): is defined by Store || Model
 

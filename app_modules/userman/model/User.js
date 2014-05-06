@@ -1,7 +1,7 @@
 Ext.syncRequire( '/l10n/' + l10n.lang + '_userman')// require l10n from model
 
 Ext.define('App.model.userman.User', {
-    extend: 'Ext.data.Model',
+    extend: Ext.data.Model,
     singleton: true,// only one user in UI (`require`d before controllers by app module)
     requires: [
         'App.backend.Connection'

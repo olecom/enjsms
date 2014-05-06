@@ -16,6 +16,6 @@ App.cfg.modelChatUser = {
 }
 
 Ext.define('App.model.userman.chatUser',{
-    extend: 'App.model.BaseCRUD',
+    extend: App.model.BaseCRUD,
     fields: App.cfg.modelChatUser.fields
 })

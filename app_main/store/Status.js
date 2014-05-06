@@ -4,10 +4,10 @@
 
 Ext.require('App.model.Status')//loading Models manually, then [M]VC
 Ext.define('App.store.Status',{
-	extend: 'Ext.data.Store',
+	extend: Ext.data.Store,
     singleton: true,// single instance for status
     storeId: 'app-status',
-    model: 'App.model.Status',
+    model: App.model.Status,
     readItems: 0,
     stsCountView: null,
     listeners:{

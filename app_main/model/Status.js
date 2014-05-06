@@ -30,6 +30,6 @@ App.cfg.modelStatus = {
 
 Ext.require('App.model.Base')//loading Models manually, then [M]VC
 Ext.define('App.model.Status',{
-   extend: 'App.model.BaseR',
+   extend: App.model.BaseR,
    fields: App.cfg.modelStatus.fields
 })

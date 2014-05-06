@@ -1,5 +1,5 @@
 Ext.define('App.store.CRUD', {
-    extend: 'Ext.data.Store',
+    extend: Ext.data.Store,
     requires: [
         'App.proxy.CRUD'
     ],
