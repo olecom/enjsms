@@ -158,14 +158,15 @@ roles = {
     }
 
     function create_auth(session, role_name){
-    /* Creating user
-    req.session.user = {
-        id: 'olecom' ,
-        // dynamic data; is filled in auth process
-        can:{//compiled list of permissions from all roles in its *order*
-            'App.view.desktop.BackendTools': true
-           ,'App.backback.JS': true
-        }
+    /* Creating user/session authorization
+    req.session.can = {
+        __name: 'role_name'
+        // access to backend files/components; it's inverted in
+        // `mwBasicAuthorization` to give propper deny by default ACL
+       , backend: { }
+        //compiled list of permissions from all roles in its priority *order*
+        'App.view.desktop.BackendTools': true
+       ,'App.backback.JS': true
     }
     */
         var can ,d ,j ,p ,i ,roll
