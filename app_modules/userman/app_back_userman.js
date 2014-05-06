@@ -158,18 +158,18 @@ roles = {
     }
 
     function create_auth(session, role_name){
-    /* Creating user/session authorization
-    req.session.can = {
-        __name: 'role_name'
-        // access to backend files/components; it's inverted in
-        // `mwBasicAuthorization` to give propper deny by default ACL
-       , backend: { }
-        //compiled list of permissions from all roles in its priority *order*
-        'App.view.desktop.BackendTools': true
-       ,'App.backback.JS': true
-    }
-    */
-        var can ,d ,j ,p ,i ,roll
+   /* Creating user/session authorization
+    * req.session.can = {
+    *     __name: 'role_name'
+    *     // access to backend files/components; it's inverted in
+    *     // `mwBasicAuthorization` to give propper deny by default ACL
+    *    , backend: { }
+    *     //compiled list of permissions from all roles in its priority *order*
+    *     'App.view.desktop.BackendTools': true
+    *    ,'App.backback.JS': true
+    * }
+    **/
+    var can ,d ,j ,p ,i ,roll
 
         can = Roles[role_name] || { __name: 'no role name' ,backend: { } }
 
@@ -231,9 +231,15 @@ roles = {
     }
 
     function mwAuthenticate(req, res){
-        var ret = { success: false, user: null, err: null, can: null }
-           ,data
-           ,u ,r
+   /* req.session.user = {// user data for UI (no pass)
+    *     id: u.id,
+    *     name: u.name,
+    *     roles: u.roles
+    * }
+    **/
+    var ret = { success: false, user: null, err: null, can: null }
+       ,data
+       ,u ,r
 
         if(req.session){
             if((ret.can = req.session.can)){
