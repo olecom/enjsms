@@ -25,11 +25,7 @@ Ext.define('App.model.userman.User', {
         }
     ],
     login: function login(newUserId, get_session_info){
-        App.backend.req({
-            // data
-            url: '/login',
-            params: newUserId,
-            // action
+        App.backend.req('/login', newUserId,{
             autoAbort: true,
             callback: function session_info(_, success, res){
                 if(success){// controller (i.e. caller) updates UI
@@ -41,9 +37,8 @@ Ext.define('App.model.userman.User', {
     },
     auth: function auth(user, role, pass, callback){
         var me = this
-        App.backend.req({
-            url: '/auth',
-            params: user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),
+        App.backend.req('/auth',
+            user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),{
             callback: function auth_cb(_, success, res){
                 if(success){
                     res = Ext.decode(res.responseText)
@@ -54,14 +49,14 @@ Ext.define('App.model.userman.User', {
                     me.login = me.auth = null// after login GC
                 }
                 callback && callback(success, res)
-            }
-        })
+            }}
+        )
     },
     pes: null,// permissions `can` list
     can: function can(perm){
         return this.pes.indexOf(perm)
     },
     logout: function logout(cb){
-        App.backend.req({ url: '/logout', callback: cb })
+        App.backend.req('/logout', null, { callback: cb })
     }
 })
