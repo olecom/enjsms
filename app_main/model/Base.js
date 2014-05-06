@@ -91,8 +91,9 @@ Ext.define('App.model.BaseCRUD',{
         'App.proxy.CRUD'
     ],
     idProperty: '_id',
-    //???clientIdProperty???
-    //url(abstract): is defined by inherited Models to operate on its own (without store)
+    /* abstract options may be defined by inherited Models: */
+    //clientIdProperty: 'Id' && !persist, for writing records to the server
+    //url: Model operates on its own (without store)
 
     constructor: function(){
         if(this.url){

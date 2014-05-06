@@ -64,7 +64,7 @@ Ext.define('App.proxy.CRUD',{
             }
 
             if(result.success){
-                root = me.getRoot(data);// is Array or blow up
+                root = me.getRoot(data)// is Array or blow up
 
                 if((result.total = root.length)){
                     Model = me.model
@@ -79,12 +79,32 @@ Ext.define('App.proxy.CRUD',{
             }
             return new Ext.data.ResultSet(result)
         }
-    },
+    }
 
-    writer:{
+   ,writer:{
         type: 'json'
        ,allowSingle: false
        //,writeRecordId: true  // default
        //,writeAllFields: !true// !default
+       ,write:
+        function(request){
+        var operation = request.operation,
+            records   = operation.records || [ ],
+            len       = records.length,
+            data      = new Array(len),
+            i         = 0
+
+            do {
+                data[i] = this.getRecordData(records[i], operation)
+            } while (++i < len)
+
+            if(!this.root){
+                request.jsonData = data
+                return request
+            }
+            request.jsonData = request.jsonData || { }
+            request.jsonData[this.root] = data
+            return request
+        }
     }
 })
