@@ -34,7 +34,7 @@ function userman(api, cfg){
     app.use(mwBasicAuthorization)
 
     api.cfg.extjs.load.require.push('App.backend.waitEvents')
-    app.use('/wait_events', wes.mwPutWaitEvents)
+    app.use('/um/lib/wait_events', wes.mwPutWaitEvents)
     app.use(n = '/backend/waitEvents.js', api.connect.sendFile(__dirname + n, true))
 
     // high priority

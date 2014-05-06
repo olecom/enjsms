@@ -2,7 +2,7 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
     /* channel#2: receive events from backend */
     var defaults
     conn.suspendEvents(false)// `this` fires own signal in callback()
-    conn.url = (App.cfg.backend.url ? App.cfg.backend.url : '') + '/wait_events'
+    conn.url = (App.cfg.backend.url || '') + '/um/lib/wait_events'
     conn.timeout = App.cfg.extjs.wait_events.timeout || (1 << 22)// ~ hour
     conn.defer = null
     defaults = {
