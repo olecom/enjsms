@@ -2,14 +2,13 @@ App.cfg.modelChatUser = {
     url: '/um/lib/chat/user',
     fields:[
     {
-        name: 'id',
-        type: 'string',
-        persist: false
+        name: '_id',
+        type: 'string'
     }
     ],
     columns:[
     {
-        dataIndex:'id',
+        dataIndex: '_id',
         flex: 1
     }
     ]
