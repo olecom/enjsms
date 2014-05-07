@@ -54,22 +54,12 @@ var id = 'App.controller.Chat'
         return
 
         function destroyChat(){
-        var s, ev
-           ,bus = me.application.eventbus.bus
-           ,i = me.refs.length - 1
-
             Ext.StoreManager.lookup(sid).destroyStore()
-            App.backend.req('/um/lib/chat/deve')// reload backend api
-            // models, stores, etc can be reloaded here
-            do {
-                s = me.refs[i].selector
-                for(ev in bus){
-                    (s = bus[ev][s]) && s.Chat && delete s.Chat
-                }
-            } while(i--)
-            console.log('destroyController')
 
-            me.application.controllers.removeAtKey('Chat')
+            me.application.eventbus.unlisten(me.id)
+            me.application.controllers.removeAtKey(me.id)
+
+            App.backend.req('/um/lib/chat/deve')// reload backend api
             me.destroy()
         }
     }
