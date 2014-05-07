@@ -63,8 +63,8 @@ Ext.define('App.controller.Login', {
         me.listen({
             global:{
                 /* runApp: Login widget is `singleton: true` and runs already */
-                backendWaitEvents: handleBackendWaitEvents,
-                backendEvents: handleBackendEvents,
+                'initwes@UI': handleInitBackendWaitEvents,
+                'wes4UI': backendEventsLogin,
                 logout: logout
             }
             //,controller: { }
@@ -116,19 +116,19 @@ Ext.define('App.controller.Login', {
         }
 
         //
-        function handleBackendEvents(success, res){
+        function backendEventsLogin(success, res){
             App.sts(
-                'backend events',
+               'backend events',
                 res.responseText || res.statusText,
                 success ? l10n.stsOK : l10n.stsHE,
                 new Date
             )
         }
 
-        function handleBackendWaitEvents(msg){
+        function handleInitBackendWaitEvents(msg){
             App.sts(
-                'backend events',
                 msg,
+               'init backend Wait EventS',
                 l10n.stsOK,
                 new Date
             )

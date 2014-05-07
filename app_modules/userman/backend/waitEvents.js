@@ -8,7 +8,7 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
     defaults = {
         autoAbort: true,// backend has only one `req.session.wait_events_req()`
         callback: function backend_events(options, success, res){
-            Ext.globalEvents.fireEventArgs('backendEvents', [ success, res ])
+            Ext.globalEvents.fireEventArgs('wes4UI', [ success, res ])
             if(conn.defer) clearTimeout(conn.defer)
             if(success){
                 conn.defer = 0
@@ -28,8 +28,8 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
     return req// return function to act manually
 
     function req(opts){
-        //TODO: l10n.um after loading of resources
-        Ext.globalEvents.fireEventArgs('backendWaitEvents', [ 'backendWaitEvents' ])
+    var ev = 'initwes@UI'
+        Ext.globalEvents.fireEventArgs(ev, [ ev ])
         return conn.request(opts || defaults)
     }
 })(Ext.create('App.backend.Connection'))

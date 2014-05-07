@@ -26,7 +26,6 @@ Ext.define('App.controller.Main',{
             global:{
                 createViewport: createViewport
                ,updateVersions: updateVersions
-               ,userStatus: handleUserStatus
 // messages:
 //auth ok: App.back.Connection.defaultHeaders['X-API'] = '1'
 //logout : delete App.back.Connection.defaultHeaders['X-API']
@@ -37,15 +36,6 @@ Ext.define('App.controller.Main',{
         })
 
         return
-
-        function handleUserStatus(item){
-            App.sts(
-                'userstatus',
-                item.itemId,
-                l10n.stsOK,
-                new Date
-            )
-        }
 
         function updateVersions(){
         var el = Ext.get('versions'), _2 = { opacity: 0 }

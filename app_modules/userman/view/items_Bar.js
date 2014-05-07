@@ -43,8 +43,7 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
 
         function onItemClick(item){
             item.up('button').setIconCls(item.iconCls).hideMenu()
-            Ext.globalEvents.fireEventArgs('userStatus', [ item ])
-            //TODO: set state && sync state with backend
+            Ext.globalEvents.fireEventArgs('usts@UI', [ item.iconCls.slice(12) ])// appbar-user-
         }
     }
                 )()// buttongroup.items
