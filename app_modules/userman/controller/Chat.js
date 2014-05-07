@@ -41,6 +41,14 @@ var id = 'App.controller.Chat'
                 model: App.model.userman.chatUser
             })
         })
+        users.load()
+
+        me.listen({
+            global:{
+               'usts@UI': handleUserStatus,
+               'wes4UI': backendEventsChat
+            }
+        })
 
         me.chat = chat
 
@@ -61,6 +69,31 @@ var id = 'App.controller.Chat'
 
             App.backend.req('/um/lib/chat/deve')// reload backend api
             me.destroy()
+        }
+
+        function handleUserStatus(status){
+            App.backend.req('/um/userstatus', status)
+        }
+
+        function backendEventsChat(success, res){
+        //backend: `wes.broadcast('usts@um', req.session.user)`
+        var data, i, msg
+            if(success){
+                data = Ext.decode(res.responseText)// is Array of blow up
+                i = data.length
+                if(i) do {
+                    if((msg = data[--i]) && 'usts@um' === msg.ev){
+                        users.findBy(function(item, id){
+                            if(id.slice(4) == msg.json.slice(4)){
+                            // prefix: 'onli' 'away' etc...
+                                item.setId(msg.json)
+                                return true
+                            }
+                            return false
+                        })
+                    }
+                } while(i)
+            }
         }
     }
 }

@@ -1,14 +1,16 @@
 function chat(api){
 var chat_api = { 'user': null, 'text': null, 'deve': load_api }
+   ,url = require('url')
 
     load_api()// init api
 
     return mwChat
 
     function mwChat(req, res, next){
-    var ret = { success: false }
-    var m = req.url.slice(1, 5)
+    var ret = { success: false, data: null }//                               \..../
+    var m = req.url.slice(1, 5)// call from UI: App.backend.req('/um/lib/chat/deve')
         //TODO: auth for devel feature
+        req.url = url.parse(req.url)// parse into object, api has no `require()`
         chat_api[m] && chat_api[m](ret, api, req, res, next)// try/catch by `connect`
         res.json(ret)
         return

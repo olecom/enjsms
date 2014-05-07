@@ -9,7 +9,15 @@ App.cfg.modelChatUser = {
     columns:[
     {
         dataIndex: '_id',
-        flex: 1
+        flex: 1,
+        renderer:
+        function rendererChatUser(v){
+        var sts = v.slice(0, 4)
+            return '<i data-qtip="' +
+                l10n.um.userStatuses[sts] + '" class="appbar-user-' +
+                sts + '"></i>' +
+                v.slice(4)
+        }
     }
     ]
 }

@@ -38,6 +38,9 @@ function userman(api, cfg){
     app.use(n = '/backend/waitEvents.js', api.connect.sendFile(__dirname + n, true))
 
     // high priority
+
+    app.use('/um/userstatus', mwUserStatus)
+
     app.use('/um/lib/chat', require('./lib/chat.js')(api))// backend API && MVC UI:
     app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
@@ -251,6 +254,7 @@ roles = {
     *     id: u.id,
     *     name: u.name,
     *     roles: u.roles
+    *     status: any of [ 'onli', 'away', 'busy', 'offl' ] @ view.items_Bar
     * }
     **/
     var ret = { success: false, user: null, err: null, can: null }
@@ -281,7 +285,8 @@ roles = {
                     ret.user = req.session.user = {// user data for UI (no pass)
                         id: u.id,
                         name: u.name,
-                        roles: u.roles
+                        roles: u.roles,
+                        status: 'onli'
                     }
                     create_auth(req.session, r)// permissions are in session
                     ret.can = req.session.can// permissions for UI
@@ -318,6 +323,20 @@ roles = {
         wes.broadcast('auth@um', ret)
     }
     //!!! TODO: save/load MemoryStore with all sessions
+
+    function mwUserStatus(req, res){
+        if(req.txt){
+            req.session.user.status = req.txt
+            // ID: `status(4 chars) + user_id + remote_addr + session_id`
+            wes.broadcast(
+                'usts@um',
+                req.txt + req.session.user.id + '@'
+                + req.socket.remoteAddress + ' '
+                + req.sessionID
+            )
+        }
+        res.end(req.session.user.status)// one response for GET && POST
+    }
 
     function mwLogout(req, res){
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
