@@ -225,6 +225,7 @@ Ext.define('App.controller.Login', {
                 if(success){
                     App.User = User
                     App.view.userman.Login.fadeOut(createViewportAuth)
+                    Ext.EventManager.onWindowUnload(App.User.logout)
                 } else {
                     // reload if no session (e.g. backend reloaded)
                     (res.status && 402 === res.status) && location.reload(true)
