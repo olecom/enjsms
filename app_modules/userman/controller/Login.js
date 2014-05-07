@@ -241,8 +241,8 @@ Ext.define('App.controller.Login', {
 
             for(; i < bar.length; ++i){// search user status item
                 f = bar[i]
-                if('appbar-user-online' == f.iconCls){
-                    f.tooltip = l10n.userStatus + ':<br><b>' + App.User.get('id') + '</b>'
+                if('appbar-user-onli' == f.iconCls){
+                    f.tooltip = l10n.um.userStatus + ':<br><b>' + App.User.get('id') + '</b>'
                     f.text = (
                         '<i>' +
                             App.User.get('name') +

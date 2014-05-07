@@ -1,7 +1,7 @@
 App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
     '-'
     ,{
-        iconCls: 'appbar-user-online'
+        iconCls: 'appbar-user-onli'
        ,height: 28
        ,tooltip: '', text: ''// filled by controller after auth
        ,menu:{
@@ -14,9 +14,9 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
                 columns: 1,
                 items:(
     function mk_status_list(){
-    var s = new Array(5) ,l = [ 'online', 'away', 'busy', 'offline' ]
+    var s = new Array(5) ,l = [ 'onli', 'away', 'busy', 'offl' ]
         for(var i = 0; i < 4; i++)  s[i] = {
-            text: l10n.userStatuses[l[i]]
+            text: l10n.um.userStatuses[l[i]]
            ,itemId: l[i]
            ,width: '100%'
            //,icon: 'css/user-' +  l[i] + '.png'
@@ -54,7 +54,7 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
     ,{
         iconCls: 'appbar-shutdown'
        ,height: 28 ,width: 28
-       ,tooltip: l10n.shutdown
+       ,tooltip: l10n.um.shutdown
        ,handler: function(){
             Ext.globalEvents.fireEventArgs('logout')
         }

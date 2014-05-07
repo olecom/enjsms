@@ -39,23 +39,27 @@ background-image: url(shutdown.png);
 width: 22px!important;
 height: 22px!important;
 }
-.appbar-user-online {
+.appbar-user-onli {
 background-image: url(user-online.png);
 width: 22px!important;
 height: 22px!important;
+padding-left: 18px;
 }
-.appbar-user-offline {
+.appbar-user-offl {
 background-image: url(user-offline.png);
 width: 22px!important;
 height: 22px!important;
+padding-left: 18px;
 }
 .appbar-user-busy {
 background-image: url(user-busy.png);
 width: 22px!important;
 height: 22px!important;
+padding-left: 18px;
 }
 .appbar-user-away {
 background-image: url(user-away.png);
 width: 22px!important;
 height: 22px!important;
+padding-left: 18px;
 }

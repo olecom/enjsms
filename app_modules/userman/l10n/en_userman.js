@@ -6,6 +6,12 @@ l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
    ,role: "Role/Position"
    ,pass: "Password"
 
+   ,shutdown: 'Exit or block'
+   ,connection: 'Network connection state'
+   ,userStatus: 'User status'
+   ,userStatusMenu: 'User<br/>status list'
+   ,userStatuses: { 'onli': 'Online','away': 'Away','busy':'Busy','offl':'Offline' }
+
    ,chat:{
         title: "Chat",
         users: "Users",

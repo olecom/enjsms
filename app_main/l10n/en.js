@@ -92,11 +92,5 @@ name_example
     ,description: 'Description'
     ,result: 'Result'
 
-    ,shutdown: 'Exit or block'
-    ,connection: 'Network connection state'
-    ,userStatus: 'User status'
-    ,userStatusMenu: 'User<br/>status list'
-    ,userStatuses: { 'online': 'Online','away': 'Away','busy':'Busy','offline':'Offline' }
-
     ,um: null // user manager
 }
