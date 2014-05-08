@@ -64,6 +64,7 @@ Ext.define('App.controller.Login', {
             global:{
                 /* runApp: Login widget is `singleton: true` and runs already */
                 'initwes@UI': handleInitBackendWaitEvents,
+                'usts@UI': handleUserStatus,
                 'wes4UI': backendEventsLogin,
                 logout: logout
             }
@@ -132,6 +133,10 @@ Ext.define('App.controller.Login', {
                 l10n.stsOK,
                 new Date
             )
+        }
+
+        function handleUserStatus(status){
+            App.backend.req('/um/userstatus', status)
         }
 
         // auth data actions

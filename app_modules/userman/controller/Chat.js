@@ -45,7 +45,6 @@ var id = 'App.controller.Chat'
 
         me.listen({
             global:{
-               'usts@UI': handleUserStatus,
                'wes4UI': backendEventsChat
             }
         })
@@ -69,10 +68,6 @@ var id = 'App.controller.Chat'
 
             App.backend.req('/um/lib/chat/deve')// reload backend api
             me.destroy()
-        }
-
-        function handleUserStatus(status){
-            App.backend.req('/um/userstatus', status)
         }
 
         function backendEventsChat(success, res){
