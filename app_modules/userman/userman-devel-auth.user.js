@@ -43,11 +43,6 @@ con.log(pref + 'auto auth user: ' + username)
            ,pass = Ext.ComponentQuery.query('field[name=pass]')[0]
            ,auth = Ext.ComponentQuery.query('button[iconCls=ok]')[0]
 
-            /*if(auth.disabled){
-con.log('devel auto auth exit, session exists')
-                return
-            }*/
-
 con.log(pref + 'auto auth set role && pass')
             role.setValue(userrole)
             pass.setValue(password)
