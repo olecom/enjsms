@@ -17,6 +17,11 @@ Ext.define('App.view.Window',{
            ,wmId = panel.wmId
            ,url
 
+            if(!wmId){
+                console.warn("window doesn't support devepment mode")
+                return
+            }
+
             panel.destroy()// models, stores and backend can be reloaded there
             Ext.Loader.loadScript({
                 url: url = (App.cfg.backend.url || '') + '/view/' + wmId + '.js'
