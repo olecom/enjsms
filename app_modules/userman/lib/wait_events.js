@@ -10,15 +10,18 @@ var Waits = {// pool of waiting server events `req`uests from UI
  * }
  **/
     }
+   ,num = 0
 
     return {
-         mwPutWaitEvents:  mwPutWaitEvents
+         mwPutWaitEvents: mwPutWaitEvents
+        ,id: id
+        ,list_ids: list_ids
         ,broadcast: broadcast
         ,cleanup: cleanup
     }
 
     function mwPutWaitEvents(req, res){
-        var w
+    var w
         if(req.session){
             if((w = Waits[req.sessionID])){
                 if(w.res){// release pending
@@ -28,16 +31,19 @@ var Waits = {// pool of waiting server events `req`uests from UI
                 w.res = res// assign new one
             } else {
                 Waits[req.sessionID] = {
+                    id: null,
                     res: res,
                     queue: [ ],
                     timer: 000
                 }
+                num++
+                id(req)
             }
             res.on('close', (function create_on_res_close(rq){
                 var sessionID = rq.sessionID, id = rq.session.user.id// closure
 api._log(sessionID + ': close init')
                 return function on_res_close(){
-                    var wn
+                var wn
 api._log(sessionID + ': release 1')
                     if((wn = Waits[sessionID])){// mark as gone
                         wn.timer && clearTimeout(wn.timer)
@@ -56,11 +62,38 @@ api._log(sessionID + ': release 2')
         return
     }
 
+    function id(req){
+        if(req.txt){
+        // ID: `status(4 chars) + user_id@remote_addr' 'session_id`
+            broadcast('usts@um',(
+                Waits[req.sessionID].id = (req.txt || 'offl').slice(0, 4) +
+                    req.session.user.id + '@' +
+                    req.socket.remoteAddress + ' ' +
+                    req.sessionID
+                )
+            )
+        }
+        return Waits[req.sessionID].id
+    }
+
+    function list_ids(){
+    var sesss = new Array(num), n = 0
+       ,sid
+
+        for(sid in Waits){
+            sesss[n++] = {
+                _id: Waits[sid].id
+            }
+        }
+        return sesss
+    }
+
     function cleanup(sessionID){
-        var sn = Waits[sessionID]
+    var sn = Waits[sessionID]
         if(sn.timer) clearTimeout(sn.timer)
         sn.res = null
         delete Waits[sessionID]
+        num--
     }
 
     function queue_event(session, ev){

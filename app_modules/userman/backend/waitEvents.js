@@ -24,12 +24,13 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
             return
         }
     }
-    req()// setup waiting cycle
+    req({ params: 'onli' })// setup waiting cycle, send initial user status
     return req// return function to act manually
 
     function req(opts){
     var ev = 'initwes@UI'
         Ext.globalEvents.fireEventArgs(ev, [ ev ])
-        return conn.request(opts || defaults)
+        return conn.request(Ext.applyIf(defaults, opts))
     }
+
 })(Ext.create('App.backend.Connection'))
