@@ -13,10 +13,15 @@ App.cfg.modelChatUser = {
         renderer:
         function rendererChatUser(v){
         var sts = v.slice(0, 4)
+           ,vv = v.slice(4)
+
+            if(0 === v.indexOf(App.User.id)){
+                vv = '<b>' + vv + '</b>'
+            }
+
             return '<i data-qtip="' +
                 l10n.um.userStatuses[sts] + '" class="appbar-user-' +
-                sts + '"></i>' +
-                v.slice(4)
+                sts + '"></i>' + vv
         }
     }
     ]
