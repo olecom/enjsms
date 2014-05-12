@@ -7,10 +7,28 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
     conn.defer = null
     defaults = {
         autoAbort: true,// backend has only one `res` per `req.session`
-        callback: function backend_events(options, success, res){
+        callback:
+        function backend_events(options, success, res){
+        var data
+            try {
+                data = JSON.parse(res.responseText)
+            } catch(ex){
+                success = false
+                console.error('App.backend.waitEvents:')
+                console.error(res)
+                data = ex.stack
+                Ext.Msg.show({
+                   title: l10n.errun_title + ' App.backend.waitEvents',
+                   buttons: Ext.Msg.OK,
+                   icon: Ext.Msg.ERROR,
+                   msg:
+('data: ' + (res.responseText || 'empty')).slice(0, 16).replace(/</g, '&lt;')
++'<br><b>'+ l10n.errun_stack + '</b>' + data.replace(/</g, '&lt;')
+                })
+            }
             Ext.globalEvents.fireEventArgs(
                 'wes4UI',
-                [ success, JSON.parse(res.responseText) ],
+                [ success, data ],
                 res.statusText
             )
             if(conn.defer) clearTimeout(conn.defer)
@@ -24,8 +42,6 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
                     req,
                     App.cfg.extjs.wait_events.defer || (1 << 17)// ~ two minutes
                 )
-            } else {
-                console.error('App.backend.waitEvents stop')
             }
             return
         }
