@@ -329,8 +329,8 @@ roles = {
     function mwLogout(req, res){
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
             if(req.session.user){// one user login per session
+                wes.broadcast('out@um', wes.id(req))
                 wes.cleanup(req.sessionID)
-                wes.broadcast('out@um', req.session.user.id)
                 req.session.user = null
                 req.session.can = null
             }

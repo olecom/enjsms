@@ -42,7 +42,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
             req.txt && id(req)// it is an initial user status
 
             res.on('close', (function create_on_res_close(rq){
-                var sessionID = rq.sessionID, id = rq.session.user.id// closure
+                var sessionID = rq.sessionID// closure
 api._log(sessionID + ': close init')
                 return function on_res_close(){
                 var wn
@@ -51,10 +51,10 @@ api._log(sessionID + ': release 1')
                         wn.timer && clearTimeout(wn.timer)
                         wn.timer = 00
                         wn.res = null
-                        broadcast('endwes@um', id)
+                        broadcast('endwes@um', wn.id)
 api._log(sessionID + ': release 2')
                     }
-                    sessionID = id = null
+                    sessionID = null
                 }
             })(req))
 
