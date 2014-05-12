@@ -89,11 +89,13 @@ api._log(sessionID + ': release 2')
     }
 
     function cleanup(sessionID){
-    var sn = Waits[sessionID]
-        if(sn.timer) clearTimeout(sn.timer)
-        sn.res = null
-        delete Waits[sessionID]
-        num--
+    var sn
+        if((sn = Waits[sessionID])){
+            if(sn.timer) clearTimeout(sn.timer)
+            sn.res = null
+            delete Waits[sessionID]
+            num--
+        }
     }
 
     function queue_event(session, ev){
