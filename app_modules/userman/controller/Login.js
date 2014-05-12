@@ -117,10 +117,10 @@ Ext.define('App.controller.Login', {
         }
 
         //
-        function backendEventsLogin(success, res){
+        function backendEventsLogin(success, data, statusText){
             App.sts(
                'backend events',
-                res.responseText || res.statusText,
+                data.length || statusText,
                 success ? l10n.stsOK : l10n.stsHE,
                 new Date
             )

@@ -70,12 +70,11 @@ var id = 'App.controller.Chat'
             me.destroy()
         }
 
-        function backendEventsChat(success, res){
+        function backendEventsChat(success, data){
         //backend: `wes.broadcast('usts@um', req.session.user)`
-        var data, i, msg
+        var i, msg
             if(success){
-                data = Ext.decode(res.responseText)// is Array of blow up
-                i = data.length
+                i = data.length// is Array or blow up
                 if(i) do {
                     if((msg = data[--i]) && 'usts@um' === msg.ev){
                         users.findBy(function(item, id){

@@ -6,9 +6,13 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
     conn.timeout = App.cfg.extjs.wait_events.timeout || (1 << 22)// ~ hour
     conn.defer = null
     defaults = {
-        autoAbort: true,// backend has only one `req.session.wait_events_req()`
+        autoAbort: true,// backend has only one `res` per `req.session`
         callback: function backend_events(options, success, res){
-            Ext.globalEvents.fireEventArgs('wes4UI', [ success, res ])
+            Ext.globalEvents.fireEventArgs(
+                'wes4UI',
+                [ success, JSON.parse(res.responseText) ],
+                res.statusText
+            )
             if(conn.defer) clearTimeout(conn.defer)
             if(success){
                 conn.defer = 0
