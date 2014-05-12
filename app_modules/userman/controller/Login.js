@@ -231,6 +231,13 @@ Ext.define('App.controller.Login', {
                     App.User = User
                     App.view.userman.Login.fadeOut(createViewportAuth)
                     if(!App.cfg.backend.url){// `browser`
+                    /* NOTE: there is no way to match reload or window/tab close
+                     *       in the browser.
+                     *       Thus session is lost and relogin is required. But
+                     *       this can be automated by userscripts.
+                     *
+                     * node-webkit: session is destroyed only on window `close`
+                     **/
                         Ext.EventManager.onWindowUnload(App.User.logout)
                     } else {// `nw`
                         app.w.on('close', function nw_close(){
