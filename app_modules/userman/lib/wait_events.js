@@ -121,16 +121,19 @@ var Waits = {// pool of waiting server events `req`uests from UI
     function queue_event(session, ev){
         session.queue.push(ev)
         if(!session.timer){
-            session.timer = setTimeout((function create_wait_queue_flush(sn){
-                return function wait_queue_flush(){
-                    if(sn.res){
-                        sn.res.json(sn.queue.splice(0))
-                        sn.res = null
-                        sn.timer = 00
-                    } else {// wait for `res` to be ready a bit later
-                        setTimeout(wait_queue_flush, 512)
+            session.timer = setTimeout(
+                (function create_wait_queue_flush(sn){
+                    return function wait_queue_flush(){
+                        if(sn.res){
+                            sn.res.json(sn.queue.splice(0))
+                            sn.res = null
+                            sn.timer = 00
+                        } else {// wait for `res` to be ready a bit later
+                            setTimeout(wait_queue_flush, 512)
+                        }
                     }
-                }})(session), 512
+                })(session)
+                ,512
             )
         }
     }
