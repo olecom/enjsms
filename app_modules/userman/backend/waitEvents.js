@@ -40,9 +40,10 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
                     conn.defer = 0
                 }
 
-                if('usts@um' == data[0].ev){// init status
-                    App.User.id = data[0].json.slice(0, 4) + App.User.id.slice(4)
-                    App.User.internalId = ''
+                if('usts@um' == data[0].ev){// init || set status
+                    if(App.User.id.slice(4) == data[0].json.slice(4)){
+                        App.User.id = data[0].json
+                    }
                 }
 
                 Ext.globalEvents.fireEventArgs(
