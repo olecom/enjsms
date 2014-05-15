@@ -8,19 +8,19 @@
  * otherwise UI must do XHR frequently
  */
 function userman(api, cfg){
-    var app = api.app
-       ,Can = cfg.can = require('./can.js')
-       ,Roles = cfg.roles = require('./roles.js')
-       ,Users = cfg.users = require('./users.js')
-       ,wes = require('./lib/wait_events.js')(api)
-       ,n = '', f, m
-       ,files = [
-            '/crypto/SHA1',
-            /* true M V C loading */
-            '/model/User',// + client's requested `l10n`
-            '/view/Login', '/view/items_Bar', '/view/items_Shortcuts', '/view/Userman',
-            '/controller/Login'
-        ]
+var app = api.app
+   ,Can = cfg.can = require('./can.js')
+   ,Roles = cfg.roles = require('./roles.js')
+   ,Users = cfg.users = require('./users.js')
+   ,wes = require('./lib/wait_events.js')(api)
+   ,n = '', f, m
+   ,files = [
+        '/crypto/SHA1',
+        /* true M V C loading */
+        '/model/User',// + client's requested `l10n`
+        '/view/Login', '/view/items_Bar', '/view/items_Shortcuts', '/view/Userman',
+        '/controller/Login'
+    ]
 
     initAuthStatic()// default authorization for `backend` permissions
 
@@ -59,7 +59,7 @@ function userman(api, cfg){
     return
 
     function mwL10n(req, res, next){
-        var q, s, postfix = '_userman.js'
+    var q, s, postfix = '_userman.js'
         if(!~req.url.indexOf(postfix)){
             next()
             return// l10n is not for this module
@@ -112,7 +112,7 @@ roles = {
 
     function initAuthStatic(){
     // any `backend` permissions must be false by default to all roles
-        var p, s = Can.Static
+    var p, s = Can.Static
         for(p in Can.backend){
             //turn class name to backend url e.g. 'App.backend.JS' - > '/backend/JS'
             s[p.slice(3).replace(/[.]/g, '/')] = false
@@ -221,8 +221,8 @@ roles = {
     }
 
     function mwLogin(req, res){
-        var ret = { success: false, roles: [], err: null }
-           ,u
+    var ret = { success: false, roles: [], err: null }
+       ,u
 
         if(req.session && (u = req.txt)){
             if(req.session.can){// auth-d show permissions list - "can"

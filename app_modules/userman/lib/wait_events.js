@@ -67,7 +67,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
             // new wes for new session
             Waits[req.sessionID] = {
                 id: null,
-                res: null,// firts `res` is being sent back with status confirm-n
+                res: null,// first `res` is being sent back with status confirmation
                 queue: [ ],
                 timer: 000
             }
