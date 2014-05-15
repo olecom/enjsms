@@ -56,10 +56,9 @@ var Waits = {// pool of waiting server events `req`uests from UI
                     return
                 }
                 s[0].json = set_id(req)
-                if(w.res){// release pending
-                    // UI set status
+                if(w.res){// release pending; UI set status
                     w.res.json(s)// NOTE: res.on('close') sets status to `offline`
-                    broadcast('usts@um', set_id(req), req.sessionID)// sets id back
+                    broadcast('usts@um', set_id(req))// sets id back
                 }
                 // assign new waiting cycle
                 w.res = res
@@ -76,7 +75,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
             s[0].json = set_id(req)
             // UI init status
             res.json(s)// NOTE: res.on('close') sets status to `offline`
-            broadcast('usts@um', set_id(req), req.sessionID)// sets id back
+            broadcast('usts@um', set_id(req))// sets id back
             return
         }
         res.statusCode = 401// 'Unauthorized'
