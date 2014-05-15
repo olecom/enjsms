@@ -1,7 +1,8 @@
 App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
     '-'
     ,{
-        iconCls: 'appbar-user-onli'
+        iconCls: 'appbar-user-onli',
+        id: 'um.usts'
        ,height: 28
        ,tooltip: '', text: ''// filled by controller after auth
        ,menu:{
@@ -10,7 +11,6 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
             items:{
                 xtype: 'buttongroup',
                 title: l10n.userStatusMenu,
-                itemId: 'userstatus',
                 columns: 1,
                 items:(
     function mk_status_list(){
