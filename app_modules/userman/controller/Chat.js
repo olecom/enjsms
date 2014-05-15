@@ -71,20 +71,29 @@ var id = 'App.controller.Chat'
         }
 
         function backendEventsChat(success, data){
-        //backend: `wes.broadcast('usts@um', req.session.user)`
+        //backend event e.g.: `wes.broadcast('out@um', wes.get_id(req))// logout`
         var i, msg
             if(success){
                 i = data.length// is Array or blow up
                 if(i) do {
-                    if((msg = data[--i]) && 'usts@um' === msg.ev){
-                        users.findBy(function(item, id){
-                            if(id.slice(4) == msg.json.slice(4)){
-                            // prefix: 'onli' 'away' etc...
-                                item.setId(msg.json)
-                                return true
+                    if((msg = data[--i])){
+                        if('usts@um' === msg.ev){// handle status change, login
+                            users.findBy(function findUserId(item, id){
+                                if(id.slice(4) == msg.json.slice(4)){
+                                // prefix: 'onli' 'away' etc...
+                                    item.setId(msg.json)
+                                    msg = null
+                                    return true
+                                }
+                                return false
+                            })
+                            if(msg){// not found, handle login/auth case
+                                users.add({ _id: msg.json })
                             }
-                            return false
-                        })
+                        } else if('out@um' === msg.ev){
+                            msg.json = users.getById(msg.json)
+                            msg.json && users.remove(msg.json)
+                        }
                     }
                 } while(i)
             }

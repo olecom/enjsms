@@ -14,50 +14,69 @@ var Waits = {// pool of waiting server events `req`uests from UI
 
     return {
          mwPutWaitEvents: mwPutWaitEvents
-        ,id: id
+        ,set_id: set_id
+        ,get_id: get_id
         ,list_ids: list_ids
         ,broadcast: broadcast
         ,cleanup: cleanup
     }
 
     function mwPutWaitEvents(req, res){
-    var w
+    var w, s
         if(req.session){
-            if((w = Waits[req.sessionID])){
-                if(w.res){// release pending
-                    w.res.statusCode = 503// 'Service Unavailable'
-                    w.res.end()
-                }
-                w.res = res// assign new one
-            } else {
-                Waits[req.sessionID] = {
-                    id: null,
-                    res: res,
-                    queue: [ ],
-                    timer: 000
-                }
-                num++
-            }
-            // NOTE: only the first `req` has data
-            req.txt && id(req)// it is an initial user status
-
             res.on('close', (function create_on_res_close(rq){
-                var sessionID = rq.sessionID// closure
-api._log(sessionID + ': close init')
+                var sessionID = '' + rq.sessionID// closure, copy string
                 return function on_res_close(){
                 var wn
-api._log(sessionID + ': release 1')
                     if((wn = Waits[sessionID])){// mark as gone
                         wn.timer && clearTimeout(wn.timer)
                         wn.timer = 00
                         wn.res = null
-                        broadcast('endwes@um', wn.id)
-api._log(sessionID + ': release 2')
+                        wn.id = 'offl' + wn.id.slice(4)//TODO: GC res=null && offl
+                        //broadcast('endwes@um', wn.id, req.sessionID)
                     }
                     sessionID = null
                 }
             })(req))
 
+            s = [{ ev: 'usts@um', json: '' }]
+            if((w = Waits[req.sessionID])){// wes exists
+                if(!req.txt){// there must be current user status in every wes `req`
+                    s = [{
+                        ev: 'errdev@um',
+                        json: '/um/lib/wait_events: `req.txt` is empty'
+                    }]
+                    if(w.res){// use pending res
+                        w.res.statusCode = 501// "Not Implemented"
+                        w.res.json(s)
+                    } else {// or current
+                        res.statusCode = 501
+                        res.json(s)
+                    }
+                    return
+                }
+                s[0].json = set_id(req)
+                if(w.res){// release pending
+                    // UI set status
+                    w.res.json(s)// NOTE: res.on('close') sets status to `offline`
+                    broadcast('usts@um', set_id(req), req.sessionID)// sets id back
+                }
+                // assign new waiting cycle
+                w.res = res
+                return// faster path
+            }
+            // new wes for new session
+            Waits[req.sessionID] = {
+                id: null,
+                res: null,// firts `res` is being sent back with status confirm-n
+                queue: [ ],
+                timer: 000
+            }
+            num++
+            s[0].json = set_id(req)
+            // UI init status
+            res.json(s)// NOTE: res.on('close') sets status to `offline`
+            broadcast('usts@um', set_id(req), req.sessionID)// sets id back
             return
         }
         res.statusCode = 401// 'Unauthorized'
@@ -65,17 +84,15 @@ api._log(sessionID + ': release 2')
         return
     }
 
-    function id(req){
-        if(req.txt){
+    function set_id(req){
         // ID: `status(4 chars) + user_id@remote_addr' 'session_id`
-            broadcast('usts@um',(
-                Waits[req.sessionID].id = (req.txt || 'offl').slice(0, 4) +
-                    req.session.user.id + '@' +
-                    req.socket.remoteAddress + ' ' +
-                    req.sessionID
-                )
-            )
-        }
+        return Waits[req.sessionID].id = (req.txt || 'onli').slice(0, 4) +
+            req.session.user.id + '@' +
+            req.socket.remoteAddress + ' ' +
+            req.sessionID
+    }
+
+    function get_id(req){
         return Waits[req.sessionID].id
     }
 
@@ -122,6 +139,7 @@ api._log(sessionID + ': release 2')
         for(var id in Waits){
             queue_event(Waits[id],{ ev:ev, json:json })
         }
+        return json
     }
 }
 

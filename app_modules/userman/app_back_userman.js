@@ -39,8 +39,6 @@ function userman(api, cfg){
 
     // high priority
 
-    app.use('/um/userstatus', mwUserStatus)
-
     app.use('/um/lib/chat', require('./lib/chat.js')(api, wes))// backend API && MVC UI:
     app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
@@ -322,14 +320,10 @@ roles = {
     }
     //!!! TODO: save/load MemoryStore with all sessions
 
-    function mwUserStatus(req, res){
-        res.end(wes.id(req))// one response for GET && POST
-    }
-
     function mwLogout(req, res){
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
             if(req.session.user){// one user login per session
-                wes.broadcast('out@um', wes.id(req))
+                wes.broadcast('out@um', wes.get_id(req))
                 wes.cleanup(req.sessionID)
                 req.session.user = null
                 req.session.can = null

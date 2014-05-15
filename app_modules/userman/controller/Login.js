@@ -117,13 +117,15 @@ Ext.define('App.controller.Login', {
         }
 
         //
-        function backendEventsLogin(success, data, statusText){
+        function backendEventsLogin(success, data){
             App.sts(
                'backend events',
-                data.length || statusText,
+                success ? data.length : data,// data || res.statusText
                 success ? l10n.stsOK : l10n.stsHE,
                 new Date
             )
+            console.log(data)//TODO: Ext,Msg on error
+            console.table(data)
         }
 
         function handleInitBackendWaitEvents(msg){
@@ -136,7 +138,7 @@ Ext.define('App.controller.Login', {
         }
 
         function handleUserStatus(status){
-            App.backend.req('/um/userstatus', status)
+            App.backend.req('/um/lib/wait_events', status)// use non aborting `req`
         }
 
         // auth data actions
