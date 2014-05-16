@@ -11,7 +11,8 @@ Ext.define('App.proxy.CRUD',{
     limitParam: undefined,
 
     listeners:{
-        exception: function crud_exception(proxy, res, op){
+        exception:
+        function crud_exception(proxy, res, op){
             console.error(arguments)
             Ext.Msg.show({
                 title: l10n.errun_title,
@@ -25,13 +26,14 @@ Ext.define('App.proxy.CRUD',{
             })
         }
     },
-
+    /* JSON-optimized reader and writer */
     reader:{
         type: 'json'
        ,idProperty: '_id'
        ,root: 'data'
        //,totalProperty: '#'// by default it is the length of the data array
-       ,getResponseData: function getResponseDataJSON(res){
+       ,getResponseData:
+        function getResponseDataJSON(res){
             try {// NOTE: dates revive in Model constructor
                 return this.readRecords(JSON.parse(res.responseText))
             } catch (ex){
@@ -45,7 +47,8 @@ Ext.define('App.proxy.CRUD',{
                 })
             }
         }
-       ,readRecords: function readRecordsJSON(data){
+       ,readRecords:
+        function readRecordsJSON(data){
         var me = this, mo = 0,
             Model, root, result
 
@@ -87,7 +90,7 @@ Ext.define('App.proxy.CRUD',{
        //,writeRecordId: true  // default
        //,writeAllFields: !true// !default
        ,write:
-        function(request){
+        function writeJSON(request){
         var operation = request.operation,
             records   = operation.records || [ ],
             len       = records.length,
