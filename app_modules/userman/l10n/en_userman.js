@@ -17,6 +17,14 @@ l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
         users: "Users",
         messages: "== Messages ==",
         tooltip: "Open Chat Window",
+        keys:
+"'ENTER': send message<br>" +
+"'ESC': clear input (history call by DOWN)<br>" +
+"'UP': previous text sent<br>" +
+"'DOWN': get back text input (after ESC or UP)<br>" +
+"'PAGE_UP/PAGE_DOWN': scroll chat room",
+        user_in: 'Enter',
+        user_out: 'Quit',
         send: "send"
    }
 
