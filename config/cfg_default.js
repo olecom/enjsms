@@ -37,8 +37,8 @@ config = {
         launch: null,            // default
         controllers: [ ],        // default
         load:{
-            requireLaunch: [ ],  // components to require in Applicaion.launch()
-            require: [ ],        // array of files from app modules ExtJS must require
+            requireLaunch: [ ],  // components to require in `Applicaion.launch()`
+            require: [ ],        // array of 'Class.Names' ExtJS must require
             css: [ ]
         }
         /* removable / changable items */
