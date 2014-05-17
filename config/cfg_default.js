@@ -19,6 +19,7 @@ config = {
         // order matters as in middlewares
             userman:{// authentication and authorization
                 store: 'dummy' //dummy (internal ro default roles), json file, db
+               ,data: '/data/um' // chat logs
             }
            ,enjsms: true
            ,pingback: true// execute JS in backend
