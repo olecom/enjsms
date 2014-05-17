@@ -3,6 +3,7 @@ var http = require('http')
 http.ServerResponse.prototype.ContentTypes = {
     AppJSON:   { 'Content-Type': 'application/json; charset=utf-8' },
     AppJS:     { 'Content-Type': 'application/javascript; charset=utf-8' },
+    TextCSS:   { 'Content-Type': 'text/css; charset=utf-8' },
     TextPlain: { 'Content-Type': 'text/plain; charset=utf-8' }
 }
 
@@ -23,9 +24,7 @@ function res_json(obj){
 }
 
 http.ServerResponse.prototype.js =
-/*  res.json({ success: true })
- *  res.json('{ "success": true }')
- *  res.json(401, { msg: ' Authorization Required' })
+/*  res.js('Ext.define(...)')
  */
 function res_js(code){
     if(!code){
@@ -36,4 +35,14 @@ function res_js(code){
     this.setHeader('Content-Length', Buffer.byteLength(code))
     this.writeHead(this.statusCode, this.ContentTypes.AppJS)
     this.end(code)
+}
+
+http.ServerResponse.prototype.txt =
+/*  res.txt('plain text')
+ */
+function res_txt(txt){
+    if(!txt) txt = 'No text available'
+    this.setHeader('Content-Length', Buffer.byteLength(txt))
+    this.writeHead(this.statusCode, this.ContentTypes.TextPlain)
+    this.end(txt)
 }
