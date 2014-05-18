@@ -16,4 +16,4 @@ App.cfg['App.view.Userman'] = {  // just cfg (fast `App` loading)
     ]
 }
 
-Ext.ns('App.view.Userman')// placeholder
+Ext.ns('App.view.Userman')// Class placeholder; `App.create()` must be used
