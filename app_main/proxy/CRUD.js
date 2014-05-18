@@ -20,7 +20,7 @@ Ext.define('App.proxy.CRUD',{
                 icon: Ext.Msg.ERROR,
                 msg: '<b>CRUD Proxy (or Reader or Model) exception!<br><br>operation ' + (
                      op.error ?
-                     'error (in proxy/reader/model):</b> ' + op.error :
+                     'error (in proxy/reader/model):</b> ' + op.error.replace(/\r*\n/g, '<br>') :
                      'success (backend):</b> ' + op.success
                 )
             })
