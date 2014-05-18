@@ -46,7 +46,7 @@ var api      = require('./api.js')
     require('../../app_modules')(api)
 
     /* backend static files for HTTP users */
-    app.use('/' ,connect['static'](__dirname + '/..', { index: 'app.htm' }))//TODO: no directory traversal, serv just app.htm
+    app.use('/' ,connect['static'](__dirname + '/..', { index: 'app.htm' }))
 
     /* final stage: error path */
     app.use(require('./middleware/errorHandler.js'))
