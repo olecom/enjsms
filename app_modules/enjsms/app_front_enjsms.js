@@ -9,13 +9,14 @@ App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [],[
    ,height:110 ,minWidth:92
    ,tooltip: 'SMS via VOIP modems (screen shot)'
    ,handler:
-    function open_enjsms(){
-        Ext.create('ENJSMS.view.Viewport', { renderTo: Ext.getCmp('desk').getEl() })
+    function launch_enjsms(){
+        new ENJSMS.view.Viewport({ constrainTo: Ext.getCmp('desk').getEl() })
     }
 }
 ])
 
-Ext.define('ENJSMS.view.Viewport',{
+Ext.define('ENJSMS.view.Viewport',
+{
     extend: 'App.view.Window',
     title: 'Picture of ENJSMS.view',
     wmImg: (App.cfg.backend.url || '') + '/enjsms/enjsms.png',
@@ -29,4 +30,5 @@ Ext.define('ENJSMS.view.Viewport',{
         src: (App.cfg.backend.url || '') + '/enjsms/sms.jpg'
     }
     ]
-})
+}
+)
