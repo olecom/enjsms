@@ -161,8 +161,7 @@ function extjs_launch(){
         }
     }
 
-    //`localStorage` doomed by local JSDuck's ExtJS docs
-    Ext.state.Manager.setProvider(new Ext.state.CookieProvider)
+    Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider)
     // handle errors raised by Ext.Error.raise()
     Ext.Error.handle = function(err){
         return !con.warn(err)
