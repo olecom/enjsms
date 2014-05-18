@@ -3,8 +3,9 @@ Ext.require([
     'App.view.desktop.Shortcuts'
 ])
 
-Ext.define('App.view.Desktop',{
-    extend: 'Ext.Container',
+Ext.define('App.view.Desktop',
+{
+    extend: Ext.Container,
     id: 'desk',
     xtype: 'desktop'
    ,region: 'center'// border layout
@@ -13,8 +14,9 @@ Ext.define('App.view.Desktop',{
    ,items:[
         { xtype: 'app-shortcuts' }
     ]
-    ,initComponent: function init_Desktop(){
-        var me = this
+   ,initComponent:
+    function init_Desktop(){
+    var me = this
 
         me.on({
         'boxready':{
@@ -22,7 +24,7 @@ Ext.define('App.view.Desktop',{
             fn: initDesktopStatus
         }})
 
-        me.callParent(arguments)
+        me.callParent()
         return
 
         function initDesktopStatus(){
@@ -121,4 +123,5 @@ Ext.define('App.view.Desktop',{
             }
         }
     }
-})
+}
+)

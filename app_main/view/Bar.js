@@ -1,5 +1,6 @@
-Ext.define('App.view.Bar',{
-    extend: 'Ext.toolbar.Toolbar',
+Ext.define('App.view.Bar',
+{
+    extend: Ext.toolbar.Toolbar,
     xtype: 'app-bar'
    //,region: 'west'/*border*/, dock: 'left', layout: 'vbox'
    ,region: 'north'/*border*/, dock: 'top', layout: 'hbox'
@@ -7,7 +8,8 @@ Ext.define('App.view.Bar',{
 
    ,baseCls: 'x-gray-toolbar'
    ,border: false
-   ,initComponent: function bar_dynamic_init(){
+   ,initComponent:
+    function bar_dynamic_init(){
     var me = this
         me.items = Ext.Array.push([
         {
@@ -35,4 +37,5 @@ Ext.define('App.view.Bar',{
         me.callParent(arguments)
         delete App.view.items_Bar
     }
-})
+}
+)

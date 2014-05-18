@@ -1,5 +1,6 @@
-Ext.define('App.view.Viewport',{
-    extend: 'Ext.container.Viewport',
+Ext.define('App.view.Viewport',
+{
+    extend: Ext.container.Viewport,
     requires:[
         'App.view.Bar',
         'App.view.Desktop'
@@ -17,4 +18,5 @@ Ext.define('App.view.Viewport',{
  *       ]
  *       me.callParent(arguments)
  *   }*/
-})
+}
+)
