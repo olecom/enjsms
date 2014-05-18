@@ -1,6 +1,6 @@
 Ext.define('App.view.Chat',
 {
-    extend: 'App.view.Window',
+    extend: App.view.Window,
     title: l10n.um.chat.title,
     wmImg: (App.cfg.backend.url || '') + '/css/userman/chat_64px.png',
     wmTooltip: 'Chat',

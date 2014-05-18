@@ -33,7 +33,7 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
                     tb.toggle(true)
                 } else {
                     App.create('view.Userman', btn,{
-                        renderTo: Ext.getCmp('desk').getEl()
+                        constrainTo: Ext.getCmp('desk').getEl()
                     })
                 }
                 btn.hideMenu()

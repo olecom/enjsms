@@ -2,7 +2,7 @@
 function(override){
 var id = 'App.controller.Chat'
    ,cfg = {
-    extend:'App.controller.Base',
+    extend: App.controller.Base,
     __name: id,
     models:[
         'chatUser'
@@ -17,15 +17,11 @@ var id = 'App.controller.Chat'
     init:
     function controllerChatInit(){
     var me = this
-       ,sid = 'chatUsers'
-       ,chat
-       ,users ,uname
-       ,date_fmt = Ext.util.Format.dateRenderer('[H:i:s]')
        ,text ,cr ,tbl, msg_tpl, prev, curr
-
-        chat = me.getView('Chat').create({
-            renderTo: Ext.getCmp('desk').getEl()
-        })
+       ,users ,uname
+       ,sid = 'chatUsers'
+       ,date_fmt = Ext.util.Format.dateRenderer('[H:i:s]')
+       ,chat = new App.view.Chat({ constrainTo: Ext.getCmp('desk').getEl() })
 
         chat.on({
             destroy: destroyChat
@@ -138,7 +134,7 @@ var id = 'App.controller.Chat'
             me.application.controllers.removeAtKey(me.id)
 
             App.backend.req('/um/lib/chat/deve')// reload backend api
-            me.destroy()
+            //return false to stop closing
         }
 
         function sendChat(){

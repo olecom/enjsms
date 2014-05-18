@@ -15,7 +15,7 @@ l10n.um.users +
             tb.toggle(true)
         } else {
             App.create('view.Userman', btn,{
-                renderTo: Ext.getCmp('desk').getEl()
+                constrainTo: Ext.getCmp('desk').getEl()
             })
         }
     }
@@ -36,9 +36,9 @@ l10n.um.chat.title +
         if(tb){
             tb.toggle(true)
         } else {
-            if(!App.getApplication().controllers.getByKey(id)) App.create(
-                'controller.' + id, btn
-            )
+            if(!App.getApplication().controllers.getByKey(id)){
+                App.create('controller.' + id, btn)
+            }
         }
     }
 }
