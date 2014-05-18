@@ -44,6 +44,8 @@ var app = api.app
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))
 
+    app.use(n = '/view/Userman.js', api.connect.sendFile(__dirname + n, true))
+
     // low priority stuff:
     n = '/css/userman/css'
     api.cfg.extjs.load.css.push(n)
