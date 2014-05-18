@@ -1,7 +1,3 @@
-/*
- * NOTE: always provide class namespace placeholder (see bottom)
- */
-
 //Ext.define('App.view.Userman',{ // slow initial loading
 App.cfg['App.um.view.Userman'] = {// just cfg (fast `App` loading)
     ns: 'um',
@@ -16,5 +12,3 @@ App.cfg['App.um.view.Userman'] = {// just cfg (fast `App` loading)
     items:[
     ]
 }
-
-Ext.ns('App.um.view.Userman')// Class placeholder; `App.create()` must be used
