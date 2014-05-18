@@ -1,5 +1,6 @@
-Ext.define('App.view.Window',{
-    extend: 'Ext.window.Window',
+Ext.define('App.view.Window',
+{
+    extend: Ext.window.Window,
     wm: null,//task bar / window manager button
     wmImg: 'css/ok.png',
     wmTooltip: 'wm tooltip',
@@ -13,8 +14,7 @@ Ext.define('App.view.Window',{
 '<b style="color:red">NOTE</b>: no models or stores etc. are reloaded by default',
         callback:// anti-MVC pattern, but this is an abstract window to extend and control
         function reload_devel_view(panel, tool, event){
-        var to = { renderTo: Ext.getCmp('desk').getEl() }
-           ,wmId = panel.wmId
+        var wmId = panel.wmId
            ,url
 
             if(!wmId){
@@ -31,11 +31,13 @@ Ext.define('App.view.Window',{
                         url: url = (App.cfg.backend.url || '') + '/controller/' + wmId + '.js'
                        ,onLoad: function ctl_loaded(){
                             Ext.Loader.removeScriptElement(url)
-                            App.create('controller.' + wmId, null, to)
+                            App.create('controller.' + wmId)
                         }
                        ,onError: function ctl_not_loaded(){
                             Ext.Loader.removeScriptElement(url)
-                            App.create('view.' + wmId, null, to)
+                            App.create('view.' + wmId, null,{
+                                constrainTo: Ext.getCmp('desk').getEl()
+                            })
                         }
                     })
                 }
@@ -45,7 +47,9 @@ Ext.define('App.view.Window',{
     {
         type:'help',
         tooltip: 'Get Help',
-        callback: function(panel, tool, event){
+        callback:
+        function get_help(panel, tool, event){
+            console.warn('abstract method')
         }
     }],
     initComponent:// anti-MVC pattern
@@ -89,4 +93,5 @@ Ext.define('App.view.Window',{
             Ext.WindowManager.front.setActive(true)
         }
     }
-})
+}
+)
