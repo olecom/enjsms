@@ -98,12 +98,11 @@ function extjs_launch(){
     }
     App.cfg = app.config
 
-    App.create = function create(ns, btn, cfg){// fast init
+    App.create = function create_sub_app(ns, btn, cfg){// fast init
         btn && btn.setLoading(true)
 
         if(!(~ns.indexOf('.app.'))){
             ns = 'App.' + ns
-            if(App.hasOwnProperty(ns)) redef = true// && def['__name']) def['override'] = def['__name']
             Ext.syncRequire(ns)
         }
 
@@ -113,16 +112,40 @@ function extjs_launch(){
             return
         }
 
-        Ext.define(ns, App.cfg[ns], function run_module(){
+        if(Ext.ClassManager.classes[ns]){
+            run_module()
+            return
+        }
+        // define a Class *only* once
+        // use `override` to redefine it (e.g. when developing)
+        if(App.cfg[ns]){
+            Ext.define(ns, App.cfg[ns], run_module)
+            App.cfg[ns] = null// GC
+            return
+            /* Noticed: multiple `Ext.define()` is fine from (re)loaded JS file */
+        }
+
+        Ext.Msg.show({
+           title: l10n.errun_title,
+           buttons: Ext.Msg.OK,
+           icon: Ext.Msg.ERROR,
+           msg:
+"Can't do <b style='color:#FF0000'>`App.create('" + ns + "')`</b>!<br><br>" +
+"<b>`App.create()` is only used with `App.cfg['Class.name']` definitions<br>" +
+"in app modules for fast initial App loading.</b>"
+        })
+        btn && btn.setLoading(false)
+        return
+
+        function run_module(){
             if(~ns.indexOf('.app.')){
                 Ext.application(ns)
             } else {
                 Ext.create(ns, cfg)
             }
 
-            App.cfg[ns] = null
             btn && btn.setLoading(false)
-        })
+        }
     }
 
     //`localStorage` doomed by local JSDuck's ExtJS docs
