@@ -17,13 +17,14 @@ Ext.define('App.view.Chat',
         collapsible: !true,
         layout: 'hbox',
         items:[
-        Ext.create('Ext.panel.Tool',{
+        {
+            xtype: 'tool',
             type: 'help',
             tooltip: {
                 text: l10n.um.chat.keys,
                 dismissDelay: 23456
             }
-        }),
+        },
         {
             xtype: 'textfield',
             fieldLabel: '<b>' + App.User.get('id') + '</b>>',

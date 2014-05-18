@@ -99,30 +99,41 @@ function extjs_launch(){
     App.cfg = app.config
 
     App.create = function create_sub_app(ns, btn, cfg){// fast init
+    /*
+     * There are classes with run time development reloading for
+     * - controllers (e.g. 'App.userman.Chat'),
+     * - slow view:
+     *     Ext.define('App.view.Chat',...)
+     * - and fast view definitions (config only):
+     *     App.cfg['App.view.Userman'] = { ... }
+     **/
         btn && btn.setLoading(true)
 
         if(!(~ns.indexOf('.app.'))){
-            ns = 'App.' + ns
-            Ext.syncRequire(ns)
-        }
+            ns = 'App.' + ns// if class name from "App" (this) namespace
 
+            if(btn){// normal load && launch via button (not dev reload)
+                if(Ext.ClassManager.classes[ns]){
+                    run_module()
+                    return
+                }
+                Ext.syncRequire(ns)
+            }
+        }
         if(~ns.indexOf('.controller.')){
-            App.getApplication().getController(ns.slice(15))
+            App.getApplication().getController(ns.slice(15))// 'App.controller.'.length
             btn && btn.setLoading(false)
             return
         }
 
-        if(Ext.ClassManager.classes[ns]){
-            run_module()
-            return
-        }
         // define a Class *only* once
-        // use `override` to redefine it (e.g. when developing)
+        // use `override` to redefine it (e.g. when developing) in run time
         if(App.cfg[ns]){
+            btn || (App.cfg[ns].override = ns)// no button -- development reload
             Ext.define(ns, App.cfg[ns], run_module)
             App.cfg[ns] = null// GC
             return
-            /* Noticed: multiple `Ext.define()` is fine from (re)loaded JS file */
+            /* Noticed: multiple `Ext.define('some.view')` is fine from (re)loaded JS file */
         }
 
         Ext.Msg.show({
@@ -140,7 +151,9 @@ function extjs_launch(){
         function run_module(){
             if(~ns.indexOf('.app.')){
                 Ext.application(ns)
-            } else {
+            } else if(~ns.indexOf('.controller.')){
+                App.getApplication().getController(ns.slice(15))
+            } else {// usually plain views
                 Ext.create(ns, cfg)
             }
 
