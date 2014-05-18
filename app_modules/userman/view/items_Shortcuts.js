@@ -14,7 +14,7 @@ l10n.um.users +
         if(tb){
             tb.toggle(true)
         } else {
-            App.create('view.Userman', btn,{
+            App.create('um.view.Userman', btn,{
                 constrainTo: Ext.getCmp('desk').getEl()
             })
         }

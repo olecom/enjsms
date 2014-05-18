@@ -15,6 +15,7 @@ Ext.define('App.view.Window',
         callback:// anti-MVC pattern, but this is an abstract window to extend and control
         function reload_devel_view(panel, tool, event){
         var wmId = panel.wmId
+           ,ns = ''
            ,url
 
             if(!wmId){
@@ -23,19 +24,22 @@ Ext.define('App.view.Window',
             }
 
             panel.destroy()// models, stores and backend can be reloaded there
+            panel.ns && (ns += '/' + panel.ns)
             Ext.Loader.loadScript({
-                url: url = (App.cfg.backend.url || '') + '/view/' + wmId + '.js'
+                url: url = (App.cfg.backend.url || '') + ns + '/view/' + wmId + '.js'
                ,onLoad: function view_loaded(){
                     Ext.Loader.removeScriptElement(url)
                     Ext.Loader.loadScript({
-                        url: url = (App.cfg.backend.url || '') + '/controller/' + wmId + '.js'
+                        url: url = (App.cfg.backend.url || '') + ns + '/controller/' + wmId + '.js'
                        ,onLoad: function ctl_loaded(){
                             Ext.Loader.removeScriptElement(url)
-                            App.create('controller.' + wmId)
+                            ns && (ns = panel.ns + '.')
+                            App.create(ns + 'controller.' + wmId)
                         }
                        ,onError: function ctl_not_loaded(){
                             Ext.Loader.removeScriptElement(url)
-                            App.create('view.' + wmId, null,{
+                            ns && (ns = panel.ns + '.')
+                            App.create(ns + 'view.' + wmId, null,{
                                 constrainTo: Ext.getCmp('desk').getEl()
                             })
                         }

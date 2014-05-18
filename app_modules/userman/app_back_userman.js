@@ -18,7 +18,7 @@ var app = api.app
         '/crypto/SHA1',
         /* true M V C loading */
         '/model/User',// + client's requested `l10n`
-        '/view/Login', '/view/items_Bar', '/view/items_Shortcuts', '/view/Userman',
+        '/view/Login', '/view/items_Bar', '/view/items_Shortcuts',
         '/controller/Login'
     ]
 
@@ -44,7 +44,7 @@ var app = api.app
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))
 
-    app.use(n = '/view/Userman.js', api.connect.sendFile(__dirname + n, true))
+    app.use('/um' + (n = '/view/Userman.js'), api.connect.sendFile(__dirname + n, true))
 
     // low priority stuff:
     n = '/css/userman/css'

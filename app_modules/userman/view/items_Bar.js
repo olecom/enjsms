@@ -32,7 +32,7 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
                 if(tb){
                     tb.toggle(true)
                 } else {
-                    App.create('view.Userman', btn,{
+                    App.create('um.view.Userman', btn,{
                         constrainTo: Ext.getCmp('desk').getEl()
                     })
                 }
