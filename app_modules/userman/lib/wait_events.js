@@ -92,7 +92,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
     }
 
     function get_id(req){
-        return Waits[req.sessionID].id
+        return (req = Waits[req.sessionID]) ? req.id : 'null'
     }
 
     function list_ids(){
