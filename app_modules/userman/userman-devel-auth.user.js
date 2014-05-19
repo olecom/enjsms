@@ -4,11 +4,11 @@
 // @namespace       supro
 // @description     supro userman app module auto auth; setup: localStorage['supro.user' || 'supro.role' || 'supro.pass']; defaults `olecom:developer.local:pass`
 // @match           http://localhost:3007/
-// @version         0.1
+// @version         0.2
 // ==/UserScript==
 
 function closure(w, localStorage, con){
-var username = localStorage['supro.user'] || 'olecom'
+var username = localStorage['supro.user'] || 'devka'
    ,userrole = localStorage['supro.role'] || 'developer.local'
    ,password = localStorage['supro.pass'] || 'pass'
    ,pref = '[supro devel] '

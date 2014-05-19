@@ -12,24 +12,25 @@ module.exports = userman
 
 function userman(api, cfg){
 var app = api.app
-   ,Can = cfg.can = require('./can.js')
-   ,Roles = cfg.roles = require('./roles.js')
-   ,Users = cfg.users = require('./users.js')
-   ,wes = require('./lib/wait_events.js')(api)
-   ,n = '', f, m
-   ,files = [
+   ,Can ,Roles ,Users
+   ,n ,f ,m ,files ,wes ,rbac
+
+    wes = require('./lib/wait_events.js')(api)
+    rbac = require('./lib/rbac.js')(api, wes)
+
+    Can = cfg.can = rbac.can
+    Roles = cfg.roles = rbac.roles
+    Users = cfg.users = rbac.users
+
+    initAuthStatic()// default authorization for `backend` permissions
+
+    files = [
         '/crypto/SHA1',
         /* true M V C loading */
         '/model/User',// + client's requested `l10n`
         '/view/Login', '/view/items_Bar', '/view/items_Shortcuts',
         '/controller/Login'
     ]
-
-    if(!cfg || 'string' != typeof cfg.data){
-        throw new Error('Not a string: `config.app.modules.userman.data`')
-    }
-
-    initAuthStatic()// default authorization for `backend` permissions
 
     for(f = 0; f < files.length; f++){// provide [files] w/o auth
         n = '/um' + (m = files[f])// apply own namespace
@@ -44,14 +45,20 @@ var app = api.app
     app.use('/um/lib/wait_events', wes.mwPutWaitEvents)
     app.use(n = '/backend/waitEvents.js', api.connect.sendFile(__dirname + n, true))
 
-    // high priority
+    // cfg check for more functionality
+    if(!cfg || 'string' != typeof cfg.data){
+        throw new Error('Not a string: `config.app.modules.userman.data`')
+    }
 
+    // high priority
     app.use('/um/lib/chat', require('./lib/chat.js')(api, wes))// backend API && MVC UI:
     app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))
 
+    app.use('/um/lib/rbac', rbac.mw)
     app.use('/um' + (n = '/view/Userman.js'), api.connect.sendFile(__dirname + n, true))
+    app.use('/um' + (n = '/controller/Userman.js'), api.connect.sendFile(__dirname + n, true))
 
     // low priority stuff:
     n = '/css/userman/css'
