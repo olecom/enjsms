@@ -38,7 +38,7 @@ var rbac_api = { can: null, roles: null, users: null, mw: mwRBAC }
                 'App.view.desktop.BackendTools': true
                ,'App.backend.JS': true
             }
-           ,Static: { }// deny access to class or other files by `initAuthStatic()`
+           ,Static: { }// deny access to Class or other files by `initAuthStatic()`
         }
         rbac_api.roles = {// 'role': new Array(of `can`s)
             'developer.local': [ rbac_api.can.backend ]// can do all from specified `can`
@@ -57,7 +57,7 @@ var rbac_api = { can: null, roles: null, users: null, mw: mwRBAC }
     }
 
     function mwRBAC(req, res, next){
-    var ret = { success: false, data: null }//                               \..../
-        res.json(ret)// sync
+    var ret = { success: false, data: null }
+        res.json(ret)
     }
 }
