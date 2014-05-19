@@ -76,7 +76,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
                     try {
                         chat_api[m] = new Function(
                            'ret, api, local, req, res, next',
-                            fs.readFileSync(__dirname + '/' + m + '.js', 'utf8')
+                            fs.readFileSync(__dirname + '/chat_' + m + '.js', 'utf8')
                         )
                     } catch(ex){
                         api._err(api.ipt(ex))
