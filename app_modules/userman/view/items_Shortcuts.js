@@ -30,13 +30,11 @@ l10n.um.chat.title +
    ,tooltip: l10n.um.chat.tooltip
    ,handler:
     function open_chat(btn){
-    var id = 'Chat', tb = Ext.getCmp('wm').items.getByKey(id)
+    var tb = Ext.getCmp('wm').items.getByKey('view.Chat')
         if(tb){
             tb.toggle(true)
         } else {
-            if(!App.getApplication().controllers.getByKey(id)){
-                App.create('controller.' + id, btn)
-            }
+            App.create('controller.Chat', btn)
         }
     }
 }
