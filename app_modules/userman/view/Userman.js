@@ -5,7 +5,7 @@ App.cfg['App.um.view.Userman'] = {// just cfg (fast `App` loading)
     title: 'App.um.view.Userman',
     wmImg: (App.cfg.backend.url || '') + '/css/userman/userman_shortcut.png',
     wmTooltip: 'Userman',
-    wmId: 'Userman',
+    wmId: 'um.view.Userman',
     autoScroll: true,
     width: 777,
     height: 555,

@@ -135,7 +135,6 @@ var id = 'App.controller.Chat'
             App.User.can['App.view.Window.tools.refresh'] && (
                 App.backend.req('/um/lib/chat/deve')// reload backend api
             )
-            //return false to stop closing
         }
 
         function sendChat(){
