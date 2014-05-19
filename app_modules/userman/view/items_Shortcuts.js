@@ -10,13 +10,11 @@ l10n.um.users +
    ,tooltip: l10n.um.tooltip
    ,handler:
     function open_userman(btn){
-    var tb = Ext.getCmp('wm').items.getByKey('Userman')
+    var tb = Ext.getCmp('wm').items.getByKey('um.view.Userman')
         if(tb){
             tb.toggle(true)
         } else {
-            App.create('um.view.Userman', btn,{
-                constrainTo: Ext.getCmp('desk').getEl()
-            })
+            App.create('um.controller.Userman', btn)
         }
     }
 }

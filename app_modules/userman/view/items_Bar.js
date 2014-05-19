@@ -26,17 +26,13 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [], [
         s[i] = { text: l10n.um.users ,scale: 'large' ,iconCls: 'userman'
            ,handler:
             function open_userman_from_bar(){
-            var tb = Ext.getCmp('wm').items.getByKey('Userman')
-               ,btn = this.up('button')
-
+            var tb = Ext.getCmp('wm').items.getByKey('um.view.Userman')
                 if(tb){
                     tb.toggle(true)
                 } else {
-                    App.create('um.view.Userman', btn,{
-                        constrainTo: Ext.getCmp('desk').getEl()
-                    })
+                    App.create('um.controller.Userman')
                 }
-                btn.hideMenu()
+                this.up('button').hideMenu()
             }
         }
         return s
