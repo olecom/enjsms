@@ -1,3 +1,8 @@
+/*
+ * Simple chat with user list and textual chat room
+ **/
+module.exports = chat
+
 function chat(api, wes){
 var chat_api = { 'user': null, 'text': null, 'deve': load_api }
    ,url = require('url')
@@ -12,12 +17,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
             fs: fs
         }
     }
-   ,dir = api.cfg.app.modules.userman && api.cfg.app.modules.userman.data
-
-    if(!dir || 'string' != typeof dir){
-        throw new Error('Not a string: `api.cfg.app.modules.userman.data`')
-    }
-    dir = process.cwd() + dir + '/chat'
+   ,dir = process.cwd() + api.cfg.app.modules.userman.data + '/chat'
 
     fs.stat(dir,
         function stat_um_data_chat_dir(err, d){
@@ -87,5 +87,3 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
         }
     }
 }
-
-module.exports = chat

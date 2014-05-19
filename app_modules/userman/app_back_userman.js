@@ -7,6 +7,9 @@
  *
  * otherwise UI must do XHR frequently
  */
+
+module.exports = userman
+
 function userman(api, cfg){
 var app = api.app
    ,Can = cfg.can = require('./can.js')
@@ -21,6 +24,10 @@ var app = api.app
         '/view/Login', '/view/items_Bar', '/view/items_Shortcuts',
         '/controller/Login'
     ]
+
+    if(!cfg || 'string' != typeof cfg.data){
+        throw new Error('Not a string: `config.app.modules.userman.data`')
+    }
 
     initAuthStatic()// default authorization for `backend` permissions
 
@@ -335,5 +342,3 @@ roles = {
         res.json()
     }
 }
-
-module.exports = userman
