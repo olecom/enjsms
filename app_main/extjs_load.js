@@ -120,8 +120,9 @@ function extjs_launch(){
                 Ext.syncRequire(ns)
             }
         }
+
         if(~ns.indexOf('.controller.')){
-            App.getApplication().getController(ns.slice(15))// 'App.controller.'.length
+            App.getApplication().getController(ns)
             btn && btn.setLoading(false)
             return
         }
@@ -152,7 +153,7 @@ function extjs_launch(){
             if(~ns.indexOf('.app.')){
                 Ext.application(ns)
             } else if(~ns.indexOf('.controller.')){
-                App.getApplication().getController(ns.slice(15))
+                App.getApplication().getController(ns)
             } else {// usually plain views
                 Ext.create(ns, cfg)
             }

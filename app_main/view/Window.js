@@ -14,32 +14,28 @@ Ext.define('App.view.Window',
 '<b style="color:red">NOTE</b>: no models or stores etc. are reloaded by default',
         callback:// anti-MVC pattern, but this is an abstract window to extend and control
         function reload_devel_view(panel, tool, event){
-        var wmId = panel.wmId
-           ,ns = ''
-           ,url
+        var url
 
-            if(!wmId){
+            if(!panel.wmId){
                 console.warn("window doesn't support devepment mode")
                 return
             }
 
             panel.destroy()// models, stores and backend can be reloaded there
-            panel.ns && (ns += '/' + panel.ns)
             Ext.Loader.loadScript({
-                url: url = (App.cfg.backend.url || '') + ns + '/view/' + wmId + '.js'
+                url: url = (App.cfg.backend.url || '') + '/' +
+                     panel.wmId.replace(/[.]/g, '/') + '.js'
                ,onLoad: function view_loaded(){
                     Ext.Loader.removeScriptElement(url)
                     Ext.Loader.loadScript({
-                        url: url = (App.cfg.backend.url || '') + ns + '/controller/' + wmId + '.js'
+                        url: url = url.replace(/[/]view[/]/, '/controller/')
                        ,onLoad: function ctl_loaded(){
                             Ext.Loader.removeScriptElement(url)
-                            ns && (ns = panel.ns + '.')
-                            App.create(ns + 'controller.' + wmId)
+                            App.create(panel.wmId.replace(/view[.]/, 'controller.'))
                         }
                        ,onError: function ctl_not_loaded(){
                             Ext.Loader.removeScriptElement(url)
-                            ns && (ns = panel.ns + '.')
-                            App.create(ns + 'view.' + wmId, null,{
+                            App.create(panel.wmId, null,{
                                 constrainTo: Ext.getCmp('desk').getEl()
                             })
                         }
