@@ -8,7 +8,7 @@ Ext.define('App.view.Window',
     autoShow: true,
     maximizable: true,
     tools:[{
-        type:'refresh',
+        type: 'refresh',
         tooltip:// developer's stuff must have no `l10n`
 'view developent: reload <b>view</b> && <b>controller</b><br>' +
 '<b style="color:red">NOTE</b>: no models or stores etc. are reloaded by default',
@@ -49,7 +49,7 @@ Ext.define('App.view.Window',
         }
     },
     {
-        type:'help',
+        type: 'help',
         tooltip: 'Get Help',
         callback:
         function get_help(panel, tool, event){

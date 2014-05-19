@@ -41,7 +41,10 @@ var rbac_api = { can: null, roles: null, users: null, mw: mwRBAC }
            ,Static: { }// deny access to Class or other files by `initAuthStatic()`
         }
         rbac_api.roles = {// 'role': new Array(of `can`s)
-            'developer.local': [ rbac_api.can.backend ]// can do all from specified `can`
+            'developer.local':[
+                rbac_api.can.backend// can do all from specified `can`
+               ,'App.view.Window.tools.refresh'// developer's stuff
+            ]
            ,'admin.local': [ 'App.view.desktop.BackendTools' ]// single true-permissions
            ,'developer': [ 'App.backend.JS' ]
         }

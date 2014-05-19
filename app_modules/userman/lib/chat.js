@@ -42,7 +42,13 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
     function mwChat(req, res, next){
     var ret = { success: false, data: null }//                               \..../
     var m = req.url.slice(1, 5)// call from UI: App.backend.req('/um/lib/chat/deve')
-        //TODO: auth for devel feature
+
+        if('deve' === m && !req.session.can['App.view.Window.tools.refresh']){
+            res.statusCode = 401// no auth
+            res.json(ret)
+            return
+        }
+
         req.url = url.parse(req.url)// parse into object, api has no `require()`
         if(req.url.query){
             req.url.query = qs.parse(req.url.query)
