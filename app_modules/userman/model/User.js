@@ -42,7 +42,7 @@ Ext.define('App.model.userman.User', {
             callback: function auth_cb(_, success, res){
                 if(success){
                     res = Ext.decode(res.responseText)
-                    me.pes = res.can
+                    me.can = res.can
                     me.set('id', res.user.id)
                     me.set('name', res.user.name)
                     me.set('Roles', res.user.roles)
@@ -52,10 +52,7 @@ Ext.define('App.model.userman.User', {
             }}
         )
     },
-    pes: null,// permissions `can` list
-    can: function can(perm){
-        return this.pes.indexOf(perm)
-    },
+    can: null,// permissions; usage: `App.User.can['App.backend.JS'] && (run_that())`
     logout: function logout(cb){
         App.backend.req('/logout', null, { callback: cb })
     }

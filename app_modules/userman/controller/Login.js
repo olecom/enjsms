@@ -268,7 +268,7 @@ Ext.define('App.controller.Login', {
                     f.text = (
                         '<i>' +
                             App.User.get('name') +
-                        '</i> (<b>' + App.User.pes.__name + '</b>)'
+                        '</i> (<b>' + App.User.can.__name + '</b>)'
                     )
                     break
                 }
