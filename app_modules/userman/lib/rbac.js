@@ -50,7 +50,7 @@ var rbac_api = { can: null, roles: null, users: null, mw: mwRBAC }
                 id: 'devka',
                 // require('crypto').createHash('sha1').update(pass).digest('hex')
                 pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
-                roles: [ 'developer.local' ],
+                roles: [ 'developer.local', 'admin.local' ],
                 name:'default login'
             }
         }
