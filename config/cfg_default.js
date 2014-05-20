@@ -2,19 +2,10 @@ config = {
 /* NOTE: this is not JSON just JavaScript
  *       idea is taken from github.com/louischatriot/mongo-edit
  */
-    gsm_modules:[
-        {
-            //name
-            //addr:
-        }
-    ],
-
     /* standard configuration of extjs+node-webkit application */
 
-    dev: 'enjsms',// developring this component
     log: 'log/',
     app:{
-        db: { mongodb:1 ,nedb:0 }, // github.com/louischatriot/nedb
         modules:{// cfg things from 'app_modules'
         // order matters as in middlewares
             userman:{// authentication and authorization
@@ -23,12 +14,6 @@ config = {
             }
            ,enjsms: true
            ,pingback: true// execute JS in backend
-            /*procman:{
-             *   // default: cfg_procman.js in own directory
-             *   config: 'config/cfg_procman_mongo_node_sms.js'
-             *  ,autoSpawn: true
-             *}
-            ,*/
         }
     },
     lang: 'ru',// base localization, must be provided by any module as fallback
@@ -55,15 +40,7 @@ config = {
         file: 'app_main/app_back.js',
         ctl_port: 3008,
         job_port: 3007,
-        sess_puzl: 'puzzle-word$50000X'
+        sess_puzl: 'puzzle-word$54321X'
        ,init_timeout: 123
-    }
-   ,mongodb:{
-         host: 'localhost'
-        ,port: 27017
-        ,journal: true
-        ,dbname: 'test'
-        ,dbpath: 'data/db'
-        ,dbprefix: ''
     }
 }
