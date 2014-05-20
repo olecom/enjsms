@@ -72,7 +72,7 @@ var d, f
 
     function append_log(){// limit is '4mb' in `app_main\lib\middleware\postTextPlain.js`
     var msg = JSON.stringify(req.json) + '\n'
-        local.wes.broadcast('chatmsg@um', msg)
+        api.wes.broadcast('chatmsg@um', msg)
         local.log_file.write('{"d":"' + d.toISOString() + '",' + msg.slice(1))
         ret.success = true
         res.json(ret)

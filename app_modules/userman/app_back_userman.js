@@ -15,12 +15,12 @@ var app = api.app
    ,Can ,Roles ,Users
    ,n ,f ,m ,files ,wes ,rbac
 
-    wes = require('./lib/wait_events.js')(api)
-    rbac = require('./lib/rbac.js')(api, wes)
+    wes = api.wes = require('./lib/wait_events.js')(api)
+    rbac = require('./lib/rbac.js')(api)
 
-    Can = cfg.can = rbac.can
-    Roles = cfg.roles = rbac.roles
-    Users = cfg.users = rbac.users
+    Can = api.can = rbac.can
+    Roles = api.roles = rbac.roles
+    Users = api.users = rbac.users
 
     initAuthStatic()// default authorization for `backend` permissions
 
@@ -51,7 +51,7 @@ var app = api.app
     }
 
     // high priority
-    app.use('/um/lib/chat', require('./lib/chat.js')(api, wes))// backend API && MVC UI:
+    app.use('/um/lib/chat', require('./lib/chat.js')(api))// backend API && MVC UI:
     app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
     app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))

@@ -3,19 +3,18 @@
  **/
 module.exports = chat
 
-function chat(api, wes){
+function chat(api){
 var chat_api = { 'user': null, 'text': null, 'deve': load_api }
    ,url = require('url')
    ,qs = require('connect/node_modules/qs')
    ,fs = require('fs')
    ,local = {
-        wes: wes
+        require:{
+            fs: fs
+        }
        ,log_dir: ''
        ,log_file: null
        ,log_file_name: ''
-       ,require:{
-            fs: fs
-        }
     }
    ,dir = process.cwd() + api.cfg.app.modules.userman.data + '/chat'
 

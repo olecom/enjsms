@@ -3,7 +3,7 @@
  **/
 module.exports = rbac
 
-function rbac(api, wes){
+function rbac(api){
 var rbac_api = { can: null, roles: null, users: null, mw: mwRBAC }
    ,fs = require('fs') ,dir
 
