@@ -28,14 +28,15 @@ function create_backend(conn){
             options = {
                 url: url,
                 params: null,
-                jsonData: null
+                jsonData: null,
+                headers: null
             }
         } else {
             options.url = url
         }
 
         if('string' == typeof data){
-            options.params = data
+            options.params = data// plain text or JavaScript for `App.backend.JS`
         } else {
             options.jsonData = data
             options.headers = {

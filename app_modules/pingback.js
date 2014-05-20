@@ -1,13 +1,12 @@
 function pingback(api){// run external text here
-    var ui
+var ui
     api.app.use('/pingback.js'
    ,function mwPingBack(req, res, next){
-        var ret = { success: false }
-
+    var ret = { success: false }
         if(req.session && req.session.can['App.backend.JS']){
-            if(req.body.plain_text) try {
+            if(req.txt) try {
                 new Function(
-                   'ret, api, req, res, next', req.body.plain_text
+                   'ret, api, req, res, next', req.txt
                 )(
                     ret, api, req, res, next
                 )
@@ -16,7 +15,7 @@ function pingback(api){// run external text here
                 }
                 ret.success = true
             } catch(ex){
-                next(ex.stack)
+                next(ex.stack)// pass to the standard error handling middleware
                 return
             }
         } else {
@@ -26,8 +25,8 @@ function pingback(api){// run external text here
     })
 
     api.app.use('/backend/JS.js'
-    ,function mwPingBackUI(req, res, next){
-        var component
+   ,function mwPingBackUI(req, res, next){
+    var component
         if(req.session && req.session.can['App.backend.JS']){
             component = ui
         } else {
@@ -37,17 +36,18 @@ function pingback(api){// run external text here
     })
     api.cfg.extjs.load.require.push('App.backend.JS')
 
-    /* ExtJS code */
+    /* ==== ExtJS code ==== */
     ui = 'App.backend.JS = (' + (function create_pingback(){
     /* running JavaScript inside backend via App.backend.req() */
     var url = (App.cfg.backend.url || '') + '/pingback.js'
        ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
 
     return function run_js_code_on_backend(code, cb){
-        App.backend.req({
-            url: url, params: code, callback: cb || default_callback
-           ,headers: appjs
-        })
+        App.backend.req(url, code,{
+                callback: cb || default_callback
+               ,headers: appjs
+            }
+        )
     }
 
     function default_callback(opts, ok, res){
