@@ -173,19 +173,24 @@ roles = {
             return
         }
         // false must be in `Can.Static`
-        /* crud reject (API calls):
-            res.statusCode = 401// 'Unauthorized'
-         * gracefull (compenents in ExtJS frontend code loaded from MVC files):
-            Ext.ns("App.view.desktop.BackendTools")
-            App.view.desktop.BackendTools = Ext.Component// Unauthorized
-        */
-        if(~req.url.indexOf('backend')){/* hacks */
-            res.statusCode = 401
-            res.end()
+
+        if(!~req.url.indexOf('.js') || ~req.url.indexOf('backend')){/* hacks */
+            res.statusCode = 401// crud reject (API calls)
+            res.end('URL "'+ (idx || '/') + '" Unauthorized')
             return
-        } else {/* phony ExtJS UI */
+        } else {
+            /* gracefully reject Classes loaded from MVC files by phony UI e.g.:
+             *   Ext.ns("App.view.desktop.BackendTools")
+             *   App.view.desktop.BackendTools = Ext.Component// Unauthorized
+             **/
+
             idx = 'App' + idx.replace(/[/]/g, '.')
-            res.js('Ext.ns("' + idx + '")\n' + idx + ' = Ext.Component// Unauthorized')
+            res.js(
+                'Ext.ns("' + idx + '")\n' +
+                idx + '= Ext.' + (
+                    ~idx.indexOf('.controller.') ? 'app.Controller' : 'Component'
+                ) + '// Unauthorized'
+            )
         }
         return
     }
