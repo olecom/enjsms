@@ -27,7 +27,7 @@ var id = 'App.um.controller.Userman'
             me.application.eventbus.unlisten(me.id)
             me.application.controllers.removeAtKey(me.id)
 
-            App.User.can['App.view.Window.tools.refresh'] && (
+            App.User.can['App.view.Window->tools.refresh'] && (
                 App.backend.req('/um/lib/rbac/deve')// reload backend api
             )
         }

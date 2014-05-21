@@ -132,7 +132,7 @@ var id = 'App.controller.Chat'
 
             me.application.eventbus.unlisten(me.id)
             me.application.controllers.removeAtKey(me.id)
-            App.User.can['App.view.Window.tools.refresh'] && (
+            App.User.can['App.view.Window->tools.refresh'] && (
                 App.backend.req('/um/lib/chat/deve')// reload backend api
             )
         }
