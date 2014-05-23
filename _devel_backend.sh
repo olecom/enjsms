@@ -72,6 +72,8 @@ $BACKEND 1>&7 2>&8 &
 
 while echo '
 Press "Enter" key to reload, "CTRL+D" stop backend || CTRL+C to break...
+
+NOTE: config is not reloaded (stop + start required)!
 '
 do
     read A || {
