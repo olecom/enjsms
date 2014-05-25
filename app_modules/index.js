@@ -23,5 +23,5 @@ var m = '', err = '', cfg = ''
         }
         cfg = ''
     }
-    err && api._err('Error load app module(s) from `config`:\n', err)
+    err && api.con.error('Error load app module(s) from `config`:\n', err)
 }
