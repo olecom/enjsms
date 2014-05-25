@@ -22,7 +22,7 @@ var app = api.app
     Roles = api.roles = rbac.roles
     Users = api.users = rbac.users
 
-    initAuthStatic()// default authorization for `backend` permissions
+    initAuth()// set default 'deny' authorization for all permissions
 
     files = [
         '/crypto/SHA1',
@@ -39,7 +39,7 @@ var app = api.app
         app.use(n, api.connect.sendFile(__dirname + (m += '.js'), true))
     }
 
-    app.use(mwBasicAuthorization)
+    app.use(mwBasicAuthorization)// apply default 'deny' from `initAuthStatic()`
 
     api.cfg.extjs.load.require.push('App.backend.waitEvents')
     app.use('/um/lib/wait_events', wes.mwPutWaitEvents)
@@ -95,51 +95,73 @@ var app = api.app
         }
     }
 
-/* Role setup example:
+/* Permission/Role/User setup example see `rbac.js` */
 
-can = {
-    backend:{
-        'App.view.desktop.BackendTools': true
-       ,'App.backend.JS': true
-    }
-}
-
- *  * roles have compiled permissions for eveny action
- * user has joined list of permissions from all roles listed in user's profile
-
-// static data:
-roles = {
-    'developer.local': [ can.backend ]// can do all from specified `can`
-   ,'admin.local': [ 'App.view.desktop.BackendTools' ]
-   ,'developer': [ 'App.backend.JS' ]
-}
-
-// after compiler:
-roles = {
-    'developer.local':{
-        __name: 'developer.local'
-       ,__what: l10n.um.roles['developer.local'] //on UI frontend
-       ,'App.view.desktop.BackendTools': true
-       ,'App.backend.JS': true
-       ....
-    }
-}
-*/
-
-    function initAuthStatic(){
-    // any `backend` permissions must be false by default to all roles
-    var p, s = Can.Static
-        for(p in Can.backend){
-            //turn class name to backend url e.g. 'App.backend.JS' - > '/backend/JS'
-            s[p.slice(3).replace(/[.]/g, '/')] = false
+    function check_type_and_apply_perm(can){
+        if(!can){
+            api._log('Warning: permission name is not defined')
+            return
         }
+        do {
+            if(0 == can.indexOf('module.')
+                 ||~can.indexOf('->')){
+            // it is not a file to serve
+                break
+            }
+            if('/' == can[0]){//#2
+                Can.API.push(can)// denied by default
+                break
+            }
+            //#1 'App.backend.JS' == >> '/backend/JS'
+            can = can.replace(/^[^.]*[.]/, '/').replace(/[.]/g, '/')
+            Can.Static[can] = false// denied by default
+        } while(0)
+        // secured permissions are being checked in `create_auth()` when
+        // `req.session.can` is created
+        Can[can] = true// there is such permission
+    }
+
+    function initAuth(){
+   /*
+    ** types of permissions:
+    * 1) 'App.backend.JS': Class name is file name  == >> '/backend/JS'
+    * 2) 'App.view.Window->tools.refresh': subclass permission (nothing special)
+    * 3) '/um/' || '/chat': backend URL (API calls)
+    * 4) 'module.pingback' || 'modules.*': allowed app modules
+    *
+    ** any permissions (allow something) must be false (deny by default)
+    * 1) Can.Static
+    * 2) Can.API
+    * -) Can.UI (not really as it is not a file to serve)
+    * -) Can:Modules (not really as it is not a file to serve)
+    *
+    ***/
+    var p, r, i
+        for(p in Can){
+            if('boolean' == typeof Can[p]){
+                check_type_and_apply_perm(p)
+            }// skip all other, can arrays are expanded in `rbac_setup()`
+        }
+        for(p in Roles){
+            r = Roles[p]
+            if(!Array.isArray(r)){
+                api._log('Warning: role "' + p + '" is not Array')
+                continue
+            }
+            for(i = 0; i < r.length; ++i){
+                if(Array.isArray(r[i])) continue// skip; array in Roles must be from Can
+                check_type_and_apply_perm(r[i])
+            }
+        }
+        rbac.merge(api.cfg.app.modules.userman.rbac)// use after init
+console.log('rbac initAuth: ' + api.ipt(rbac, { depth : 6 }))
     }
 
     function mwBasicAuthorization(req, res, next){
-    var idx = req.url
-
-        /* protect namespace of the module */
-        if(0 == idx.indexOf('/um/')){// TODO: configure other protected namespaces
+    // see `create_auth()`
+    var i, idx, can, perm
+        /* protect namespace of this from any no auth access */
+        if(0 == req.url.indexOf('/um/')){// TODO: configure other protected namespaces
             do {
                 if(req.session){
                     if(req.session.user){
@@ -147,7 +169,7 @@ roles = {
                     }
                 }
                 res.statusCode = 401// no auth
-                req.session || res.statusCode++// no session
+                req.session || res.statusCode++// 402 no session
                 res.end()
                 return
             } while(0)
@@ -157,39 +179,64 @@ roles = {
          * /backend/JS.js?_dc=1395638116367
          * /backend/JS
          */
-        idx = idx.slice(0, idx.indexOf('.js?'))
+        idx = req.url.indexOf('.js?')
+        perm = req.url
+        if(req.session && (can = req.session.can)){// auth
+            if(~idx){// *.js files
+                perm = perm.slice(0, idx)
+                if(Can.Static.hasOwnProperty(perm) && can.Static[perm]){
+console.log('allow session Can.Static: ' + perm)
+                    next()// allow connect.static
+                    return
+                }
+            } else {
+console.log('perm: ' + perm + ' can: ', can)
+                for(i = 0; i < can.API.length; ++i){// scan all API
+console.log('check: ' + can.API[i])
+                    if(0 == perm.indexOf(can.API[i])){// for subsets
+                    // e.g. '/um/' in ''/um/lib...''
+console.log('allow "' + perm + '" by can.API: ' + can.API[i])
+                        next()// allow API
+                        return
+                    }
+                }
+            }
+            // all other falls thru
+        }
 
-        if(req.session && req.session.can){// auth
-            //if(req.headers['x-api']){// fast path for API calls
-            //}
-            if(!req.session.can.backend.hasOwnProperty(idx)){
-                next()// to `connect.static()`
+        if(!Can.Static.hasOwnProperty(perm)){// no auth
+           for(i = 0; i < Can.API.length; ++i){// all API must heve permission
+console.log('Check: ' + Can.API[i])
+                if(0 == perm.indexOf(Can.API[i])){
+                // search for subsets e.g. '/um/' in ''/um/lib...''
+console.log('disallow "' + perm + '" by Can.API: ' + Can.API[i])
+                    perm = ''
+                    break
+                }
+            }
+            if(perm){
+console.log('allow Can.Static: ' + perm)
+                next()// allow stuff that is NOT listed there
                 return
             }
-        // false must be in `req.session.can.backend[idx]
-        // fall thru
-        } else if(!Can.Static.hasOwnProperty(idx)){// no auth
-            next()
-            return
+            // fall thru to disallow
         }
-        // false must be in `Can.Static`
-
-        if(!~req.url.indexOf('.js') || ~req.url.indexOf('backend')){/* hacks */
+        // disallow
+        if(!~idx){// not *.js files
             res.statusCode = 401// crud reject (API calls)
-            res.end('URL "'+ (idx || '/') + '" Unauthorized')
-            return
+            res.json({ success: false, err: "URL '"+ (perm || '/') + "' Unauthorized" })
         } else {
-            /* gracefully reject Classes loaded from MVC files by phony UI e.g.:
-             *   Ext.ns("App.view.desktop.BackendTools")
-             *   App.view.desktop.BackendTools = Ext.Component// Unauthorized
-             **/
-
-            idx = 'App' + idx.replace(/[/]/g, '.')
+           /* gracefully reject Classes loaded from MVC files by phony UI e.g.:
+            *   Ext.ns("App.view.desktop.BackendTools")
+            *   App.view.desktop.BackendTools = Ext.Component// Unauthorized
+            **/
+            perm = 'App' + perm.replace(/[/]/g, '.')
             res.js(
-                'Ext.ns("' + idx + '")\n' +
-                idx + '= Ext.' + (
-                    ~idx.indexOf('.controller.') ? 'app.Controller' : 'Component'
-                ) + '// Unauthorized'
+               'if(window.Ext){\n' +
+               '    Ext.ns("' + perm + '")\n    ' +
+                    perm + ' = Ext.' + (
+                    ~perm.indexOf('.controller.') ? 'app.Controller' : 'Component'
+                ) + '\n}// Unauthorized'
             )
         }
         return
@@ -198,47 +245,83 @@ roles = {
     function create_auth(session, role_name){
    /* Creating user/session authorization
     * req.session.can = {
-    *     __name: 'role_name'
-    *     // access to backend files/components; it's inverted in
-    *     // `mwBasicAuthorization` to give propper deny by default ACL
-    *    , backend: { }
+    *     __name: 'role.name'
+    *     // access to static (Class) files
+    *     // if file URL (i.e. with '*.js' postfix; stripped)  is in there
+    *     // then allow access (which is denied by default)
+    *    ,Static: { '/backend/JS': true }
+    *     // access to API calls
+    *     // `mwBasicAuthorization` scans this array for every URL that is
+    *     // not a '*.js' file; if there is a match of any items here with URL's
+    *     // first place e.g. URL: "/um/lib/..." && can.API[0]: "/um/" allow access
+    *    ,API: [ '/um/' ]
     *     //compiled list of permissions from all roles in its priority *order*
-    *     'App.view.desktop.BackendTools': true
+    *    ,'App.view.desktop.BackendTools': true
     *    ,'App.backback.JS': true
     * }
     **/
-    var can ,d ,j ,p ,i ,roll
-
-        can = Roles[role_name] || { __name: 'no role name' ,backend: { } }
-
+    var can, d, p, i, roll
+        can = Roles[role_name] || { __name: 'no role name' }
         if(Array.isArray(can)){// compile permissions from role setup
             roll = can
             can = {
                 __name: role_name
-               ,backend: { }
+               ,Static: { }
+               ,API: [ ]
             }
-            d = roll.length
-            for(i = 0; i < d; i++){
-                j = roll[i]
-                if('string' == typeof j){// single permission name
-                    can[j] = true        // is true
-                } else {
-                    for(p in j){         // group of permissions
-                        can[p] = j[p]    // value as is in group `can`
+            for(i = 0; i < roll.length; ++i){
+                p = roll[i]
+                if(Array.isArray(p)){// group of permissions from Can
+                    for(d = 0; d < p.length; ++d){
+                        apply_permission(p[d])
                     }
+                } else {
+                    apply_permission(p)
                 }
             }
-            Roles[role_name] = can
-        }
-        // compile ExtJS MVC component file access for `Can.backend` permission
-        for(p in Can.backend){
-            if(!can[p]){
-                //turn class name to backend url 'App.backend.JS' - > '/backend/JS'
-                can.backend[p.slice(3).replace(/[.]/g, '/')] = false
-            }
+            Roles[role_name] = can// rewrite role with complied list of perm-s
         }
         session.can = can
         return
+
+        function apply_permission(j){
+        var i, is_api = false
+console.log('perm apply:"' + j + '"; Can[j]: ', Can[j])
+            if(true === Can[j]){// single available permission name
+            // secured permissions true here and blocked from others in `rbac.merge`
+                can[j] = true
+
+                for(i = 0; i < Can.API.length; ++i){// all Can.API must heve Can
+                    if(j === Can.API[i]){// add permission if it is in Can.API
+                        can.API.push(j)
+                        is_api = true
+                        break
+                    }
+                }
+                if(!is_api){
+                    j = j.replace(/^[^.]*[.]/, '/').replace(/[.]/g, '/')
+                    if(Can.Static.hasOwnProperty(j)){
+                        can.Static[j] = true
+                    }
+                }
+            } else {
+            // security: check any new permission
+                if(null === rbac.secure_can(j)){// no such perm-n
+                    for(i = 0; i < Can.API.length; ++i){// all API must heve permission
+                        if(0 == Can.API[i].indexOf(j)){// j: "/p", API[i]: '/pingback'
+                            is_api = true
+                            api._log('!Security `apply_permission`: skip secure API subset "' + j + '"')
+                            break// stop scan; deny subsets of API from app modules
+                        }
+                    }
+                    if(!is_api){// allow API or any other perm-n from app modules
+                        check_type_and_apply_perm(j)
+                    }
+                } else {
+                    api._log('!Security `apply_permission`: skip secure permission "' + j + '"')
+                }
+            }
+        }
     }
 
     function mwLogin(req, res){

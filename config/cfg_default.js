@@ -8,12 +8,32 @@ config = {
     app:{
         modules:{// cfg things from 'app_modules'
         // order matters as in middlewares
-            userman:{// authentication and authorization
-                store: 'dummy' //dummy (internal ro default roles), json file, db
-               ,data: '/data/um' // chat logs
+            '?auth': null,// callback to auth modules in loader (implemented by `userman`)
+            userman:{//#0: authentication and authorization (plus Chat)
+                store: 'fs' // TODO: fs || db
+               ,data: '/data/um' // store fs: chat logs
+               ,rbac:{
+                   can:{
+                        'module.pingback': true
+                       ,'module.enjsms': true
+                    }
+                   ,roles:{
+                        'user.test':[
+                            'module.enjsms'
+                        ]
+                    }
+                   ,users:{
+                        test:{
+                            pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
+                            roles: [ 'user.test' ],
+                            name: 'test user'
+                        }
+                    }
+                }
             }
-           ,enjsms: true
-           ,pingback: true// execute JS in backend
+            /* after auth anything can go in not particular order */
+           ,enjsms: true// sms app dummy
+           ,pingback: true
         }
     },
     lang: 'ru',// base localization, must be provided by any module as fallback
@@ -24,7 +44,8 @@ config = {
         controllers: [ ],        // default
         load:{
             requireLaunch: [ ],  // components to require in `Applicaion.launch()`
-            require: [ ],        // array of 'Class.Names' ExtJS must require
+            require: [ ],        // array of common 'Class.Names' App must require
+                                 // to use some app modules without auth
             css: [ ]
         }
         /* removable / changable items */
