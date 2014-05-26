@@ -43,7 +43,7 @@ config = {
         launch: null,            // default
         controllers: [ ],        // default
         load:{
-            requireLaunch: [ ],  // components to require in `Applicaion.launch()`
+            requireLaunch: [ ],  // components to require in `Application.launch()`
             require: [ ],        // array of common 'Class.Names' App must require
                                  // to use some app modules without auth
             css: [ ]
@@ -52,7 +52,7 @@ config = {
        ,pathFile: 'extjs.txt'
        ,path: 'ext-4.2.1.883/'   // search extjs.txt or this above './'; 'extjs/' is for HTML
        ,fading: true             // visual effects for content appearance
-       ,wait_events:{
+       ,wait_events:{            // NOTE: config is for userman's module Class
             timeout: 7777777,    // 2.16 hours vs max on backend: (1 << 23) = 2.33
            defer: 77777          // minute and half
         }

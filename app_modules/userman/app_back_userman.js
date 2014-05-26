@@ -39,7 +39,7 @@ var app = api.app
         app.use(n, api.connect.sendFile(__dirname + (m += '.js'), true))
     }
 
-    app.use(mwBasicAuthorization)// apply default 'deny' from `initAuthStatic()`
+    app.use(mwBasicAuthorization)// apply default 'deny' from `initAuth()`
 
     api.cfg.extjs.load.require.push('App.backend.waitEvents')
     app.use('/um/lib/wait_events', wes.mwPutWaitEvents)
