@@ -20,6 +20,7 @@ config = {
                    ,roles:{
                         'user.test':[
                             'module.enjsms'
+                           ,'App.controller.Chat', 'App.view.Chat','/chat'
                         ]
                     }
                    ,users:{
@@ -43,7 +44,7 @@ config = {
         launch: null,            // default
         controllers: [ ],        // default
         load:{
-            requireLaunch: [ ],  // components to require in `Application.launch()`
+            requireLaunch: [ ],  // components to require in `Applicaion.launch()`
             require: [ ],        // array of common 'Class.Names' App must require
                                  // to use some app modules without auth
             css: [ ]
