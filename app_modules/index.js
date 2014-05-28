@@ -3,8 +3,15 @@ module.exports = app_modules
 function app_modules(api){// Application modules loader
 var m = '', err = '', cfg = ''
    ,fs = require('fs')
+   ,auth = function no_auth(){ }
 
     for(m in api.cfg.app.modules){
+        if('?' === m[0]) continue
+        if(api.cfg.app.modules['?auth']){
+            auth = api.cfg.app.modules['?auth']
+            api.cfg.app.modules['?auth'] = null
+        }
+        auth(m)// setup && pre check
         try {// stat on FS e.g.: app_modules/userman/
             if(fs.statSync(__dirname + '/' + m).isDirectory()){
                 cfg = api.cfg.app.modules[m]
@@ -22,6 +29,7 @@ var m = '', err = '', cfg = ''
             err += m.replace(/[.]js/, '[.js]') + ':\n!!!' + ex.stack + '\n'
         }
         cfg = ''
+        auth()// post check
     }
     err && api.con.error('Error load app module(s) from `config`:\n', err)
 }
