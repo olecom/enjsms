@@ -12,38 +12,53 @@ Ext.define('App.view.Window',
     tools:[{
         type: 'refresh',
         tooltip:// developer's stuff must have no `l10n`
-'view developent: reload <b>view</b> && <b>controller</b><br>' +
-'<b style="color:red">NOTE</b>: no models or stores etc. are reloaded by default',
+'view developent reload: <b>l10n</b>, <b>view</b> && <b>controller</b><br>' +
+'<b style="color:red">NOTE</b>: no models or stores etc. are reloaded<br>' +
+'hook to <b>thisView.on("destroy")</b> event to reload anything else',
         callback:// anti-MVC pattern, but this is an abstract window to extend and control
         function reload_devel_view(panel, tool, event){
-        var url
+        var url, url_l10n
 
             if(!panel.wmId){
-                console.warn("window doesn't support devepment mode")
+                console.warn("window doesn't support development mode")
                 return
             }
 
             panel.destroy()// models, stores and backend can be reloaded there
+
+            url_l10n = (App.cfg.backend.url || '') + '/l10n/' + panel.wmId
+                        .replace(/([^.]+)[.].*$/, l10n.lang + '_$1.js')
             Ext.Loader.loadScript({
-                url: url = (App.cfg.backend.url || '') + '/' +
-                     panel.wmId.replace(/[.]/g, '/') + '.js'
-               ,onLoad: function view_loaded(){
-                    Ext.Loader.removeScriptElement(url)
+                url: url_l10n
+               ,onLoad: function l10n_reloaded(){
+                    Ext.Loader.removeScriptElement(url_l10n)
+                    url = (App.cfg.backend.url || '') + '/' +
+                            panel.wmId.replace(/[.]/g, '/') + '.js'
                     Ext.Loader.loadScript({
-                        url: url = url.replace(/[/]view[/]/, '/controller/')
-                       ,onLoad: function ctl_loaded(){
-                            Ext.Loader.removeScriptElement(url)
-                            App.create(panel.wmId.replace(/view[.]/, 'controller.'))
-                        }
-                       ,onError: function ctl_not_loaded(){
-                            Ext.Loader.removeScriptElement(url)
-                            App.create(panel.wmId, null,{
-                                constrainTo: Ext.getCmp('desk').getEl()
-                            })
-                        }
+                        url: url
+                       ,onLoad: view_loaded
                     })
                 }
             })
+
+            return
+
+            function view_loaded(){
+                Ext.Loader.removeScriptElement(url)
+                Ext.Loader.loadScript({
+                    url: url = url.replace(/[/]view[/]/, '/controller/')
+                   ,onLoad: function ctl_loaded(){
+                        Ext.Loader.removeScriptElement(url)
+                        App.create(panel.wmId.replace(/view[.]/, 'controller.'))
+                    }
+                   ,onError: function ctl_not_loaded(){
+                        Ext.Loader.removeScriptElement(url)
+                        App.create(panel.wmId, null,{
+                            constrainTo: Ext.getCmp('desk').getEl()
+                        })
+                    }
+                })
+            }
         }
     },
     {
