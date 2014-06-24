@@ -10,13 +10,5 @@ Ext.define('App.view.Viewport',
         { xtype: 'app-bar' },//uses    `App.view.items_Shortcuts`
         { xtype: 'desktop' } //deletes `App.view.items_Shortcuts`
     ]
-/*    ,initComponent: function dynamic_init() {
- *       var me = this
- *       me.items = [
- *           { xtype: 'app-bar' }
- *          ,{ xtype: 'desktop' }
- *       ]
- *       me.callParent(arguments)
- *   }*/
 }
 )

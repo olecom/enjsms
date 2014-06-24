@@ -10,9 +10,6 @@ var id = 'App.controller.Chat'
     views:[
         'Chat'
     ],
-    refs:[
-        { ref: 'Chat', selector: '[wmId=Chat]' }
-    ],
     //!!!chat: null,// dev tools: App.getApplication().getController('Chat').chat
     init:
     function controllerChatInit(){

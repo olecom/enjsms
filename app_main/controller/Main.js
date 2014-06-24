@@ -3,20 +3,6 @@
  */
 Ext.define('App.controller.Main',{
     extend: 'App.controller.Base',
-    /*views:[
-        'Viewport',
-        //'Desktop'
-    ],
-    refs:[
-        //{
-          //  ref: 'Viewport',
-            //selector: '[xtype=viewport]'
-        //},
-        {
-            ref: 'Bar',
-            selector: '[xtype=app-bar]'
-        }
-    ],*/
     init: function controllerMainInit(){
         var me = this
            ,createViewport// function var for GC init
@@ -26,13 +12,7 @@ Ext.define('App.controller.Main',{
             global:{
                 createViewport: createViewport
                ,updateVersions: updateVersions
-// messages:
-//auth ok: App.back.Connection.defaultHeaders['X-API'] = '1'
-//logout : delete App.back.Connection.defaultHeaders['X-API']
-            },
-            controller:{ },
-            component:{ },
-            store:{ }
+            }
         })
 
         return
@@ -88,15 +68,15 @@ Ext.define('App.controller.Main',{
         }
 
         function appReady(){
-            /*dynamic controller for dynamic models
-             * this doesn't work due to curved loading: Controller first, not Model.
-               application.config: {
-                    models: [ 'Base', 'BaseR', 'Status' ],
-                    stores: [ 'Status' ],
-                    controllers: [ 'Main' ]
-                }
-             **/
-            //me.viewport = Ext.ComponentQuery.query('viewport')[0]
+           /* dynamic controller for dynamic models
+            * due to reversed loading (Controller first, not Model)
+            * this doesn't work:
+              application.config: {
+                   models: [ 'Base', 'BaseR', 'Status' ],
+                   stores: [ 'Status' ],
+                   controllers: [ 'Main' ]
+               }
+            **/
             me.suspendEvent('createViewport')
             if(createViewport) createViewport = null// GC init
 
@@ -115,5 +95,5 @@ Ext.define('App.controller.Main',{
             delete App.cfg.backend.msg
             delete App.cfg.backend.time
         }
-    }// init()
+    }
 })
