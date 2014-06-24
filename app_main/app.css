@@ -96,7 +96,8 @@ body { background: #FFFFFF url(css/supro.png) no-repeat center !important }
 
 .sg-c { background-image:url(css/comments_delete.png); }
 .sg-e { background-image:url(css/script_link.png); }
-.sg-r { background-image:url(css/link_go.png); }
+.sg-s { background-image:url(css/shutdown-sml.png); }
+.sg-r { background-image:url(css/arrow_refresh_small.png); }
 .sg-k { background-image:url(css/link_delete.png); }
 .sg-m { background-image:url(css/comments.png); }
 
@@ -109,3 +110,4 @@ body { background: #FFFFFF url(css/supro.png) no-repeat center !important }
 
 .transparent > div { background: transparent!important; }
 .ok { background-image:url(css/ok.png)!important; }
+.cancel { background-image:url(css/delete.png)!important; }
