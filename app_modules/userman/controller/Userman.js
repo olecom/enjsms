@@ -10,9 +10,8 @@ var id = 'App.um.controller.Userman'
     mainView: null,// for development in devtools
     init:
     function controllerUsermanInit(){
-    var me = this, mainView
-
-        mainView = new App.um.view.Userman({ constrainTo: Ext.getCmp('desk').getEl() })
+    var me = this
+       ,mainView = new App.um.view.Userman
 
         mainView.on({
             destroy: destroyUserman

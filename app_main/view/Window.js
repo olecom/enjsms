@@ -7,6 +7,8 @@ Ext.define('App.view.Window',
     constrainHeader: true,// doesn't work properly
     autoShow: true,
     maximizable: true,
+    __resizeLock: false,// see `fixHeight()`
+    layout: 'fit',
     tools:[{
         type: 'refresh',
         tooltip:// developer's stuff must have no `l10n`
@@ -56,6 +58,7 @@ Ext.define('App.view.Window',
     function dynamic_init_window(){
     var me = this
 
+        if(!me.constrainTo) me.constrainTo = Ext.getCmp('desk').getEl()
         me.callParent()
 
         me.wm = Ext.getCmp('wm').add({
@@ -68,6 +71,22 @@ Ext.define('App.view.Window',
            ,scope: me
         })
         me.on({
+            /* Fix bug with `constrainTo` window, which is wrongly maximized
+             * - maximize: initial event
+             * - resize: browser window resizes
+             * */
+            maximize: function maximizeViewWindow(w){
+                w.__resizeLock = true
+                w.setHeight(w.getHeight() - 34)// fix size
+                w.__resizeLock = false
+            },
+            resize: function fixMaximizedHeight(w){
+                if(w.maximized && !w.__resizeLock){
+                    w.__resizeLock = true
+                    w.setHeight(w.getHeight() - 34)// fix `constrainTo`
+                    w.__resizeLock = false
+                }
+            },
             destroy: function onCloseWindow(){
                 Ext.getCmp('wm').remove(me.wm, /*autoDestroy:*/ true)
                 me.wm = null

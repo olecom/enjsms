@@ -167,7 +167,13 @@ function extjs_launch(){
     Ext.Error.handle = function(err){
         return !con.warn(err)
     }
-
+/* debug
+ * console> [E] Layout run failed
+ * with `ext-all-dev.js` and this:
+Ext.Loader.loadScript({url:'extjs/src/diag/layout/Context.js'})
+Ext.Loader.loadScript({url:'extjs/src/diag/layout/ContextItem.js'})
+*/
+    Ext.syncRequire('App.view.Window')// provide core Class(es)
     if(App.cfg.extjs.load.requireLaunch.length){
         var j
            ,i = 0
@@ -177,6 +183,7 @@ function extjs_launch(){
             l.innerHTML += '<br>' + j
         } while(++i < App.cfg.extjs.load.requireLaunch.length)
     }
+
     if(App.cfg.createViewport){//if no app module (e.g. userman auth) does that
         Ext.globalEvents.fireEvent('createViewport')
     }

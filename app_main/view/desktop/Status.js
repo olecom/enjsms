@@ -1,7 +1,7 @@
 Ext.require('App.store.Status')
 
 Ext.define('App.view.desktop.StatusGrid',{
-    extend: 'Ext.grid.Panel',
+    extend: Ext.grid.Panel,
     singleton: true,
     title: l10n.stsSystem,
     /* config for stretching `grid` to fit container correctly: */

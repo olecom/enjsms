@@ -18,7 +18,7 @@ var id = 'App.controller.Chat'
        ,users ,uname
        ,sid = 'chatUsers'
        ,date_fmt = Ext.util.Format.dateRenderer('[H:i:s]')
-       ,chat = new App.view.Chat({ constrainTo: Ext.getCmp('desk').getEl() })
+       ,chat = new App.view.Chat
 
         chat.on({
             destroy: destroyChat

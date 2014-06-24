@@ -1,5 +1,5 @@
 Ext.define ('App.view.desktop.BackendTools',{
-    extend: 'Ext.toolbar.Toolbar',
+    extend: Ext.toolbar.Toolbar,
     xtype: 'sg-ct',
     dock: 'bottom',
     items:[ '-','nodejs: ',{

@@ -1,5 +1,5 @@
 Ext.define('App.view.desktop.Shortcuts',{
-    extend: 'Ext.toolbar.Toolbar',
+    extend: Ext.toolbar.Toolbar,
     xtype: 'app-shortcuts',
     style: 'background-color:transparent;background-image:none;'
 
