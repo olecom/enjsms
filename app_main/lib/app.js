@@ -60,11 +60,13 @@ var api      = require('./api.js')
     return
 
     function remote_extjs_cfg(){
-        var fs = require('fs')
+    var fs = require('fs')
         if(cfg.extjs.pathFile){
             cfg.extjs.path = fs.readFileSync(cfg.extjs.pathFile).toString().trim()
         }
-        app.use('/extjs/' ,connect['static'](__dirname + '/../../' + cfg.extjs.path))
+        cfg.extjs.path = __dirname + '/../../' + cfg.extjs.path
+        app.use('/extjs/'                  ,connect['static'](cfg.extjs.path))
+        app.use('/extjs/docs/extjs-build/' ,connect['static'](cfg.extjs.path))
         cfg.extjs.path = 'extjs/'// switch local to external path
         app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
     }
