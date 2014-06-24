@@ -10,7 +10,15 @@ Ext.define ('App.view.desktop.BackendTools',{
                 return App.doCheckBackend()
             throw new Error('OOPS: restricted code in frontend')
        }
-    },'->',{
+    },'->','-',{
+        text: l10n.stsStopSystem
+       ,iconCls: 'sg-s'
+       ,handler: function(){
+            if(App.doStopBackend)// TODO request cmd_exit, stop mongoDB
+                return App.doStopBackend()
+            throw new Error('OOPS: restricted code in frontend')
+       }
+    },'-',{
         text: l10n.stsRestart
        ,iconCls: 'sg-r'
        ,handler: function(){
@@ -18,7 +26,7 @@ Ext.define ('App.view.desktop.BackendTools',{
                 return App.doRestartBackend()
             throw new Error('OOPS: restricted code in frontend')
        }
-    },'-',{
+    },'-','->',{
         text: l10n.stsKill
        ,iconCls: 'sg-k'
        ,handler: function(){

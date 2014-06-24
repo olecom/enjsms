@@ -69,7 +69,7 @@ l10n = { lang: 'ru',//!!! локализация используется тол
     ,stsStart: 'ЗАПУСК основной `nodejs`'
     ,stsCheck: 'ПРОВЕРКА работы основной `nodejs`'
     ,stsRestarting: '(2 сек.) запускается новый основной `nodejs`'
-    ,stsKilling: 'ЗАВЕРШИТЬ основной `nodejs` (завис)'
+    ,stsKilling: 'УБИТЬ основной `nodejs` (завис)'
     ,stsBackendPid: function(pid){
         return '' + pid + ' - идентификатор основного процесса(nodejs) системы'
     }
@@ -79,7 +79,8 @@ l10n = { lang: 'ru',//!!! локализация используется тол
     ,stsClean: 'Очистить'
     ,stsEcho: 'Запрос-проверка'
     ,stsRestart: 'Перезапустить'
-    ,stsKill: 'Завершить силой, "убить" (завис)'
+    ,stsStopSystem: 'Завершить работу системы'
+    ,stsKill: '"Убить" (завис)'
     ,stsKilled: 'основной процесс "убит"'
     ,stsKilledAlready: 'основной процесс уже "умер"'
     ,stsAlive: 'основной процесс "живой"'

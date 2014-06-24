@@ -79,6 +79,7 @@ name_example
     ,stsClean: 'Clear'
     ,stsEcho: 'Request-check'
     ,stsRestart: 'Restart'
+    ,stsStopSystem: 'Shutdown the system'
     ,stsKill: 'Terminate/kill process (hangs)'
     ,stsKilled: 'main process is "killed"'
     ,stsKilledAlready: 'main process is already "dead"'
