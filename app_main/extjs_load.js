@@ -165,6 +165,15 @@ function extjs_launch(){
     Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider)
     // handle errors raised by Ext.Error.raise()
     Ext.Error.handle = function(err){
+        Ext.Msg.show({
+            title: l10n.errun_title,
+            buttons: Ext.Msg.OK,
+            icon: Ext.Msg.ERROR,
+            msg: '<b>' +
+err.msg.slice(0, 177) + '...</b><br><br>sourceClass: <b>' +
+err.sourceClass + '</b><br>sourceMethod: <b>' +
+err.sourceMethod + '</b>'
+                })
         return !con.warn(err)
     }
 /* debug
