@@ -1,8 +1,8 @@
 //`new Function(...){`
 if(local.log_dir){
-    api_text(ret, api, local, req, res)
-} else {// direcroty is not ready
-    setTimeout(api_text, 1024, ret, api, local, req, res)
+    api_text(ret, api, local, req, res, next)
+} else {// directoty is not ready
+    setTimeout(api_text, 1024, ret, api, local, req, res, next)
 }
 return true// async anyway
 //`}`
@@ -14,7 +14,7 @@ return true// async anyway
  * Developed, tested, debugged using reload `view.Window` tool button
  **/
 
-function api_text(ret, api, local, req, res){
+function api_text(ret, api, local, req, res, next){
 var d, f
     if(!local.log_dir){
         throw new Error('Chat: no `log_dir` available')// handled by `connect`
@@ -44,7 +44,7 @@ var d, f
         if(local.log_file){// current log file is opened
             local.log_file.end(null,
                 function on_close_log_file(err){
-                    if(err) throw new Error(err)
+                    if(err) next(new Error(err))
                     open_log()
                 }
             )
@@ -63,7 +63,7 @@ var d, f
 
         local.log_file.on('error',
             function on_error_log_file(err){
-                if(err) throw new Error(err)
+                if(err) next(new Error(err))
                 local.log_file.end()
                 local.log_file = null
             }
