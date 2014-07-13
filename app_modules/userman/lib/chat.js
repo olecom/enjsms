@@ -44,8 +44,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
 
         if('deve' === m && !req.session.can['App.view.Window->tools.refresh']){
             res.statusCode = 401// no auth
-            res.json(ret)
-            return
+            return res.json(ret)
         }
 
         req.url = url.parse(req.url)// parse into object, api has no `require()`
@@ -54,10 +53,12 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
         }
         if(chat_api[m]){
             if(!chat_api[m](ret, api, local, req, res, next)){// try/catch by `connect`
-                res.json(ret)// sync
+                return res.json(ret)// sync
             }// async
+        } else {
+            return res.json(ret)// sync no handler
         }
-        return
+        return undefined
     }
 
     function load_api(){
