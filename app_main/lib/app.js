@@ -48,6 +48,7 @@ var api      = require('./api.js')
     /* backend static files for HTTP users */
     app.use('/' ,connect['static'](__dirname + '/..', { index: 'app.htm' }))
 
+    app.use('/test.js' , sendFile('test.js'))
     /* final stage: error path */
     app.use(require('./middleware/errorHandler.js'))
        .use(_404)// no middleware handled request
