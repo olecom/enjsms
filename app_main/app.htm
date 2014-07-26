@@ -11,13 +11,13 @@
          for now it's static: -->
     <script type="text/javascript" src="l10n/ru.js" charset="utf-8"></script>
     <script type="text/javascript">(
-    function pre_load(w, d, c){
+    function pre_load(w, d, con){
         var b, s = "FATAL ERROR: no language! File './l10n/ru.js' or similar."
         if(!window.l10n)
             return d.write(s) && alert(s)
 
         w.addEventListener('error' ,function(errEvent){// show any errors early
-            c && c.error(errEvent)
+            con.error(errEvent)
             if(w.Ext){
                 return Ext.Msg.show({
                    title: l10n.errun_title,
