@@ -3,6 +3,7 @@ module.exports = { /* API setup */
     app: null,// connect()
     connect: null,// connectjs
     cfg: null,
+    db: null,// mongodb connected
 
     /* modules sub api (can be removed if no such app module used)
      * performance hint: placeholders tell V8 about future structure
@@ -12,10 +13,11 @@ module.exports = { /* API setup */
     roles: null,// userman: same for roles
     users: null,// userman: same for users
 
-    set_api: function set_api(cfg, con, _log, _err){
+    set_api: function set_api(cfg, db){
         var api = this
 
         api.cfg = cfg
+        api.db = db
 
         return api
     }

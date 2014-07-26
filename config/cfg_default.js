@@ -64,5 +64,10 @@ config = {
         job_port: 3007,
         sess_puzl: 'puzzle-word$54321X'
        ,init_timeout: 123
+
+       ,mongodb:{ //'mongodb://' + process.env.MONGODS + process.env.MONGO_DBNAME
+            url: 'mongodb://127.0.0.1:27017/supro_GLOB'
+           ,options: { forceServerObjectId: true ,journal: true }
+        }
     }
 }
