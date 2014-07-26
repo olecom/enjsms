@@ -37,10 +37,11 @@ l10n.errun_stack + '</b>' + errEvent.error.stack.replace(/</g, '&lt;').replace(/
             w.alert && w.alert(l10n.uncaughtException  + errEvent.message)
             w.alert = null// show fatal error once
         })
-
-        if(!(s = localStorage.l10n) || l10n.lang == s)
+        con.log('checking `localStorage.l10n`...')
+        if(!(s = localStorage.l10n) || l10n.lang == s){
             return load_front()
-
+        }
+        con.log('loading `localStorage.l10n`: ' + localStorage.l10n)
         b = d.head.getElementsByTagName('script')
         d.head.removeChild(b[1])
         d.head.removeChild(b[0])
