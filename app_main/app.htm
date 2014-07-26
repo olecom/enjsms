@@ -19,6 +19,10 @@
         w.addEventListener('error' ,function(errEvent){// show any errors early
             con.error(errEvent)
             if(w.Ext){
+                if(app.btn){
+                    app.btn.setLoading(false)
+                    app.btn = null
+                }
                 return Ext.Msg.show({
                    title: l10n.errun_title,
                    buttons: Ext.Msg.OK,

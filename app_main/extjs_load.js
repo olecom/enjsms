@@ -7,6 +7,7 @@ var app
 (function gc_wrapper(con){
     app = {
         config: null,
+        btn: null,// quick launch buttons to access when error
         extjs_load: extjs_load_gc_wrapped
     }
     return
@@ -107,7 +108,7 @@ function extjs_launch(){
      * - and fast view definitions (config only):
      *     App.cfg['App.view.Userman'] = { ... }
      **/
-        btn && btn.setLoading(true)
+        btn && (app.btn = btn).setLoading(true)
 
         if(!(~ns.indexOf('.app.'))){
             ns = 'App.' + ns// if class name from "App" (this) namespace
@@ -157,7 +158,6 @@ function extjs_launch(){
             } else {// usually plain views
                 Ext.create(ns, cfg)
             }
-
             btn && btn.setLoading(false)
         }
     }
