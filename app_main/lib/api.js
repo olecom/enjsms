@@ -3,11 +3,6 @@ module.exports = { /* API setup */
     app: null,// connect()
     connect: null,// connectjs
     cfg: null,
-    con: null,// console
-    _log: null,
-    _err: null,
-
-    ipt: require('util').inspect,
 
     /* modules sub api (can be removed if no such app module used)
      * performance hint: placeholders tell V8 about future structure
@@ -21,9 +16,6 @@ module.exports = { /* API setup */
         var api = this
 
         api.cfg = cfg
-        api.con = con
-        api._log = _log
-        api._err = _err
 
         return api
     }

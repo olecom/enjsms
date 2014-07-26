@@ -10,7 +10,6 @@ var api      = require('./api.js')
    ,connect = api.connect = require('connect')
    ,app     = api.app = connect()
    ,cfg     = api.cfg
-   ,_log    = api._log
 
     /* Add own middlewares */
 
@@ -32,7 +31,7 @@ var api      = require('./api.js')
     /* TODO: save and load session info from files
      *connect.session.MemoryStore.prototype.loadSync
      *connect.session.MemoryStore.prototype.saveSync = function(path){
-     *   _log('this.sessions: ' + api.ipt(this.sessions) + '\n')
+     *   log('this.sessions: ', this.sessions, '\n')
     }*/
 
     app.use(connect.session({
@@ -53,7 +52,7 @@ var api      = require('./api.js')
     app.use(require('./middleware/errorHandler.js'))
        .use(_404)// no middleware handled request
     .listen(cfg.backend.job_port ,function app_is_up_and_running(){
-        _log('^ app is up and running\n' +
+        log('^ app is up and running\n' +
             new Date().toISOString()
         )
     })

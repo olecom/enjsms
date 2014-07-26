@@ -9,10 +9,8 @@ var fs = require('fs')
                     function on_fstat(err, stat){
                         if(err){
                             res.statusCode = 500
-                            err = api.ipt(err)
-                            api._err(err)
-                            res.txt(err)
-                            return
+                            log('sendFile err: ', err)
+                            return res.txt(err.stack ? err.stack : err)
                         }
                         res.setHeader('Content-Length', stat.size)
                         res.setHeader('Content-Type',(
@@ -28,9 +26,8 @@ var fs = require('fs')
         fstream.on('error',
             function on_fstream_error(err){
                 res.statusCode = 500
-                err = api.ipt(err)
-                api._err(err)
-                res.txt(err)
+                log(err)
+                return res.txt(err)
             }
         )
     }

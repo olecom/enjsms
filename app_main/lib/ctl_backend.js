@@ -9,12 +9,8 @@
 ================================================================================
 */
 
-function ctl_backend_uglify_js(cfg, run_backend, _log, _err){
+function ctl_backend_uglify_js(cfg, run_backend){
 var ipt  = require('util').inspect
-   ,noop = function() {}
-
-    if(!_log) _log = noop
-    if(!_err) _err = noop
 
 var ctl = require('http').createServer(
 function proc_ctl_http_serv(req, res){
@@ -22,7 +18,7 @@ function proc_ctl_http_serv(req, res){
 
     res.on('close', proc_ctl_res_unexpected_close)
 
-    _log('ctl req url:' + req.url)
+    log('ctl req url:' + req.url)
     if ('/sts_running' == req.url){
     } else if ('/cmd_exit' == req.url){
         process.nextTick(function(){
@@ -45,7 +41,7 @@ function proc_ctl_http_serv(req, res){
 ctl.on('listening',
 function proc_ctl_http_serv_listening(){
     ctl = new Date()// fill `ctl` as running flag
-    _log(
+    log(
         '^ backend http proc ctl @ http://127.0.0.1:' + cfg.backend.ctl_port + '\n' +
         ctl.toISOString()
     )
@@ -55,24 +51,24 @@ ctl.on('error',
 function proc_ctl_http_serv_error(e){
 // NOTE: net error handler must not be inside init(listen) callback!!!
     if('EADDRINUSE' == e.code){// 'EADDRNOTAVAIL'?
-        _err(
+        log(
             "!!! FATAL(ctl): can't listen host:port='127.0.0.1':" + cfg.backend.ctl_port +
             "\n" + ipt(e) +
             "\nNOTE: check config 'ctl_port' option collision"
         )
     } else {//FIXME: handle all fatal errors to unset `ctl` and process.exit()
-        _err("! ERROR(ctl) controlling http channel: " + ipt(e))
+        log("! ERROR(ctl) controlling http channel: " + ipt(e))
     }
     if (!ctl) process.exit(1)
 })
 
 ctl.on('clientError',
 function proc_ctl_client_error(e, sock){
-    _err("! ERROR(ctl) in client connection: " + ipt(e))
+    log("! ERROR(ctl) in client connection: " + ipt(e))
 })
 
 function proc_ctl_res_unexpected_close(){
-    _err('! ERROR(ctl) aborted request')
+    log('! ERROR(ctl) aborted request')
 }
 
 ctl.listen(cfg.backend.ctl_port ,'127.0.0.1' ,run_backend)
