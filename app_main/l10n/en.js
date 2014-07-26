@@ -4,6 +4,7 @@ l10n = { lang: 'en',
     ,reload: 'reload',
 
     loading: 'Loading...'
+    ,oops_rcif: 'OOPS: restricted code in frontend'
     ,errload: 'Loading failed due to errors.'
     ,errload_no_app:
         'Installation error! File not found: "app_front.js".\n' +

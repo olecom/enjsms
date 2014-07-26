@@ -8,7 +8,7 @@ Ext.define ('App.view.desktop.BackendTools',{
        ,handler: function(){
             if(App.doCheckBackend)// request, check/sync $PID
                 return App.doCheckBackend()
-            throw new Error('OOPS: restricted code in frontend')
+            throw new Error(l10n.oops_rcif)
        }
     },'->','-',{
         text: l10n.stsStopSystem
@@ -16,7 +16,7 @@ Ext.define ('App.view.desktop.BackendTools',{
        ,handler: function(){
             if(App.doStopBackend)// TODO request cmd_exit, stop mongoDB
                 return App.doStopBackend()
-            throw new Error('OOPS: restricted code in frontend')
+            throw new Error(l10n.oops_rcif)
        }
     },'-',{
         text: l10n.stsRestart
@@ -24,7 +24,7 @@ Ext.define ('App.view.desktop.BackendTools',{
        ,handler: function(){
             if(App.doRestartBackend)// request cmd_exit, respawn, recheck
                 return App.doRestartBackend()
-            throw new Error('OOPS: restricted code in frontend')
+            throw new Error(l10n.oops_rcif)
        }
     },'-','->',{
         text: l10n.stsKill
@@ -32,7 +32,7 @@ Ext.define ('App.view.desktop.BackendTools',{
        ,handler: function(){
             if(App.doTerminateBackend)// spawn `terminate.wsh $PID`
                 return App.doTerminateBackend()
-            throw new Error('OOPS: restricted code in frontend')
+            throw new Error(l10n.oops_rcif)
         }
     }]
 })

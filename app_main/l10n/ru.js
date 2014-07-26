@@ -4,6 +4,7 @@ l10n = { lang: 'ru',//!!! локализация используется тол
     ,reload: 'перезагрузить',
 
     loading: 'Загрузка...'
+    ,oops_rcif: 'OOPS: restricted code in frontend'
     ,errload: 'Загрузка прекращена из-за ошибок.'
     ,errload_no_app:
         'Ошибка установки! Не найден файл "app_front.js".\n' +
