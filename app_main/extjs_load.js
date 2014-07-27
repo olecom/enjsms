@@ -99,6 +99,21 @@ function extjs_launch(){
     }
     App.cfg = app.config
 
+    var l10n_data = l10n
+
+    /*
+     * Access existing data via e.g.:
+     * > l10n.docOpenAll
+     * When developing to have some placeholders and viewable content without
+     * need to fill of the `l10n` files use:
+     * > l10n('create_season')
+     */
+    l10n = function l10nProvider(msg){
+        var m
+        return (m = this[msg]) ? m : msg
+    }
+    Ext.apply(l10n, l10n_data)
+
     App.create = function create_sub_app(ns, btn, cfg){// fast init
     /*
      * There are classes with run time development reloading for
