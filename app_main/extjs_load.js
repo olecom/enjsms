@@ -99,8 +99,6 @@ function extjs_launch(){
     }
     App.cfg = app.config
 
-    var l10n_data = l10n
-
     /*
      * Access existing data via e.g.:
      * > l10n.docOpenAll
@@ -108,10 +106,14 @@ function extjs_launch(){
      * need to fill of the `l10n` files use:
      * > l10n('create_season')
      */
+    var l10n_data = l10n
     l10n = function l10nProvider(msg){
-        var m
-        return (m = this[msg]) ? m : msg
+        var me, m
+
+        me = (me = l10n._ns) ? l10n[me] : l10n
+        return me && (m = me[msg]) ? m : msg
     }
+    l10n._ns = ''
     Ext.apply(l10n, l10n_data)
 
     App.create = function create_sub_app(ns, btn, cfg){// fast init
