@@ -52,6 +52,12 @@ Ext.define('App.proxy.CRUD',{
         var me = this, mo = 0,
             Model, root, result
 
+            if(me.getMeta && (result = me.getMeta(data))){
+                me.onMetaChange(result)
+            } else if(data.metaData){
+                me.onMetaChange(data.metaData)
+            }
+
             /* raw or JSON can be seen by devtools/network, thus no
              * ```
              *  me.rawData = data
