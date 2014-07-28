@@ -63,11 +63,9 @@ Ext.define('App.proxy.CRUD',{
              *  me.rawData = data
              *  me.jsonData = data
              * ``` */
-
-            data = me.getData(data)
             result = {
                 total  : 0,
-                records: null,
+                records: [ ],
                 success: me.getSuccess(data),
                 message: me.messageProperty ? me.getMessage(data) : null
             }
