@@ -81,10 +81,7 @@ function mongodb_connect(config, app_callback){
                 }
 
                 e = " MongoDB v" + d.documents[0]['version']
-                //log(e + " server @ " + cfg.url)
-                //supro.v = supro.v + e
-                return app_callback(null ,e)
-                //return init_collections(null ,app_callback)
+                return app_callback(null ,e, db)
             })
         })//cb admin
     })

@@ -14,17 +14,19 @@ var cfg = require('./lib/read_config.js')
                 new Date().toISOString()
         )
 
-        require('./lib/api.js').set_api(cfg)
         if(cfg.backend.mongodb){
             return require('./lib/mongodb.js').connect(
                 cfg.backend.mongodb
-               ,function on_app_db(err, dbInfo){
+               ,function on_app_db(err, db_info, db){
                     err && process.exit(1)// it's over
-                    log(dbInfo)
+                    log(db_info)
+                    require('./lib/api.js').set_api(cfg, db)
                     require('./lib/app.js')()
+                    return
                 }
             )
         }// else use no db:
+        require('./lib/api.js').set_api(cfg)
         require('./lib/app.js')()
         return undefined
     }
