@@ -53,7 +53,11 @@ function mongodb_connect(config, app_callback){
             db = mongodb.client = newdb
         }
         db.on('error', function on_db_err(err){
-            log('db error: ', err)
+            log('db error: ', err.stack || err)
+            /*
+             * NOTE: fatal errors and/or crashes inside DB callbacks can not use
+             *       `res.json()` to report UI and that. Timeout will fire in UI
+             */
         })
         db.on('timeout', function on_db_timeout(conn){
             log('db timeout: ' + conn.host + ':' + conn.port)
