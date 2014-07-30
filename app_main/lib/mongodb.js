@@ -40,7 +40,9 @@ function mongodb_connect(config, app_callback){
                 }
             }
         }
-        cfg.url = config.url ? config.url : 'mongodb://127.0.0.1:27017/supro_GLOB'
+        cfg.url = config.url && config.db_name?
+                  config.url + config.db_name :
+                  'mongodb://127.0.0.1:27027/supro_GLOB'
     }
     return MongoClient.connect(cfg.url, cfg.options, function on_connect(err ,newdb){
         if(err){

@@ -66,7 +66,8 @@ config = {
        ,init_timeout: 123
 
        ,mongodb:{ //'mongodb://' + process.env.MONGODS + process.env.MONGO_DBNAME
-            url: 'mongodb://127.0.0.1:27017/supro_GLOB'
+            url: 'mongodb://127.0.0.1:27027/'
+           ,db_name: 'supro_GLOB'
            ,options: { forceServerObjectId: true ,journal: true }
         }
     }
