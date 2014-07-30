@@ -47,7 +47,12 @@ function mongodb_connect(config, app_callback){
     return MongoClient.connect(cfg.url, cfg.options, function on_connect(err ,newdb){
         if(err){
             log('MongoClient.connect:', err)
-            return setTimeout(mongodb_connect, 4096)
+            return setTimeout(
+                function reconnect(){
+                    mongodb_connect(config, app_callback)
+                },
+                4096
+            )
         }
         if(!db && newdb){
             db = mongodb.client = newdb
