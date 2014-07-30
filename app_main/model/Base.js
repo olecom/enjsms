@@ -82,7 +82,18 @@ Ext.Array.insert(
 
 Ext.define('App.model.BaseR',{
     extend: Ext.data.Model,
-    fields: App.cfg.modelBase.fields
+    fields: App.cfg.modelBase.fields,
+    constructor: function(){
+        /* Before:
+         * > id: "App.model.Status-ext-record-9
+         * > internalId: "ext-record-9"
+         **/
+        App.cfg.modelBase.c9r.apply(this, arguments)
+        /* After:
+         * > id: "ext-record-9"
+         * > internalId: "ext-record-9"
+         */
+    }
 })
 
 Ext.define('App.model.BaseCRUD',{
