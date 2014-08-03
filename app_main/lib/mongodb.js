@@ -12,7 +12,7 @@ var mongodb = {
     // methods
     connect: mongodb_connect
     // mongo console methods
-   ,getCollection: null
+   //,getCollection: null
 }
 
 //var globm ,globi ,objm ,obji ,colls_cache = { }, objs_cache = { }
@@ -20,7 +20,6 @@ var mongodb = {
 return module.exports = mongodb
 
 function mongodb_connect(config, app_callback){
-    var MongoClient = require('mongodb').MongoClient
 	/* Any data is being copied globally on every object (or node) of the system,
 	 * thus `_id`s on every side may collide with locally generated data.
 	 * So _id's are generated on Mongod's server side and play role only inside
@@ -44,7 +43,7 @@ function mongodb_connect(config, app_callback){
                   config.url + config.db_name :
                   'mongodb://127.0.0.1:27027/supro_GLOB'
     }
-    return MongoClient.connect(cfg.url, cfg.options, function on_connect(err ,newdb){
+    return require('mongodb').MongoClient.connect(cfg.url, cfg.options, function on_connect(err ,newdb){
         if(err){
             log('MongoClient.connect:', err)
             return setTimeout(
@@ -84,12 +83,13 @@ function mongodb_connect(config, app_callback){
                 }
                 // collection from the driver is not the only thing we need here
                 // there can be other info stored inside this objects e.g. `meta`
-                mongodb.getCollection = function getCollection(name){// using cache
+                db.getCollection = function getCollection(name){// using cache
                     if(!colls_cache[name]){// name is `collectionName`
-                        colls_cache[name] = db.client.collection(name)
+                        colls_cache[name] = db.collection(name)
                     }
                     return colls_cache[name]
                 }
+                db.ObjectId = require('mongodb').ObjectID
 
                 e = " MongoDB v" + d.documents[0]['version']
                 return app_callback(null ,e, db)
