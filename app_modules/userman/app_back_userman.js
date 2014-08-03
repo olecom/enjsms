@@ -380,6 +380,7 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                 if('developer.local' === r &&
                    '127.0.0.1' !== req.socket.remoteAddress){
                     ret.success = false//security: don't allow remote access
+                    ret.err = 'no_remote_access'
                 }
                 if(ret.success){
                     if(req.session.fail){
@@ -397,7 +398,7 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                     wes.broadcast('auth@um', ret)
                     return// fast path
                 } else {
-                    ret.err = 'Bad user name, password, role'
+                    ret.err || (ret.err = 'Bad user name, password, role')
                 }
             } else {
                 ret.err = 'No data available'
