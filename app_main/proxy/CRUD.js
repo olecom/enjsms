@@ -9,18 +9,25 @@ Ext.define('App.proxy.CRUD',{
     startParam: undefined,// default is empty params
     pageParam: undefined,
     limitParam: undefined,
+    timeout: 2048,
 
     listeners:{
         exception:
         function crud_exception(proxy, res, op){
+        var msg
+            try {
+                msg = l10n(JSON.parse(res.responseText).data)
+            }catch (ex){
+                msg = l10n.err_crud_proxy
+            }
             console.error(arguments)
             Ext.Msg.show({
                 title: l10n.errun_title,
                 buttons: Ext.Msg.OK,
                 icon: Ext.Msg.ERROR,
-                msg: '<b>CRUD Proxy (or Reader or Model) exception!<br><br>operation ' + (
-                     op.error ?
-                     'error (in proxy/reader/model):</b> ' + op.error.replace(/\r*\n/g, '<br>') :
+                msg: '<b>' + msg + '<br><br>operation ' + (op.error ?
+                     'error (in proxy/reader/model):</b> ' + String(
+                      op.error.statusText || op.error).replace(/\r*\n/g, '<br>') :
                      'success (backend):</b> ' + op.success
                 )
             })
