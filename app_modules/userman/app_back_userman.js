@@ -99,7 +99,7 @@ var app = api.app
 
     function check_type_and_apply_perm(can){
         if(!can){
-            api._log('Warning: permission name is not defined')
+            log('Warning: permission name is not defined')
             return
         }
         do {
@@ -145,7 +145,7 @@ var app = api.app
         for(p in Roles){
             r = Roles[p]
             if(!Array.isArray(r)){
-                api._log('Warning: role "' + p + '" is not Array')
+                log('Warning: role "' + p + '" is not Array')
                 continue
             }
             for(i = 0; i < r.length; ++i){
@@ -154,7 +154,7 @@ var app = api.app
             }
         }
         rbac.merge(api.cfg.app.modules.userman.rbac)// use after init
-console.log('rbac initAuth: ' + api.ipt(rbac, { depth : 6 }))
+//log('rbac initAuth: ', require('util').inspect(rbac, { depth : 6 }))
     }
 
     function mwBasicAuthorization(req, res, next){
@@ -185,19 +185,17 @@ console.log('rbac initAuth: ' + api.ipt(rbac, { depth : 6 }))
             if(~idx){// *.js files
                 perm = perm.slice(0, idx)
                 if(Can.Static.hasOwnProperty(perm) && can.Static[perm]){
-console.log('allow session Can.Static: ' + perm)
-                    next()// allow connect.static
-                    return
+log('allow session Can.Static: ' + perm)
+                    return next()// allow connect.static
                 }
             } else {
-console.log('perm: ' + perm + ' can: ', can)
+log('perm: ' + perm + ' can: ', can)
                 for(i = 0; i < can.API.length; ++i){// scan all API
-console.log('check: ' + can.API[i])
+log('check: ' + can.API[i])
                     if(0 == perm.indexOf(can.API[i])){// for subsets
                     // e.g. '/um/' in ''/um/lib...''
-console.log('allow "' + perm + '" by can.API: ' + can.API[i])
-                        next()// allow API
-                        return
+log('allow "' + perm + '" by can.API: ' + can.API[i])
+                        return next()// allow API
                     }
                 }
             }
@@ -206,18 +204,17 @@ console.log('allow "' + perm + '" by can.API: ' + can.API[i])
 
         if(!Can.Static.hasOwnProperty(perm)){// no auth
            for(i = 0; i < Can.API.length; ++i){// all API must heve permission
-console.log('Check: ' + Can.API[i])
+log('Check: ' + Can.API[i])
                 if(0 == perm.indexOf(Can.API[i])){
                 // search for subsets e.g. '/um/' in ''/um/lib...''
-console.log('disallow "' + perm + '" by Can.API: ' + Can.API[i])
+log('disallow "' + perm + '" by Can.API: ' + Can.API[i])
                     perm = ''
                     break
                 }
             }
             if(perm){
-console.log('allow Can.Static: ' + perm)
-                next()// allow stuff that is NOT listed there
-                return
+log('allow Can.Static: ' + perm)
+                return next()// allow stuff that is NOT listed there
             }
             // fall thru to disallow
         }
@@ -286,7 +283,7 @@ console.log('allow Can.Static: ' + perm)
 
         function apply_permission(j){
         var i, is_api = false
-console.log('perm apply:"' + j + '"; Can[j]: ', Can[j])
+log('perm apply:"' + j + '"; Can[j]: ', Can[j])
             if(true === Can[j]){// single available permission name
             // secured permissions true here and blocked from others in `rbac.merge`
                 can[j] = true
@@ -310,7 +307,7 @@ console.log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                     for(i = 0; i < Can.API.length; ++i){// all API must heve permission
                         if(0 == Can.API[i].indexOf(j)){// j: "/p", API[i]: '/pingback'
                             is_api = true
-                            api._log('!Security `apply_permission`: skip secure API subset "' + j + '"')
+                            log('!Security `apply_permission`: skip secure API subset "' + j + '"')
                             break// stop scan; deny subsets of API from app modules
                         }
                     }
@@ -318,7 +315,7 @@ console.log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                         check_type_and_apply_perm(j)
                     }
                 } else {
-                    api._log('!Security `apply_permission`: skip secure permission "' + j + '"')
+                    log('!Security `apply_permission`: skip secure permission "' + j + '"')
                 }
             }
         }

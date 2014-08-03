@@ -168,7 +168,7 @@ console.log('eca a: ', a)
         if(!rbac) return
 
         if(0 == rbac_api.can.API.length){
-            api._log('Coding error: empty `rbac_api.can.API`; use `merge_rbac()` *after* `initAuth()`')
+            log('Coding error: empty `rbac_api.can.API`; use `merge_rbac()` *after* `initAuth()`')
         }
 
         var i, j, k, m, ii, src, dst, secure
@@ -176,22 +176,22 @@ console.log('eca a: ', a)
         secure = rbac_api.secure_can
         for(i in rbac){
             if(!rbac_api.hasOwnProperty(i)){// check if `rbac_api` has such category
-                api._log('!Security `merge_rbac`: overwrite attempt of "' + i + '"')
+                log('!Security `merge_rbac`: overwrite attempt of "' + i + '"')
                 continue// don't allow anything from untrusted sources
             }
             src = rbac[i], dst = rbac_api[i]
             for(j in src){// from source to destination
                 if(dst.hasOwnProperty(j)){
-                    api._log('!Security `merge_rbac`: overwrite attempt of `' + i + '["' + j + '"]`')
+                    log('!Security `merge_rbac`: overwrite attempt of `' + i + '["' + j + '"]`')
                     continue// don't allow overwrite anything
                 }
                 if('can' == i){
                     if(Array.isArray(src[j])){
-                        api._log('`merge_rbac`: skip array can.' + j)
+                        log('`merge_rbac`: skip array can.' + j)
                         continue// disable arrays (nothing can be there)
                     }
                     if(null !== secure(j)){
-                        api._log('!Security `merge_rbac`: skip secure permission "' + j + '"')
+                        log('!Security `merge_rbac`: skip secure permission "' + j + '"')
                         continue// there is such permission in `secure_can`
                     }
                 } else if('roles' == i){// check perms thru `secure_can`
@@ -203,7 +203,7 @@ console.log('eca a: ', a)
                     for(k = 0; k < m.length; ++k){
 //console.log('merge role m[k]: ' + m[k])
                         if(null !== secure(m[k])){
-                            api._log('!Security `merge_rbac`: reject role secure permission "' + m[k] + '"')
+                            log('!Security `merge_rbac`: reject role secure permission "' + m[k] + '"')
                             m[k] = ''// there is such permission in `secure_can`
                         } else {// check API subsets
 //console.log('merge role API: ', rbac_api.can.API)
@@ -212,7 +212,7 @@ console.log('eca a: ', a)
 //console.log('merge role API[ii]: ' + rbac_api.can.API[ii])
                                 if(0 == rbac_api.can.API[ii].indexOf(m[k])){
                                 // j: "/p", API[i]: '/pingback'
-                                    api._log(
+                                    log(
                                         '!Security `merge_rbac`: skip secure API subset "' +
                                         m[k] + '" in role "'+ j + '"'
                                     )
