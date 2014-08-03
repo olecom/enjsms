@@ -23,7 +23,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
 
     function mwPutWaitEvents(req, res){
     var w, s
-        if(req.session){
+        if(req.session && req.session.user){
             res.on('close', (function create_on_res_close(rq){
                 var sessionID = '' + rq.sessionID// closure, copy string
                 return function on_res_close(){
