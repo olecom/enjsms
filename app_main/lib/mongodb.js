@@ -20,11 +20,11 @@ var mongodb = {
 return module.exports = mongodb
 
 function mongodb_connect(config, app_callback){
-	/* Any data is being copied globally on every object (or node) of the system,
-	 * thus `_id`s on every side may collide with locally generated data.
-	 * So _id's are generated on Mongod's server side and play role only inside
-	 * local MongoDB internally
-	 * */
+    /* Any data is being copied globally on every object (or node) of the system,
+     * thus `_id`s on every side may collide with locally generated data.
+     * So _id's are generated on Mongod's server side and play role only inside
+     * local MongoDB internally
+     * */
     if(config){
         cfg.options = config.options ? config.options :{
             db:{
