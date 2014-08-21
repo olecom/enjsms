@@ -4,14 +4,14 @@ var cfg = require('./lib/read_config.js')
     global.log = log
 
     require('./lib/response.js')
-    require('./lib/process.js')(process)
+    require('./lib/process.js')(process, global)
     require('./lib/ctl_backend.js')(cfg, run_backend)
 
     function log(){ con.log.apply(con, arguments) }
 
     function run_backend(){
         log('^ app is starting http @ port ' + cfg.backend.job_port + '\n' +
-                new Date().toISOString()
+            new Date().toISOString()
         )
 
         if(cfg.backend.mongodb){
