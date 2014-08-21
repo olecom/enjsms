@@ -119,7 +119,7 @@ function extjs_launch(){
             msg = msg.slice(0, idx)
 
             return me && (m = me[msg]) ?
-                   m + '<br><div style="color:red;">' + tail + '</div>' :
+                   m + '<br><br><div style="color:red;">' + tail + '</div>' :
                    msg
         }
 

@@ -1,3 +1,8 @@
+/*
+ * JSON-optimized proxy, reader and writer
+ **/
+if(Ext.encode !== JSON.stringify) Ext.encode = JSON.stringify// ensure this one
+
 Ext.define('App.proxy.CRUD',{
     extend: Ext.data.proxy.Rest,
     alias: 'proxy.crud',
@@ -15,17 +20,20 @@ Ext.define('App.proxy.CRUD',{
     listeners:{
         exception:
         function crud_exception(proxy, res, op){
-        var msg
-            try {
-                msg = l10n(JSON.parse(res.responseText).data)
-            } catch(ex){
+        var msg, icon
+
+            try { icon = JSON.parse(res.responseText).data } catch(ex){ }
+            if(icon){
+                msg = l10n(icon)
+                icon = icon[0] == '_' ? Ext.Msg.WARNING : Ext.Msg.ERROR
+            } else {
                 msg = l10n.err_crud_proxy
             }
             console.error(arguments), console.error(op.error)
             if(!Ext.Msg.isVisible()) Ext.Msg.show({
                 title: l10n.errun_title,
-                buttons: Ext.Msg.OK,
-                icon: Ext.Msg.ERROR,
+                buttons: Ext.Msg.OK,// app of fatal errors:
+                icon: icon,
                 msg: '<b>' + msg + '<br><br>operation ' + (op.error ?
                      'error (in proxy/reader/model):</b> ' + String(
                       op.error.statusText || op.error).replace(/\r*\n/g, '<br>') :
