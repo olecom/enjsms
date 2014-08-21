@@ -111,3 +111,6 @@ body { background: #FFFFFF url(css/supro.png) no-repeat center !important }
 .transparent > div { background: transparent!important; }
 .ok { background-image:url(css/ok.png)!important; }
 .cancel { background-image:url(css/delete.png)!important; }
+
+.row-err { background-color: #FF9787 }
+.row-err td { background-color: #FF9787 }
