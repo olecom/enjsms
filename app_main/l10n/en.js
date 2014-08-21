@@ -1,5 +1,6 @@
 l10n = { lang: 'en',
     app: 'SUPRO Demo'
+    ,'': "empty"
     ,welcome: 'SUPRO welcomes: application development'
     ,reload: 'reload',
 
@@ -90,10 +91,35 @@ name_example
     ,stsMsg: 'Messages: '
     ,stsMarkRead: 'Mark all as read'
 
+    ,btnCreate: 'Create'
+    ,btnEdit: 'Edit'
+    ,btnCancel: 'Cancel'
+
+    ,copyCtrlC: 'CTRL+C copies cell'
+
+    ,formNoChange: 'No changes'
+    ,formNoChangeMsg: 'The Form has no changes!'
+
     ,time: 'Time'
     ,operation: 'Operation'
     ,description: 'Description'
     ,result: 'Result'
+
+    /* DATA EXCHANGE */
+
+    // fronend error messages
+    ,err_crud_proxy: 'Request failed. Fatal. Call for developer.'
+
+    // backend error codes
+    ,no_db: 'Data Base is unavailable. Fatal. Call for developer.'
+
+    ,store_save_err: 'Data save failed!'
+
+    ,trans_start_fail: 'trans_start_fail'
+    ,trans_end_fail: 'trans_end_fail'
+    ,'!history': '!history'
+    ,'error index': 'Duplicate SKU insert or other Index error'
+    ,MongoError: 'FATAL Mongo Error'
 
     ,um: null // user manager
 }

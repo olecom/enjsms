@@ -108,9 +108,21 @@ function extjs_launch(){
      */
     var l10n_data = l10n
     l10n = function l10nProvider(msg){
-        var me, m
+        var me, m, idx, tail
 
         me = (me = l10n._ns) ? l10n[me] : l10n
+
+        idx = msg.indexOf(':')
+
+        if(idx > 0){
+            tail = msg.slice(idx + 1)
+            msg = msg.slice(0, idx)
+
+            return me && (m = me[msg]) ?
+                   m + '<br><div style="color:red;">' + tail + '</div>' :
+                   msg
+        }
+
         return me && (m = me[msg]) ? m : msg
     }
     l10n._ns = ''
