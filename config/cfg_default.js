@@ -68,7 +68,11 @@ config = {
        ,mongodb:{ //'mongodb://' + process.env.MONGODS + process.env.MONGO_DBNAME
             url: 'mongodb://127.0.0.1:27027/'
            ,db_name: 'supro_GLOB'
-           ,options: { forceServerObjectId: true ,journal: true }
+           ,options:{// you know what you doing here!
+               bufferMaxEntries: 0,
+               forceServerObjectId: true,
+               journal: true
+           }
         }
     }
 }

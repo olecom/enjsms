@@ -105,6 +105,7 @@ Ext.define('App.model.BaseCRUD',{
     /* abstract options may be defined by inherited Models: */
     //clientIdProperty: 'Id' && !persist, for writing records to the server
     //url: Model operates on its own (without store)
+    //fields: reconfigured by store/proxy/grid; or see below 'modelShoeItems'
 
     constructor: function(){
         if(this.url){
@@ -119,3 +120,172 @@ Ext.define('App.model.BaseCRUD',{
         App.cfg.modelBase.c9r.apply(this, arguments)// use short view ids
     }
 })
+
+/* =============================================================================
+
+App.cfg.modelShoeItems = {
+    /*fields:[// this are initial sets of config; first init is done by `metaChange`
+    { name: 'add',     type: 'date' },
+    { name: 'id',      type: 'int' },
+    'id_mpcode'
+    /*{ name: 'add_by',  type: 'string' },
+    { name: 'edit',    type: 'date' },
+    { name: 'edit_by', type: 'string' },* /
+    ],* /
+    columns:[
+    { dataIndex: 'id',      text: l10n.so.clmn.id, width: 28 },
+    { dataIndex: 'add',     text: l10n.so.clmn.add, format: 'Y/m/d H:i:s l', xtype: "datecolumn" }
+    /*{ dataIndex: 'add_by',  text: l10n.so.clmn.add_by, hidden: true },
+    { dataIndex: 'edit',    text: l10n.so.clmn.edit, hidden: true },
+    { dataIndex: 'edit_by', text: l10n.so.clmn.edit_by, hidden: true }* /
+    ]
+}
+
+/*Ext.define('App.shoesupro.model.OrderItems',{
+    extend: App.model.BaseCRUD,
+    fields: App.cfg.modelShoeItems.fields
+})
+ *
+doc = {
+  "_id": new ObjectID("53df77df9bfa430000000004")
+, add: new Date("Mon Aug 04 2014 03:00:00 GMT+0300 (Калининградское время (зима))")
+, "add_by": "default login"
+, edit: null
+, "edit_by": ""
+, name: "Осень-зима 2014/2015"
+, "#": 31
+, "total_plan": 12345
+, "total_done": 0
+, eur: 15000
+, dlr: 12000
+, fem: 120
+, mal: 130
+, id: 0
+, fields: [
+    {
+      name: "add"
+    , type: "date"
+    }
+  , {
+      name: "add_by"
+    , type: "string"
+    }
+  , {
+      name: "edit"
+    , type: "date"
+    }
+  , {
+      name: "edit_by"
+    , type: "string"
+    }
+  , {
+      name: "id"
+    , type: "int"
+    }
+  , "id_mpcode"
+  , "pcode"
+  , {
+      name: "total_qty"
+    , type: "int"
+    }
+  , "id_mfg"
+  , {
+      name: "id_in"
+    , type: "int"
+    }
+  , "gend"
+  , "prodname"
+  , "g_color"
+  , "g_material"
+  , "g_sizes_set"
+  , "g_sizes"
+  ]
+, columns: [
+    {
+      dataIndex: "id"
+    , text: "id"
+    , width: 28
+    }
+  , {
+      dataIndex: "add"
+    , text: "add"
+    , format: "Y/m/d H:i:s l"
+    , xtype: "datecolumn"
+    , width: 187
+    , tdCls: "so-clmn-add"
+    }
+  , {
+      dataIndex: "id_mpcode"
+    , text: "id_mpcode"
+    , width: 167
+    , editor: "textfield"
+    }
+  , {
+      dataIndex: "id_in"
+    , text: "id_in"
+    , width: 28
+    }
+  , {
+      dataIndex: "id_mfg"
+    , text: "id_mfg"
+    , width: 44
+    }
+  , {
+      dataIndex: "g_sizes"
+    , text: "g_sizes"
+    , xtype: "so_gridColumnSizes"
+    }
+  , {
+      dataIndex: "g_sizes"
+    , text: "g_sizes_sum"
+    , xtype: "so_gridColumnSizesSum"
+    , width: 44
+    }
+  , {
+      dataIndex: "total_qty"
+    , text: "total_qty"
+    , width: 44
+    }
+  , {
+      dataIndex: "pcode"
+    , text: "pcode"
+    , editor: "textfield"
+    }
+  , {
+      dataIndex: "gend"
+    , text: "gend"
+    , width: 44
+    }
+  , {
+      dataIndex: "prodname"
+    , text: "prodname"
+    }
+  , {
+      dataIndex: "g_color"
+    , text: "g_color"
+    }
+  , {
+      dataIndex: "g_material"
+    , text: "g_material"
+    }
+  , {
+      dataIndex: "g_sizes_set"
+    , text: "g_sizes_set"
+    }
+  , {
+      dataIndex: "add_by"
+    , text: "add_by"
+    }
+  , {
+      dataIndex: "edit"
+    , text: "edit"
+    , hidden: true
+    }
+  , {
+      dataIndex: "edit_by"
+    , text: "edit_by"
+    , hidden: true
+    }
+  ]
+};
+*/

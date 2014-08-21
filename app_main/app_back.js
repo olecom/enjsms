@@ -17,9 +17,9 @@ var cfg = require('./lib/read_config.js')
         if(cfg.backend.mongodb){
             return require('./lib/mongodb.js').connect(
                 cfg.backend.mongodb
-               ,function on_app_db(err, db_info, db){
-                    err && process.exit(1)// it's over
-                    log(db_info)
+               ,function on_app_db(err, db){
+                    err && process.exit(1)// it's over, don't even launch
+
                     require('./lib/api.js').set_api(cfg, db)
                     require('./lib/app.js')()
                     return

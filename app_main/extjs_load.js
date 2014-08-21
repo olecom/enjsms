@@ -190,6 +190,9 @@ function extjs_launch(){
             btn && btn.setLoading(false)
         }
     }
+    // NOTE: Ext JSON pasing is useful for non valid JSON with `l10n` as values
+    con.log('ExtJS Ext.encode: always native `JSON.stringify()`')
+    Ext.encode = JSON.stringify
 
     Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider)
     // handle errors raised by Ext.Error.raise()

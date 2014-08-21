@@ -6,9 +6,10 @@ Ext.define('App.proxy.CRUD',{
     // proxy defaults can be overriden by store's constructor
     idParam: '_id',// mongodb's
     batchActions: true,
-    startParam: undefined,// default is empty params
+    startParam: undefined,// our default is empty params
     pageParam: undefined,
     limitParam: undefined,
+    appendId: false,// and no ID in URL tail
     timeout: 2048,
 
     listeners:{
@@ -17,11 +18,11 @@ Ext.define('App.proxy.CRUD',{
         var msg
             try {
                 msg = l10n(JSON.parse(res.responseText).data)
-            }catch (ex){
+            } catch(ex){
                 msg = l10n.err_crud_proxy
             }
-            console.error(arguments)
-            Ext.Msg.show({
+            console.error(arguments), console.error(op.error)
+            if(!Ext.Msg.isVisible()) Ext.Msg.show({
                 title: l10n.errun_title,
                 buttons: Ext.Msg.OK,
                 icon: Ext.Msg.ERROR,
@@ -71,7 +72,8 @@ Ext.define('App.proxy.CRUD',{
              *  me.jsonData = data
              * ``` */
             result = {
-                total  : 0,
+                total  : data.total || 0,
+                count  : 0,
                 records: [ ],
                 success: me.getSuccess(data),
                 message: me.messageProperty ? me.getMessage(data) : null
@@ -80,13 +82,11 @@ Ext.define('App.proxy.CRUD',{
             if(result.success){
                 root = me.getRoot(data)// is Array or blow up
 
-                if((result.total = root.length)){
+                if((result.count = root.length)){
                     Model = me.model
                     do {
                         data = (root[mo] = new Model(root[mo]))
-                        if(data.phantom){
-                            data.phantom = false// if no IDs from the server
-                        }
+                        data.phantom && (data.phantom = false)// if no IDs from the server
                     } while(++mo < root.length)
                 }
                 result.records = root
@@ -99,7 +99,8 @@ Ext.define('App.proxy.CRUD',{
         type: 'json'
        ,allowSingle: false
        //,writeRecordId: true  // default
-       //,writeAllFields: !true// !default
+       ,writeAllFields: !true// !default
+       ,dateFormat: 'c'// use ISO 8601 date with timezone info
        ,write:
         function writeJSON(request){
         var operation = request.operation,
@@ -121,4 +122,11 @@ Ext.define('App.proxy.CRUD',{
             return request
         }
     }
+/*   ,constructor: function(cfg){
+       if(cfg.reader){// don't overwrite this proxy reader setup, just configure
+           Ext.apply(this.reader, cfg.reader)
+           delete cfg.reader
+       }
+       this.callParent([cfg])
+   }*/
 })
