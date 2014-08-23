@@ -62,6 +62,7 @@ config = {
         file: 'app_main/app_back.js',
         ctl_port: 3008,
         job_port: 3007,
+        //sess_maxage: //null: browser lifetime; default: ~9.3 hours one working day
         sess_puzl: 'puzzle-word$54321X'
        ,init_timeout: 123
 

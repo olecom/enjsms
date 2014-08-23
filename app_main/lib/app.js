@@ -37,8 +37,18 @@ var api      = require('./api.js')
     app.use(connect.session({
         secret: cfg.backend.sess_puzl
        ,generate: function(req, res){
-            return req.url === '/login' //&& user not in store
+            return !req.session && req.url === '/login'
         }
+       ,cookie:{
+           /*
+            * `maxAge: null` browser lifetime session
+            * But: to enable UI to remove session on any unload/close event
+            *      see `Ext.EventManager.onWindowUnload` @
+            *      app_modules\userman\controller\Login.js
+            **/
+            maxAge: cfg.backend.hasOwnProperty('sess_maxage') ?
+                    cfg.backend.sess_maxage : 1 << 25// 9.3 hours ~one working day
+       }
        //,store = require('connect-mongo')(app)
     }))
 

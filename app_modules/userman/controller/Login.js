@@ -237,10 +237,11 @@ Ext.define('App.controller.Login', {
                      *       in the browser.
                      *       Thus session is lost and relogin is required. But
                      *       this can be automated by userscripts.
+                     *       In Chrome `Ext.EventManager.onWindowUnload()` works.
                      *
                      * node-webkit: session is destroyed only on window `close`
                      **/
-                        Ext.EventManager.onWindowUnload(App.User.logout)
+                     //Ext.EventManager.onWindowUnload(App.User.logout)// leave session for now
                     } else {// `nw`
                         app.w.on('close', function nw_close(){
                             App.User.logout()
