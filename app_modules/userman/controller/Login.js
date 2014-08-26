@@ -228,8 +228,8 @@ Ext.define('App.controller.Login', {
                     callbackAuth
                 )
             }
-            function callbackAuth(success, res){
-                if(success){
+            function callbackAuth(err, json, res){
+                if(!err){
                     App.User = User
                     App.view.userman.Login.fadeOut(createViewportAuth)
                     if(!App.cfg.backend.url){// `browser`
@@ -243,10 +243,10 @@ Ext.define('App.controller.Login', {
                      **/
                      //Ext.EventManager.onWindowUnload(App.User.logout)// leave session for now
                     } else {// `nw`
-                        app.w.on('close', function nw_close(){
-                            App.User.logout()
-                            this.close(true)
-                        })
+                        //app.w.on('close', function nw_close(){
+                        //    App.User.logout()
+                        //    this.close(true)
+                        //})
                     }
                 } else {
                     // reload if no session (e.g. backend reloaded)

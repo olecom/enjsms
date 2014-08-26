@@ -27,9 +27,9 @@ Ext.define('App.model.userman.User', {
     login: function login(newUserId, get_session_info){
         App.backend.req('/login', newUserId,{
             autoAbort: true,
-            callback: function session_info(_, success, res){
-                if(success){// controller (i.e. caller) updates UI
-                    get_session_info(Ext.decode(res.responseText))
+            callback: function session_info(err, json){
+                if(!err){// controller (i.e. caller) updates UI
+                    get_session_info(json)
                     return
                 }
             }
@@ -38,22 +38,21 @@ Ext.define('App.model.userman.User', {
     auth: function auth(user, role, pass, callback){
         var me = this
         App.backend.req('/auth',
-            user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),{
-            callback: function auth_cb(_, success, res){
-                if(success){
-                    res = Ext.decode(res.responseText)
-                    me.can = res.can
-                    me.set('id', res.user.id)
-                    me.set('name', res.user.name)
-                    me.set('Roles', res.user.roles)
+            user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),
+            function auth_cb(err, json, res){
+                if(!err){
+                    me.can = json.can
+                    me.set('id', json.user.id)
+                    me.set('name', json.user.name)
+                    me.set('Roles', json.user.roles)
                     me.login = me.auth = null// after login GC
                 }
-                callback && callback(success, res)
-            }}
+                callback && callback(err, json, res)
+            }
         )
     },
     can: null,// permissions; usage: `App.User.can['App.backend.JS'] && (run_that())`
     logout: function logout(cb){
-        App.backend.req('/logout', null, { callback: cb })
+        App.backend.req('/logout', null, cb)
     }
 })
