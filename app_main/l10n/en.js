@@ -111,7 +111,9 @@ name_example
     ,err_crud_proxy: 'Request failed. Fatal. Call for developer.'
 
     // backend error codes
-    ,no_db: 'Data Base is unavailable. Fatal. Call for developer.'
+    ,'!session': 'Session has ended. New login required. Unsaved data move to MS Excel.'
+    ,'!db': 'Data Base is unavailable. Fatal. Call for developer.'
+    ,'!such_subapi': 'No such sub API.'
 
     ,store_save_err: 'Data save failed!'
 
@@ -119,7 +121,11 @@ name_example
     ,trans_end_fail: 'trans_end_fail'
     ,'!history': '!history'
     ,'error index': 'Duplicate SKU insert or other Index error'
-    ,MongoError: 'FATAL Mongo Error'
+    ,MongoError: 'FATAL Mongo Error. Call for developer.'
+    ,TypeError: 'Programming error. Call for developer.'
+    ,ReferenceError: 'Programming error. Call for developer.'
+    // backend applicaiton errors (non fatal or wrong input)
+    ,_exists: 'Already exists.'
 
     ,um: null // user manager
 }
