@@ -1,9 +1,6 @@
 Ext.define('App.store.CRUD',{
     extend: Ext.data.Store,
-    requires:[
-        'App.model.BaseCRUD',
-        'App.proxy.CRUD'
-    ],
+    requires:[ 'App.model.BaseCRUD' ],
     //url: required; is used to configure proxy
 
     constructor: function(cfg){
@@ -22,16 +19,8 @@ Ext.define('App.store.CRUD',{
                 listeners:{
                     metachange: function find_reconfigureGrids(store, meta){
                     var url = store.proxy.url
-
-console.log('reconfig grids')
-                        Ext.each(Ext.ComponentQuery.query(
-                            'so_gridOrderItems[itemId="' + store.storeId +'"]'),
-                            function(grid){
-                                grid.reconfigure(null, meta.columns)
-                            }
-                        )
                         // next data will go without init && meta && reconfig
-                        store.proxy.url = url.slice(0, url.indexOf('!init'))
+                        store.proxy.url = url.slice(0, url.indexOf('+init'))
                     }
                 }
             }
