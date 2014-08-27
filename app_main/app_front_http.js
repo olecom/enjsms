@@ -12,10 +12,11 @@ var xhr = new XMLHttpRequest
 
     function load_config_then_ExtJS(res){
     var extjs_config, req = res.target
+
         if(4 != req.readyState) return
-        if(200 != req.status) throw new Error(/config/.test(req.responseURL)?
-            l10n.errload_config_read :
-            l10n.extjsNotFound
+        if(200 != req.status) throw new Error(
+            ~String(req.responseURL).indexOf('ext-all')?
+            l10n.extjsNotFound : l10n.errload_config_read
         )
 
         if(req.responseText){// config
