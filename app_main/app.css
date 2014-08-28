@@ -114,3 +114,4 @@ body { background: #FFFFFF url(css/supro.png) no-repeat center !important }
 
 .row-err { background-color: #FF9787 }
 .row-err td { background-color: #FF9787 }
+.rows-selall{background:url(css/cursor.png) no-repeat;}

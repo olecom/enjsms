@@ -96,6 +96,7 @@ l10n = { lang: 'ru',//!!! локализация используется тол
     ,btnCancel: 'Отмена'
 
     ,copyCtrlC: 'CTRL+C скопирует ячейку'
+    ,selectAll: 'Выделить всё строки'
 
     ,formNoChange: 'Нет изменений'
     ,formNoChangeMsg: 'В форме нет никаких изменеий!'

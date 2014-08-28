@@ -96,6 +96,7 @@ name_example
     ,btnCancel: 'Cancel'
 
     ,copyCtrlC: 'CTRL+C copies cell'
+    ,selectAll: 'Select all rows'
 
     ,formNoChange: 'No changes'
     ,formNoChangeMsg: 'The Form has no changes!'
