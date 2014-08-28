@@ -18,24 +18,32 @@ test = {
     },
 
     get: function ajax_get(url, data){
-        var req = new XMLHttpRequest()
+        var req = new XMLHttpRequest
         req.open("GET" ,url ,false)
         req.send(data)
         return req
     },
 
     post: function ajax_post(url, data){
-        var req = new XMLHttpRequest()
+        var req = new XMLHttpRequest
         req.open("POST" ,url ,false)
         req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8')
         req.send(JSON.stringify(data))
         return req
     },
     postxt: function ajax_post(url, data){
-        var req = new XMLHttpRequest()
+        var req = new XMLHttpRequest
         req.open("POST" ,url ,false)
         req.setRequestHeader('Content-Type', 'text/plain; charset=UTF-8')
         req.send(data)
+        return req
+    },
+
+    put: function ajax_put(url, data){
+        var req = new XMLHttpRequest
+        req.open("PUT" ,url ,false)
+        req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8')
+        req.send(JSON.stringify(data))
         return req
     },
 
