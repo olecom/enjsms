@@ -17,10 +17,15 @@ Ext.define('App.store.CRUD',{
                 remoteFilter: false,
                 remoteGroup: true,
                 listeners:{
-                    metachange: function find_reconfigureGrids(store, meta){
-                    var url = store.proxy.url
+                    metachange: function find_reconfigureGrids(store, metaData){
+                    var p = store.proxy
                         // next data will go without init && meta && reconfig
-                        store.proxy.url = url.slice(0, url.indexOf('+init'))
+                        p.url = p.url.slice(0, p.url.indexOf('+init'))
+                        if(metaData.hasOwnProperty('edit')){
+//TODO: if error, send diff of changes for conflict resolution, if any
+                            // send back for concurrent write checks
+                            p.extraParams.edit = metaData.edit
+                        }
                     }
                 }
             }

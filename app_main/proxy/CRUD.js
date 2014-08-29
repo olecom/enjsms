@@ -130,11 +130,4 @@ Ext.define('App.proxy.CRUD',{
             return request
         }
     }
-/*   ,constructor: function(cfg){
-       if(cfg.reader){// don't overwrite this proxy reader setup, just configure
-           Ext.apply(this.reader, cfg.reader)
-           delete cfg.reader
-       }
-       this.callParent([cfg])
-   }*/
 })
