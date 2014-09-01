@@ -38,5 +38,9 @@ Ext.define('App.store.CRUD',{
         )
         delete cfg.url// is not needed in store
         me.callParent([cfg])
+
+        if(me.handleStoreException){//application module/logic error
+            me.on('exception', me.handleStoreException)
+        }
     }
 })

@@ -19,20 +19,28 @@ Ext.define('App.proxy.CRUD',{
 
     listeners:{
         exception:
-        function crud_exception(proxy, res, op){
+        function crud_exception_proxy(proxy, res, op){
         var msg, icon
 
             try { icon = JSON.parse(res.responseText).data } catch(ex){ }
             if(icon){
-                msg = l10n(icon)
-                icon = icon[0] == '_' ? Ext.Msg.WARNING : Ext.Msg.ERROR
+                if('~' == icon[0] && proxy.model){//application module/logic error
+                    msg = op.records[0]
+                    if(msg && msg.stores[0]){
+                        msg.stores[0].fireEvent('exception', icon)
+                    }
+
+                    return
+                }
+                msg = l10n(icon)// warning or fatal error:
+                icon = '_' == icon[0] ? Ext.Msg.WARNING : Ext.Msg.ERROR
             } else {
                 msg = l10n.err_crud_proxy
             }
             console.error(arguments), console.error(op.error)
             if(!Ext.Msg.isVisible()) Ext.Msg.show({
                 title: l10n.errun_title,
-                buttons: Ext.Msg.OK,// app of fatal errors:
+                buttons: Ext.Msg.OK,
                 icon: icon,
                 msg: '<b>' + msg + '<br><br>operation ' + (op.error ?
                      'error (in proxy/reader/model):</b> ' + String(

@@ -125,6 +125,7 @@ name_example
     ,MongoError: 'FATAL Mongo Error. Call for developer.'
     ,TypeError: 'Programming error. Call for developer.'
     ,ReferenceError: 'Programming error. Call for developer.'
+    ,Error: 'Programming error. Call for developer.'
     // backend applicaiton errors (non fatal or wrong input)
     ,_exists: 'Already exists.'
 
