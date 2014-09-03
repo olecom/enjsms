@@ -11,12 +11,11 @@ Ext.define('App.proxy.CRUD',{
     // proxy defaults can be overriden by store's constructor
     //idParam: '_id',// URL param of ID mongodb's
     batchActions: true,
-    startParam: undefined,// our default is empty params
+    startParam: undefined,// our default is empty params || startParam: 'skip'
     pageParam: undefined,
-    limitParam: undefined,
+    limitParam: undefined,// || limitParam: 'limit'
     appendId: false,// and no ID in URL tail
     timeout: 2048,
-
     listeners:{
         exception:
         function crud_exception_proxy(proxy, res, op){
