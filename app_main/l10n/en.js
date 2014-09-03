@@ -116,18 +116,17 @@ name_example
     ,'!db': 'Data Base is unavailable. Fatal. Call for developer.'
     ,'!such_subapi': 'No such sub API.'
 
-    ,store_save_err: 'Data save failed!'
-
-    ,trans_start_fail: 'trans_start_fail'
-    ,trans_end_fail: 'trans_end_fail'
-    ,'!history': '!history'
+    ,'!transs': 'trans_start_fail'
+    ,'!transe': 'trans_end_fail'
+    ,'!hsts': 'failed history start'
+    ,'!hste': 'failed history end'
     ,'error index': 'Duplicate SKU insert or other Index error'
     ,MongoError: 'FATAL Mongo Error. Call for developer.'
     ,TypeError: 'Programming error. Call for developer.'
     ,ReferenceError: 'Programming error. Call for developer.'
     ,Error: 'Programming error. Call for developer.'
     // backend applicaiton errors (non fatal or wrong input)
-    ,_exists: 'Already exists.'
+    //,'~exists': 'Already exists.'
 
     ,um: null // user manager
 }
