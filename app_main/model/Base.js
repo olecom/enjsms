@@ -92,16 +92,25 @@ Ext.define('App.model.BaseR',{
         /* After:
          * > id: "ext-record-9"
          * > internalId: "ext-record-9"
-         */
+         **/
     }
 })
 
 Ext.define('App.model.BaseCRUD',{
     extend: Ext.data.Model,
-    requires:[
-        'App.proxy.CRUD'
-    ],
+    requires:[ 'App.proxy.CRUD' ],
+   /* idProperty is the internal ID of model in `data.Store` <--> backend link
+    * in general MongoDB's default `_id` (any DB doc has it) is OK here
+    *
+    * but if there are many local databases serving data to one global one
+    * (i.e. is distributed on document basis via some transport),
+    * then using `_id` isn't possible due to possible collisions
+    * such collections define `idProperty` on proxy level or redefine model
+    *
+    * NOTE: collections being synced via transport must delete `_id` in docs
+    **/
     idProperty: '_id',
+
     /* abstract options may be defined by inherited Models: */
     //clientIdProperty: 'Id' && !persist, for writing records to the server
     //url: Model operates on its own (without store)

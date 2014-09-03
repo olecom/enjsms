@@ -9,7 +9,7 @@ Ext.define('App.proxy.CRUD',{
     //url(abstract): is defined by Store || Model
 
     // proxy defaults can be overriden by store's constructor
-    idParam: '_id',// mongodb's
+    //idParam: '_id',// URL param of ID mongodb's
     batchActions: true,
     startParam: undefined,// our default is empty params
     pageParam: undefined,
@@ -36,6 +36,7 @@ Ext.define('App.proxy.CRUD',{
                 icon = '_' == icon[0] ? Ext.Msg.WARNING : Ext.Msg.ERROR
             } else {
                 msg = l10n.err_crud_proxy
+                icon = Ext.Msg.ERROR
             }
             console.error(arguments), console.error(op.error)
             if(!Ext.Msg.isVisible()) Ext.Msg.show({
@@ -53,7 +54,7 @@ Ext.define('App.proxy.CRUD',{
     /* JSON-optimized reader and writer */
     reader:{
         type: 'json'
-       ,idProperty: '_id'
+       //,idProperty: setup this by `data.Model`s for both reader and writer
        ,root: 'data'
        //,totalProperty: '#'// by default it is the length of the data array
        ,getResponseData:

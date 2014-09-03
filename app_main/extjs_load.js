@@ -214,7 +214,10 @@ err.sourceMethod + '</b>'
 Ext.Loader.loadScript({url:'extjs/src/diag/layout/Context.js'})
 Ext.Loader.loadScript({url:'extjs/src/diag/layout/ContextItem.js'})
 */
-    Ext.syncRequire('App.view.Window')// provide core Class(es)
+
+    Ext.syncRequire('App.model.Base')//loading Models manually, then [M]VC
+    Ext.syncRequire('App.store.CRUD')
+    Ext.syncRequire('App.view.Window')// provide core View Class(es)
     if(App.cfg.extjs.load.requireLaunch.length){
         var j
            ,i = 0
