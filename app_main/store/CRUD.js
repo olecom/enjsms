@@ -30,8 +30,8 @@ Ext.define('App.store.CRUD',{
         cfg.storeId || (cfg.storeId = 'supro_CRUD_' + (new Date).valueOf())
 
         App.cfg.backend.url && (cfg.url = App.cfg.backend.url + cfg.url)
-        cfg.proxy = Ext.apply(cfg.proxy || { },
-            { type: 'crud', url: cfg.url }// force this store CRUD proxy
+        cfg.proxy = Ext.apply(cfg.proxy || { },// force this store CRUD proxy config
+            { type: 'crud', url: cfg.url, storeId: cfg.storeId }
         )
 
         delete cfg.url// is not needed in store

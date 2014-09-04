@@ -23,10 +23,10 @@ Ext.define('App.proxy.CRUD',{
 
             try { icon = JSON.parse(res.responseText).data } catch(ex){ }
             if(icon){
-                if('~' == icon[0] && proxy.model){//application module/logic error
-                    msg = op.records[0]
-                    if(msg && msg.stores[0]){
-                        msg.stores[0].fireEvent('exception', icon)
+                if('~' == icon[0] && proxy.storeId){
+                    msg = Ext.StoreManager.lookup(proxy.storeId)
+                    if(msg){//pass application module/logic error to the store
+                        msg.fireEvent('exception', icon)
                     }
 
                     return
