@@ -69,7 +69,7 @@ function mongodb_connect(config, app_callback){
         })
         db.on('close', function on_db_close(conn){
             db.status = ''
-            log('db close: ' + conn.host + ':' + conn.port)
+            conn && log('db close: ' + conn.host + ':' + conn.port)
         })
 
         db.on('reconnect', function on_db_close(conn){

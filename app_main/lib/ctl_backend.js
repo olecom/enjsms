@@ -20,11 +20,28 @@ function proc_ctl_http_serv(req, res){
 
     log('ctl req url:' + req.url)
     if ('/sts_running' == req.url){
-    } else if ('/cmd_exit' == req.url){
-        process.nextTick(function(){
-            process.exit(0)
-        })
-        body += '$ is going down'
+        // empty
+    } else if('/cmd_exit' == req.url){
+
+        if(cfg.backend.mongodb){
+            if((cfg = require('./mongodb.js').client)){
+                return cfg.close(true, function end_with_mongodb(err){
+                    err && (body += '! MongoDB close error:' + err + '\n')
+                    body += '^ MongoDB connection was closed\n'
+                    log(body)
+
+                    res.writeHead(200 ,{ 'Content-Length': body.length,
+                                         'Content-Type': 'text/plain' }
+                    )
+                    res.end(body)
+
+                    return the_end(err ? 2 : 0)
+                })
+            }
+        }
+
+        the_end()
+        body += '$ is going down\n'
     } else if ('/cmd_stat' == req.url){
         body += Math.ceil(process.uptime()) + '\n' + ctl.toISOString()
     } else {// show some info about this
@@ -34,8 +51,9 @@ function proc_ctl_http_serv(req, res){
         '\n\n' +
         'application under control is at HTTP port: ' + cfg.backend.job_port + '\n'
     }
-    res.writeHead(200 ,{ 'Content-Length': body.length ,'Content-Type': 'text/plain' })
-    res.end(body)
+
+    res.writeHead(200 ,{ 'Content-Length': body.length, 'Content-Type': 'text/plain' })
+    return res.end(body)
 })
 
 ctl.on('listening',
@@ -75,6 +93,11 @@ ctl.listen(cfg.backend.ctl_port ,'127.0.0.1' ,run_backend)
 ctl.unref()// "allow the program to exit if this is the only active server in the event system"
 ctl = null// setup is over, waiting for 'listening' event, `ctl` is running flag
 
+function the_end(code){
+    process.nextTick(function(){
+        process.exit(code ? code : 0)
+    })
+}
 }
 
 module.exports = ctl_backend_uglify_js
