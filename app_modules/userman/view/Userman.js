@@ -2,7 +2,7 @@
 Ext.define('App.um.view.Userman',{ // slow initial loading
     extend: App.view.Window,
     title: 'App.um.view.Userman',
-    wmImg: (App.cfg.backend.url || '') + '/css/userman/userman_shortcut.png',
+    wmImg: App.backendURL + '/css/userman/userman_shortcut.png',
     wmTooltip: 'Userman',
     wmId: 'um.view.Userman',
     autoScroll: !true,

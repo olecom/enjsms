@@ -1,7 +1,7 @@
 App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [], [
 {
     text:
-'<img height="64" width="64" src="' + (App.cfg.backend.url || '') +
+'<img height="64" width="64" src="' + App.backendURL +
 '/css/userman/userman_shortcut.png"/>' +
 '<br/><br/>' +
 l10n.um.users +
@@ -21,7 +21,7 @@ l10n.um.users +
 ,
 {
     text:
-'<img height="64" width="64" src="' + (App.cfg.backend.url || '') +
+'<img height="64" width="64" src="' + App.backendURL +
 '/css/userman/chat_64px.png"/>' +
 '<br/><br/>' +
 l10n.um.chat.title +
