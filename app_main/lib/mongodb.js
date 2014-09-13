@@ -11,6 +11,7 @@ var colls_cache = { }// for collections which may have additional dynamic fields
 var mongodb = {
     client: null,
     // methods
+    //TODO: close() with check for `serverStatus.metrics.cursor.open.total`
     connect: mongodb_connect
 }
 

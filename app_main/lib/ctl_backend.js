@@ -25,6 +25,7 @@ function proc_ctl_http_serv(req, res){
 
         if(cfg.backend.mongodb){
             if((cfg = require('./mongodb.js').client)){
+            //FIXME: check `serverStatus.metrics.cursor.open.total`
                 return cfg.close(true, function end_with_mongodb(err){
                     err && (body += '! MongoDB close error:' + err + '\n')
                     body += '^ MongoDB connection was closed\n'
