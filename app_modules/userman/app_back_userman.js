@@ -52,9 +52,9 @@ var app = api.app
 
     // high priority
     app.use('/um/lib/chat', require('./lib/chat.js')(api))// backend API && MVC UI:
-    app.use(n = '/model/chatUser.js', api.connect.sendFile(__dirname + n, true))
-    app.use(n = '/view/Chat.js', api.connect.sendFile(__dirname + n, true))
-    app.use(n = '/controller/Chat.js', api.connect.sendFile(__dirname + n, true))
+    app.use('/um' + (n = '/model/chatUser.js'), api.connect.sendFile(__dirname + n, true))
+    app.use('/um' + (n = '/view/Chat.js'), api.connect.sendFile(__dirname + n, true))
+    app.use('/um' + (n = '/controller/Chat.js'), api.connect.sendFile(__dirname + n, true))
 
     app.use('/um/lib/rbac', rbac.mw)
     app.use('/um' + (n = '/view/Userman.js'), api.connect.sendFile(__dirname + n, true))
@@ -75,7 +75,8 @@ var app = api.app
     return
 
     function mwL10n(req, res, next){
-    var q, s, postfix = '_userman.js'
+    var q, s, postfix = '_um.js'
+
         if(!~req.url.indexOf(postfix)){
             next()
             return// l10n is not for this module

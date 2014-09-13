@@ -1,3 +1,4 @@
+App.um = { }
 App.backend.waitEvents = (function create_backend_wait_events(conn){
     /* channel#2: receive events from backend */
     var defaults

@@ -27,7 +27,7 @@ App.cfg.modelChatUser = {
     ]
 }
 
-Ext.define('App.model.userman.chatUser',{
+Ext.define('App.um.model.chatUser',{
     extend: App.model.BaseCRUD,
     fields: App.cfg.modelChatUser.fields
 })

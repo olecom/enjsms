@@ -1,14 +1,14 @@
 (// support reloading for development
 function(override){
-var id = 'App.controller.Chat'
+var id = 'App.um.controller.Chat'
    ,cfg = {
     extend: App.controller.Base,
     __name: id,
     models:[
-        'chatUser'
+        'App.um.model.chatUser'
     ],
     views:[
-        'Chat'
+        'App.um.view.Chat'
     ],
     //!!!chat: null,// dev tools: App.getApplication().getController('Chat').chat
     init:
@@ -18,7 +18,7 @@ var id = 'App.controller.Chat'
        ,users ,uname
        ,sid = 'chatUsers'
        ,date_fmt = Ext.util.Format.dateRenderer('[H:i:s]')
-       ,chat = new App.view.Chat
+       ,chat = new App.um.view.Chat
 
         chat.on({
             destroy: destroyChat
@@ -37,7 +37,7 @@ var id = 'App.controller.Chat'
             {
                 storeId: sid,
                 url: App.cfg.modelChatUser.url,
-                model: App.model.userman.chatUser
+                model: App.um.model.chatUser
             })
         })
         users.load()
@@ -219,4 +219,4 @@ if(override) cfg.override = id
  **/
 Ext.define(id, cfg)
 
-})(App.controller.Chat)
+})(App.um.controller && App.um.controller.Chat)
