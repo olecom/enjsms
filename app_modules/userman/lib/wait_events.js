@@ -109,6 +109,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
 
     function cleanup(sessionID){
     var sn
+
         if((sn = Waits[sessionID])){
             if(sn.timer) clearTimeout(sn.timer)
             sn.res = null

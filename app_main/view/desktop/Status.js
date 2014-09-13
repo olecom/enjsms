@@ -48,7 +48,7 @@ Ext.define('App.view.desktop.StatusGrid',{
 
 Ext.define('App.view.desktop.Status',{
     xtype: 'app-status-bubble',
-    extend: 'Ext.container.Container',
+    extend: Ext.container.Container,
     layout: 'hbox',
     align: 'stretch',
     width: 7, height: 7,// it is being resized and animated, when created
@@ -67,7 +67,7 @@ Ext.define('App.view.desktop.Status',{
             width: '100%'
         }
         ,items:[
-            Ext.create('Ext.Img',{
+            Ext.create(Ext.Img,{
                 src: 'css/extdeskrun.gif',
                 style: 'cursor:move;',
                 height: 61// fix first layout

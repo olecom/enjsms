@@ -85,7 +85,7 @@ Ext.define('App.view.userman.Login',{
         me.fadeOutProgress = function(cb){
             Ext.get('progress-bar').fadeOut(t)
             Ext.get('login-view').fadeIn(t)
-            a.height = 277
+            a.height = 297
             if(cb) a.callback = cb
             login.animate(a)
             a.callback = null

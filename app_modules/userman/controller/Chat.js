@@ -33,7 +33,7 @@ var id = 'App.controller.Chat'
             header: false,
             hideHeaders: true,
             columns: App.cfg.modelChatUser.columns,
-            store: users = Ext.StoreManager.lookup(sid) || Ext.create('App.store.CRUD',
+            store: users = Ext.StoreManager.lookup(sid) || Ext.create(App.store.CRUD,
             {
                 storeId: sid,
                 url: App.cfg.modelChatUser.url,
@@ -149,63 +149,58 @@ var id = 'App.controller.Chat'
 
         function backendEventsChat(success, data){
         //backend event e.g.: `wes.broadcast('out@um', wes.get_id(req))// logout`
-        var i, msg
-           ,u
-            if(success){
-                i = data.length// is Array or blow up
-                if(i) do {
-                    if((msg = data[--i])){
-                        if('usts@um' === msg.ev){// handle status change, login
-                            users.findBy(function findUserId(item, id){
-                                if(id.slice(4) == msg.json.slice(4)){
-                                // prefix: 'onli' 'away' etc...
-                                    item.setId(msg.json)
-                                    msg = null
-                                    return true
-                                }
-                                return false
-                            })
-                            if(msg){// not found, handle login/auth case
-                                users.add({ _id: msg.json })
-                                msg = (
-                                   '<i style="color:#4169E1">' +
-                                    l10n.um.chat.user_in +
-                                   '</i>&nbsp;<b style="color:#00FF00">' +
-                                    msg.json.slice(4, msg.json.indexOf(' ')) + '</b>'
-                                )
-                                u = '<b style="color:#00FF00">----></b>&nbsp;|&nbsp;'
-                            }
-                        } else if('out@um' === msg.ev){
-                            u = users.getById(msg.json)
-                            u && users.remove(u)
-                            msg = (
-                               '<i style="color:#4169E1">' +
-                                l10n.um.chat.user_out +
-                               '</i>&nbsp;<b style="color:#FF0000">' +
-                                msg.json.slice(4, msg.json.indexOf(' ')) + '</b>'
-                            )
-                            u = '<b style="color:#FF0000">&lt;----</b>&nbsp;|&nbsp;'
-                        } else if('chatmsg@um' === msg.ev){
-                            msg = JSON.parse(msg.json)//TODO: try
+        var i, msg, u
 
-                            u = (msg.usr == App.User.id ?
-                                uname :
-                               '&nbsp;' +
-                                msg.usr.slice(4, msg.usr.indexOf(' ')) +
-                               '&nbsp;|&nbsp;'
-                            )
-                            msg = msg.msg
+            if(success && (i = data.length)) do {// is Array or blow up
+                if(!(msg = data[--i])) continue
+
+                if('usts@um' === msg.ev){// handle status change, login
+                    users.findBy(function findUserId(item, id){
+                        if(id.slice(4) == msg.json.slice(4)){
+                        // prefix: 'onli' 'away' etc...
+                            item.setId(msg.json)
+                            msg = null
+                            return true
                         }
-                        if(u){// print msg into chat room
-                            msg_tpl.append(
-                                tbl,
-                                [ date_fmt(new Date), u, msg ]
-                            ).scrollIntoView(tbl.parentElement)
-                            u = null// clear print flag
-                        }
+                        return false
+                    })
+                    if(msg){// not found, handle login/auth case
+                        users.add({ _id: msg.json })
+                        msg = (
+                           '<i style="color:#4169E1">' +
+                            l10n.um.chat.user_in +
+                           '</i>&nbsp;<b style="color:#00FF00">' +
+                            msg.json.slice(4, msg.json.indexOf(' ')) + '</b>'
+                        )
+                        u = '<b style="color:#00FF00">----></b>&nbsp;|&nbsp;'
                     }
-                } while(i)
-            }
+                } else if('out@um' === msg.ev){
+                    u = users.getById(msg.json)
+                    u && users.remove(u)
+                    msg = (
+                       '<i style="color:#4169E1">' +
+                        l10n.um.chat.user_out +
+                       '</i>&nbsp;<b style="color:#FF0000">' +
+                        msg.json.slice(4, msg.json.indexOf(' ')) + '</b>'
+                    )
+                    u = '<b style="color:#FF0000">&lt;----</b>&nbsp;|&nbsp;'
+                } else if('chatmsg@um' === msg.ev && (msg = Ext.decode(msg.json))){
+                    u = (msg.usr == App.User.id ?
+                        uname :
+                       '&nbsp;' +
+                        msg.usr.slice(4, msg.usr.indexOf(' ')) +
+                       '&nbsp;|&nbsp;'
+                    )
+                    msg = msg.msg
+                }
+                if(u){// print msg into chat room
+                    msg_tpl.append(
+                        tbl,
+                        [ date_fmt(new Date), u, msg ]
+                    ).scrollIntoView(tbl.parentElement)
+                    u = null// clear print flag
+                }
+            } while(i)
         }
     }
 }

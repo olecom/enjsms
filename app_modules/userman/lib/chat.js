@@ -85,7 +85,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
                             fs.readFileSync(__dirname + '/chat_' + m + '.js', 'utf8')
                         )
                     } catch(ex){
-                        api._err(api.ipt(ex))
+                        log('exec fail:', ex)
                         tmp && (chat_api[m] = tmp)
                     }
                 }

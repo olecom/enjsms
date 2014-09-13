@@ -2,10 +2,10 @@ Ext.ns('App.view')
 App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [],[
 {
     text:
-'<img height="64" width="64" src="' + (App.cfg.backend.url || '') +
-'/enjsms/enjsms.png"/>' +
-'<br/><br/>' +
-'enjSMS<br/>'
+'<img height="64" width="64" src="' + App.backendURL +
+'/enjsms/enjsms.png"/><br><br>' +
+'enjSMS' +
+'<br>'
    ,height:110 ,minWidth:92
    ,tooltip: 'SMS via VOIP modems (screen shot)'
    ,handler:

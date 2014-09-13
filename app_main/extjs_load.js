@@ -2,7 +2,7 @@
  * common part for `nw` && `connectjs` front ends
  */
 
-var app
+var app// FIXME: check if this can be just `App`, one global var is needed
 
 (function gc_wrapper(con){
     app = {
@@ -15,12 +15,6 @@ var app
 /* init stuff must be garbage collected */
 
 function extjs_load_gc_wrapped(doc ,w){
-    function css_load(url, backend){
-        var el = doc.createElement('link')
-        el.setAttribute('rel', 'stylesheet')
-        el.setAttribute('href', (backend ? backend : '') + url)
-        doc.head.appendChild(el)
-    }
 var path, extjs
 
     if(app.config.extjs.load.css.length){
@@ -30,64 +24,72 @@ var path, extjs
     }
     path = app.config.extjs.path
     css_load(path + 'resources/css/ext-all.css')
-    extjs = doc.createElement('script'),
-    extjs.setAttribute('type' ,'application/javascript')
-    extjs.setAttribute('charset' ,'utf-8')
-    extjs.setAttribute('src' ,path + 'ext-all-nw.js')// fix of `loadScriptFile`
+    extjs = doc.createElement('script')
+    extjs.setAttribute('type', 'application/javascript')
+    extjs.setAttribute('charset', 'utf-8')
+    extjs.setAttribute('src', path + 'ext-all-nw.js')//`loadScriptFile()` fixed
     doc.head.appendChild(extjs)
 
     extjs = setInterval(function waiting_extjs(){
-        if(w.Ext){// xhr HEAD check is done, thus just wating
-            clearInterval(extjs)
-            app.extjs_load = null//mark for GC
-            path = Ext.Loader.getPath('Ext')
-            extjs = path + '/../locale/ext-lang-' + l10n.lang + '.js'
-            Ext.Loader.loadScript({
-                url: extjs,
-                onError: function fail_load_locale(){
-                    throw new Error('Error loading locale file:\n' + extjs)
-                }
-            })
-            con.log(
-                'ExtJS version: ' + Ext.getVersion('extjs') + '\n' +
-                'ExtJS locale: ' + l10n.lang + '\n' +
-                'ExtJS is at <' + path + '>'
-            )
-            Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')
-            Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
+        if(!w.Ext) return// waiting if xhr HEAD check is done
 
-            if(app.config.backend.url){// `nw` context`
-                app.config.extjs.appFolder = app.config.backend.url
-                /*
-                 * patch ExtJS Loader to work from "file://" in `node-webkit`
-                 * also `debugSourceURL` removed in `ext-all-debug.js#loadScriptFile()`
-                 * it crushes `eval` there
-                 * */
-                Ext.Loader._getPath = Ext.Loader.getPath
-                Ext.Loader.getPath = function getPath(className){
-                    return '/' == className[0] ?
-                        app.config.backend.url + className + '.js' :
-                        Ext.Loader._getPath(className)
-                }
+        clearInterval(extjs)
+        app.extjs_load = null//mark for GC
+        path = Ext.Loader.getPath('Ext')//ExtJS 5: config is OK, remove this
+        extjs = path + '/../locale/ext-lang-' + l10n.lang + '.js'
+        Ext.Loader.loadScript({
+            url: extjs,
+            onError: function fail_load_locale(){
+                throw new Error('Error loading locale file:\n' + extjs)
             }
+        })
+        con.log(
+            'ExtJS version: ' + Ext.getVersion('extjs') + '\n ' +
+            'ExtJS locale: ' + l10n.lang + '\n ' +
+            'ExtJS is at <' + path + '>'
+        )
+        Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')
+        Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
 
-            app.config.extjs.launch = extjs_launch
-            app.config.extjs.controllers.push('Main')
-            Ext.application(app.config.extjs)
-            return
+        if(app.config.backend.url){// `nw` context`
+            app.config.extjs.appFolder = app.config.backend.url
+           /*
+            * patch ExtJS Loader to work from "file://" in `node-webkit`
+            * also `debugSourceURL` removed in `ext-all-debug.js#loadScriptFile()`
+            * it crushes `eval` there
+            **/
+            Ext.Loader._getPath = Ext.Loader.getPath
+            Ext.Loader.getPath = function getPath(className){
+                return '/' == className[0] ?
+                    app.config.backend.url + className + '.js' :
+                    Ext.Loader._getPath(className)
+            }
         }
+
+        app.config.extjs.launch = extjs_launch
+        app.config.extjs.controllers.push('Main')
+        Ext.application(app.config.extjs)
+
+        return
     }, 1024)
     con.log('extjs_load: done, waiting for ExtJS')
+
     return
+
+    function css_load(url, backend){
+        var el = doc.createElement('link')
+        el.setAttribute('rel', 'stylesheet')
+        el.setAttribute('href', (backend || '') + url)
+        doc.head.appendChild(el)
+    }
 }
 
 function extjs_launch(){
-    app.config.extjs.launch = null
     delete app.config.extjs.launch
-    app.config.createViewport = true// bunch `app.config` processing here
+    app.config.createViewport = true
     delete app.extjs_load
 
-    //global `App` object is available now
+    // global `App` object is available now
     if(app.backend_check){
         App.doCheckBackend = app.backend_check
         App.doRestartBackend = app.backend_restart
@@ -98,140 +100,197 @@ function extjs_launch(){
         delete app.backend_terminate
     }
     App.cfg = app.config
+    App.backendURL = App.cfg.backend.url || ''
+    App.create = sub_app_create
+    App.reload = sub_app_reload_devel_view
+    App.getHelpAbstract = get_help_abstract
 
-    /*
-     * Access existing data via e.g.:
-     * > l10n.docOpenAll
-     * When developing to have some placeholders and viewable content without
-     * need to fill of the `l10n` files use:
-     * > l10n('create_season')
-     */
-    var l10n_data = l10n
-    l10n = function l10nProvider(msg){
-        var me, m, idx, tail
-
-        me = (me = l10n._ns) ? l10n[me] : l10n
-
-        idx = msg.indexOf(':')
-
-        if(idx > 0){
-            tail = msg.slice(idx + 1)
-            msg = msg.slice(0, idx)
-
-            return me && (m = me[msg]) ?
-                   m + '<br><br><div style="color:red;">' + tail + '</div>' :
-                   msg
-        }
-
-        return me && (m = me[msg]) ? m : msg
-    }
+   /*
+    * l10n: Access existing data via e.g.:
+    * > l10n.docOpenAll
+    * When developing to have some placeholders and viewable content without
+    * need to fill of the `l10n` files use call:
+    * > l10n('create_season')
+    * The namespace of a module can be selected by:
+    * > l10n._ns = 'so'; 'code with l10n("stuff")' ; l10n._ns = ''
+    * > l10n.so.stuff
+    **/
+    var t = l10n
+    l10n = l10n_provider
     l10n._ns = ''
-    Ext.apply(l10n, l10n_data)
+    Ext.apply(l10n, t)
 
-    App.create = function create_sub_app(ns, btn, cfg){// fast init
-    /*
-     * There are classes with run time development reloading for
-     * - controllers (e.g. 'App.userman.Chat'),
-     * - slow view:
-     *     Ext.define('App.view.Chat',...)
-     * - and fast view definitions (config only):
-     *     App.cfg['App.view.Userman'] = { ... }
-     **/
-        btn && (app.btn = btn).setLoading(true)
-
-        if(!(~ns.indexOf('.app.'))){
-            ns = 'App.' + ns// if class name from "App" (this) namespace
-
-            if(btn){// normal load && launch via button (not dev reload)
-                if(Ext.ClassManager.classes[ns]){
-                    run_module()
-                    return
-                }
-                Ext.syncRequire(ns)
-            }
-        }
-
-        if(~ns.indexOf('.controller.')){
-            App.getApplication().getController(ns)
-            btn && btn.setLoading(false)
-            return
-        }
-
-        // define a Class *only* once
-        // use `override` to redefine it (e.g. when developing) in run time
-        if(App.cfg[ns]){
-            btn || (App.cfg[ns].override = ns)// no button -- development reload
-            Ext.define(ns, App.cfg[ns], run_module)
-            App.cfg[ns] = null// GC
-            return
-            /* Noticed: multiple `Ext.define('some.view')` is fine from (re)loaded JS file */
-        }
-
-        Ext.Msg.show({
-           title: l10n.errun_title,
-           buttons: Ext.Msg.OK,
-           icon: Ext.Msg.ERROR,
-           msg:
-"Can't do <b style='color:#FF0000'>`App.create('" + ns + "')`</b>!<br><br>" +
-"<b>`App.create()` is only used with `App.cfg['Class.name']` definitions<br>" +
-"in app modules for fast initial App loading.</b>"
-        })
-        btn && btn.setLoading(false)
-        return
-
-        function run_module(){
-            if(~ns.indexOf('.app.')){
-                Ext.application(ns)
-            } else if(~ns.indexOf('.controller.')){
-                App.getApplication().getController(ns)
-            } else {// usually plain views
-                Ext.create(ns, cfg)
-            }
-            btn && btn.setLoading(false)
-        }
-    }
-    // NOTE: Ext JSON pasing is useful for non valid JSON with `l10n` as values
+    // NOTE: Ext JSON decoding is useful for JS-as-JSON with `l10n` as values
     con.log('ExtJS Ext.encode: always native `JSON.stringify()`')
     Ext.encode = JSON.stringify
 
     Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider)
-    // handle errors raised by Ext.Error.raise()
-    Ext.Error.handle = function(err){
-        Ext.Msg.show({
-            title: l10n.errun_title,
-            buttons: Ext.Msg.OK,
-            icon: Ext.Msg.ERROR,
-            msg: '<b>' +
-err.msg.slice(0, 177) + '...</b><br><br>sourceClass: <b>' +
-err.sourceClass + '</b><br>sourceMethod: <b>' +
-err.sourceMethod + '</b>'
-                })
-        return !con.warn(err)
-    }
-/* debug
- * console> [E] Layout run failed
- * with `ext-all-dev.js` and this:
-Ext.Loader.loadScript({url:'extjs/src/diag/layout/Context.js'})
-Ext.Loader.loadScript({url:'extjs/src/diag/layout/ContextItem.js'})
-*/
-
-    Ext.syncRequire('App.model.Base')//loading Models manually, then [M]VC
-    Ext.syncRequire('App.store.CRUD')
+    Ext.Error.handle = Ext_Error_handle// by Ext.Error.raise()
+    // Start loading The Application
+    Ext.syncRequire('App.backend.Connection')// `req`<->`res` with backend
+    Ext.syncRequire('App.model.Base') // loading Models manually, then [M]VC
+    Ext.syncRequire('App.store.CRUD') // our CRUD for `Ext.data.*`
     Ext.syncRequire('App.view.Window')// provide core View Class(es)
-    if(App.cfg.extjs.load.requireLaunch.length){
-        var j
-           ,i = 0
-           ,l = Ext.fly('startup').dom.lastChild
-        do{
-            Ext.syncRequire([j = App.cfg.extjs.load.requireLaunch[i]])
-            l.innerHTML += '<br>' + j
-        } while(++i < App.cfg.extjs.load.requireLaunch.length)
+
+    t = App.cfg.extjs.load.requireLaunch.length
+    if(t){// load stuff required by backend
+    var j, i = 0, l = Ext.fly('startup').dom.lastChild
+
+        do {
+            l.innerHTML += '<br>' + (j = App.cfg.extjs.load.requireLaunch[i])
+            Ext.syncRequire(j)
+        } while(++i < t)
     }
 
-    if(App.cfg.createViewport){//if no app module (e.g. userman auth) does that
+    if(App.cfg.createViewport){// if no app module (e.g. userman auth) does that
         Ext.globalEvents.fireEvent('createViewport')
     }
 
     con.log('ExtJS + App launch: OK')
 }
+
+function l10n_provider(msg){
+var me, m, idx, tail
+
+    me = (me = l10n._ns) ? l10n[me] : l10n
+
+    idx = msg.indexOf(':')
+
+    if(idx > 0){
+        tail = msg.slice(idx + 1)
+        msg = msg.slice(0, idx)
+
+        return me && (m = me[msg]) ?
+               m + '<br><br><div style="color:red;">' + tail + '</div>' :
+               msg
+    }
+
+    return me && (m = me[msg]) ? m : msg
+}
+
+function sub_app_create(ns, btn, cfg){
+/*
+ * There are classes with run time development reloading for
+ * - controllers (e.g. 'App.userman.Chat'),
+ * - slow view:
+ *     Ext.define('App.view.Chat',...)
+ * - and fast view definitions (config only):
+ *     App.cfg['App.view.Userman'] = { ... }
+ **/
+    btn && (app.btn = btn).setLoading(true)
+
+    if(!(~ns.indexOf('.app.'))){
+        ns = 'App.' + ns// if class name from "App" (this) namespace
+
+        if(btn){// normal load && launch via button (not dev reload)
+            if(Ext.ClassManager.classes[ns]){
+                run_module()
+                return
+            }
+            Ext.syncRequire(ns)
+        }
+    }
+
+    if(~ns.indexOf('.controller.')){
+        App.getApplication().getController(ns)
+        btn && btn.setLoading(false)
+        return
+    }
+
+    // define a Class *only* once
+    // use `override` to redefine it (e.g. when developing) in run time
+    if(App.cfg[ns]){
+        btn || (App.cfg[ns].override = ns)// no button -- development reload
+        Ext.define(ns, App.cfg[ns], run_module)
+        App.cfg[ns] = null// GC
+        return
+        /* Noticed: multiple `Ext.define('some.view')` is fine from (re)loaded JS file */
+    }
+
+    Ext.Msg.show({
+       title: l10n.errun_title,
+       buttons: Ext.Msg.OK,
+       icon: Ext.Msg.ERROR,
+       msg:
+"Can't do <b style='color:#FF0000'>`App.create('" + ns + "')`</b>!<br><br>" +
+"<b>`App.create()` is only used with `App.cfg['Class.name']` definitions<br>" +
+"in app modules for fast initial App loading.</b>"
+    })
+    btn && btn.setLoading(false)
+    return
+
+    function run_module(){
+        if(~ns.indexOf('.app.')){
+            Ext.application(ns)
+        } else if(~ns.indexOf('.controller.')){
+            App.getApplication().getController(ns)
+        } else {// usually plain views
+            Ext.create(ns, cfg)
+        }
+        btn && btn.setLoading(false)
+    }
+}
+
+function sub_app_reload_devel_view(panel, tool, event){
+var url, url_l10n
+
+    if(!panel.wmId){
+        console.warn("window doesn't support development mode")
+        return
+    }
+
+    panel.destroy()// models, stores and backend can be reloaded there
+
+    url_l10n = App.backendURL + '/l10n/' + panel.wmId
+              .replace(/([^.]+)[.].*$/, l10n.lang + '_$1.js')
+    Ext.Loader.loadScript({
+        url: url_l10n
+       ,onLoad: function l10n_reloaded(){
+            Ext.Loader.removeScriptElement(url_l10n)
+            url = App.backendURL + '/' +
+                    panel.wmId.replace(/[.]/g, '/') + '.js'
+            Ext.Loader.loadScript({
+                url: url
+               ,onLoad: view_loaded
+            })
+        }
+    })
+
+    return
+
+    function view_loaded(){
+        Ext.Loader.removeScriptElement(url)
+        Ext.Loader.loadScript({
+            url: url = url.replace(/[/]view[/]/, '/controller/')
+           ,onLoad: function ctl_loaded(){
+                Ext.Loader.removeScriptElement(url)
+                App.create(panel.wmId.replace(/view[.]/, 'controller.'))
+            }
+           ,onError: function ctl_not_loaded(){
+                Ext.Loader.removeScriptElement(url)
+                App.create(panel.wmId, null,{
+                    constrainTo: Ext.getCmp('desk').getEl()
+                })
+            }
+        })
+    }
+}
+
+function get_help_abstract(panel, tool, event){
+    console.warn('abstract method')
+}
+
+function Ext_Error_handle(err){
+    Ext.Msg.show({
+        title: l10n.errun_title,
+        buttons: Ext.Msg.OK,
+        icon: Ext.Msg.ERROR,
+        msg: '<b>' +
+err.msg.slice(0, 177) + '...</b><br><br>sourceClass: <b>' +
+err.sourceClass + '</b><br>sourceMethod: <b>' +
+err.sourceMethod + '</b>'
+    })
+    return !con.warn(err)
+}
+
 })(window.console)

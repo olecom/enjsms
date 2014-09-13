@@ -12,15 +12,26 @@ Ext.define('App.backend.Connection',{
 
 /*
  * Users of Connection Class
+ */
+App.backend.req = (
+/* Channel#1: request data from backend
  * usage:
  *      App.backend.req('/ns/action0', 'online')
  *      App.backend.req('/ns/action1', { status: "online" })
  *      App.backend.req('/ns/action2', function callback(err, json){})
  *      App.backend.req('/ns/action3', { data: 'data'}, function callback(...){})
+ *
+ *      // all callbacks, even from `options.callback`, are node.js-style
+ *      App.backend.req(
+ *          '/ns/js',
+ *          '"javascript code";',
+ *          {
+ *              headers:{ 'Content-Type': 'application/javascript; charset=utf-8'},
+ *              callback: function callback(err, json, res){...}
+ *          }
+ *      )
  */
-App.backend.req = (
-function create_backend(conn){
-    /* channel#1: request data from backend */
+function create_backend_request(conn){
     return function backend_request(url, data, options){
     var callback = Ext.emptyFn
 
@@ -41,6 +52,7 @@ function create_backend(conn){
             options.url = url
             options.callback && (callback = options.callback)
         }
+        options.callback = callbackExtAjax
 
         if('string' == typeof data){
             options.params = data// plain text or JavaScript for `App.backend.JS`
@@ -52,11 +64,10 @@ function create_backend(conn){
                 'Content-Type': 'application/json; charset=utf-8'
             }
         }
-        options.callback = callbackBackend
 
         return conn.request(options)
 
-        function callbackBackend(opts, success, xhr){
+        function callbackExtAjax(opts, success, xhr){
         var json = Ext.decode(xhr.responseText)
 
             return callback(!success || !json, json, xhr)

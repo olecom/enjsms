@@ -4,9 +4,7 @@ var id = 'App.um.controller.Userman'
    ,cfg = {
     extend: App.controller.Base,
     __name: id,
-    views:[
-        'App.um.view.Userman'
-    ],
+    views:[ 'App.um.view.Userman' ],
     mainView: null,// for development in devtools
     init:
     function controllerUsermanInit(){

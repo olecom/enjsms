@@ -36,7 +36,8 @@ Ext.define('App.model.userman.User', {
         })
     },
     auth: function auth(user, role, pass, callback){
-        var me = this
+    var me = this
+
         App.backend.req('/auth',
             user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),
             function auth_cb(err, json, res){

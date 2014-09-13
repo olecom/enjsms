@@ -1,3 +1,4 @@
+
 module.exports = app_modules
 
 function app_modules(api){// Application modules loader
@@ -6,7 +7,7 @@ var m = '', err = '', cfg = ''
    ,auth = function no_auth(){ }
 
     for(m in api.cfg.app.modules){
-        if('?' === m[0]) continue
+        if('?' === m[0]) continue// skip special modules
         if(api.cfg.app.modules['?auth']){
             auth = api.cfg.app.modules['?auth']
             api.cfg.app.modules['?auth'] = null
@@ -31,5 +32,5 @@ var m = '', err = '', cfg = ''
         cfg = ''
         auth()// post check
     }
-    err && api.con.error('Error load app module(s) from `config`:\n', err)
+    err && log('Error load app module(s) from `config`:\n', err)
 }

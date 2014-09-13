@@ -343,7 +343,7 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
             }
             //if no user found, then auth will fail, don't tell it here
         } else {
-            ret.err = 'Miscoding! No session and/or plain text username'
+            ret.err = '!session_txt'
         }
         res.json(ret)
     }
@@ -380,7 +380,7 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                 if('developer.local' === r &&
                    '127.0.0.1' !== req.socket.remoteAddress){
                     ret.success = false//security: don't allow remote access
-                    ret.err = 'no_remote_access'
+                    ret.err = '!remote_access'
                 }
                 if(ret.success){
                     if(req.session.fail){
@@ -398,10 +398,10 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                     wes.broadcast('auth@um', ret)
                     return// fast path
                 } else {
-                    ret.err || (ret.err = 'Bad user name, password, role')
+                    ret.err || (ret.err = '!bad_upr')
                 }
             } else {
-                ret.err = 'No data available'
+                ret.err = '!data'
             }
 
             if(ret.err){
@@ -420,7 +420,7 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
             res.statusCode = 400
         } else {
             res.statusCode = 402
-            ret.err = 'No session'
+            ret.err = '!session'
         }
         res.json(ret)
         wes.broadcast('auth@um', ret)
