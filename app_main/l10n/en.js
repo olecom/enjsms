@@ -91,6 +91,7 @@ name_example
     ,stsMsg: 'Messages: '
     ,stsMarkRead: 'Mark all as read'
 
+    ,btnAdd: 'Add'
     ,btnCreate: 'Create'
     ,btnEdit: 'Edit'
     ,btnCancel: 'Cancel'
@@ -109,10 +110,13 @@ name_example
     /* DATA EXCHANGE */
 
     // fronend error messages
+    ,emptyTextGrid: '--== No data ==--'
     ,err_crud_proxy: 'Request failed. Fatal. Call for developer.'
 
     // backend error codes
     ,'!session': 'Session has ended. New login required. Unsaved data move to MS Excel.'
+    ,'!handler': 'No such handler in backend logic.'
+    ,'!auth': 'Access denied.'
     ,'!db': 'Data Base is unavailable. Fatal. Call for developer.'
     ,'!such_subapi': 'No such sub API.'
 
