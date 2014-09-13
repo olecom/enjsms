@@ -19,7 +19,7 @@ Ext.define('ENJSMS.view.Viewport',
 {
     extend: 'App.view.Window',
     title: 'Picture of ENJSMS.view',
-    wmImg: (App.cfg.backend.url || '') + '/enjsms/enjsms.png',
+    wmImg: App.backendURL + '/enjsms/enjsms.png',
     wmTooltip: 'enjSMS',
     autoScroll: true,
     width: 1104,
@@ -27,7 +27,7 @@ Ext.define('ENJSMS.view.Viewport',
     items:[
     {
         xtype: 'image',
-        src: (App.cfg.backend.url || '') + '/enjsms/sms.jpg'
+        src: App.backendURL + '/enjsms/sms.jpg'
     }
     ]
 }
