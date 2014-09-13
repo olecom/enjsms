@@ -15,7 +15,7 @@ Ext.define('App.proxy.CRUD',{
     pageParam: undefined,
     limitParam: undefined,// || limitParam: 'limit'
     appendId: false,// and no ID in URL tail
-    timeout: 2048,
+    timeout: 2048,// arbitrary
     listeners:{
         exception:
         function crud_exception_proxy(proxy, res, op){
@@ -45,7 +45,7 @@ Ext.define('App.proxy.CRUD',{
                 msg: '<b>' + msg + '<br><br>operation ' + (op.error ?
                      'error (in proxy/reader/model):</b> ' + String(
                       op.error.statusText || op.error).replace(/\r*\n/g, '<br>') :
-                     'success (backend):</b> ' + op.success
+                     (op.success ? 'success' : 'fail')  + ' (backend)</b>'
                 )
             })
         }
