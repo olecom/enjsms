@@ -11,6 +11,9 @@ var api      = require('./api.js')
    ,app     = api.app = connect()
    ,cfg     = api.cfg
 
+    /* `l10n` files middleware factory for app modules */
+    api.mwL10n = require('./middleware/l10n.js')
+
     /* Add own middlewares */
 
     connect.sendFile = sendFile

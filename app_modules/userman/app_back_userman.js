@@ -66,35 +66,13 @@ var app = api.app
     app.use(n, api.connect.sendFile(__dirname + '/userman.css', true))
     app.use('/css/userman/', api.connect['static'](__dirname + '/css/'))
 
-    app.use('/l10n/', mwL10n)
+    app.use('/l10n/', api.mwL10n(api, __dirname, '_um.js'))
 
     app.use('/login', mwLogin)// '/login' creates `req.session`', shows `roles`
     app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
     app.use('/logout', mwLogout)
 
     return
-
-    function mwL10n(req, res, next){
-    var q, s, postfix = '_um.js'
-
-        if(!~req.url.indexOf(postfix)){
-            next()
-            return// l10n is not for this module
-        }
-        if((q = req.url.indexOf('?')) >= 0){
-            s = req.url.slice(0, q)
-        }
-        try{// client requested l10n
-            s = __dirname + '/l10n' + s
-            require('fs').statSync(s)
-            api.connect.sendFile(s, true)(req, res)
-        } catch(ex){// or fallback
-            api.connect.sendFile(
-                __dirname + '/l10n/' + api.cfg.lang + postfix,
-                true// absolute path is provided
-            )(req, res)
-        }
-    }
 
 /* Permission/Role/User setup example see `rbac.js` */
 
