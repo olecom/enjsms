@@ -86,7 +86,6 @@ var path, extjs
 
 function extjs_launch(){
     delete app.config.extjs.launch
-    app.config.createViewport = true
     delete app.extjs_load
 
     // global `App` object is available now
@@ -142,7 +141,7 @@ function extjs_launch(){
         } while(++i < t)
     }
 
-    if(App.cfg.createViewport){// if no app module (e.g. userman auth) does that
+    if(false !== App.cfg.createViewport){// if no app module (e.g. userman auth) does that
         Ext.globalEvents.fireEvent('createViewport')
     }
 
@@ -235,7 +234,7 @@ function sub_app_reload_devel_view(panel, tool, event){
 var url, url_l10n
 
     if(!panel.wmId){
-        console.warn("window doesn't support development mode")
+        con.warn("window doesn't support development mode")
         return
     }
 
@@ -277,7 +276,7 @@ var url, url_l10n
 }
 
 function get_help_abstract(panel, tool, event){
-    console.warn('abstract method')
+    con.warn('abstract method')
 }
 
 function Ext_Error_handle(err){
