@@ -1,8 +1,9 @@
+//TODO: don't use controller here
 (// support reloading for development
 function(override){
 var id = 'App.um.controller.Userman'
    ,cfg = {
-    extend: App.controller.Base,
+    extend: Ext.app.Controller,
     __name: id,
     views:[ 'App.um.view.Userman' ],
     mainView: null,// for development in devtools
@@ -32,4 +33,4 @@ var id = 'App.um.controller.Userman'
 }
 if(override) cfg.override = id
 Ext.define(id, cfg)
-})(App.controller.Userman)
+})(App.um.controller && App.um.controller.Userman)

@@ -2,7 +2,7 @@
 function(override){
 var id = 'App.um.controller.Chat'
    ,cfg = {
-    extend: App.controller.Base,
+    extend: Ext.app.Controller,
     __name: id,
     models:[
         'App.um.model.chatUser'

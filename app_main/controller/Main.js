@@ -2,7 +2,7 @@
  * Main controller for all top-level application functionality
  */
 Ext.define('App.controller.Main',{
-    extend: 'App.controller.Base',
+    extend: Ext.app.Controller,
     init: function controllerMainInit(){
         var me = this
            ,createViewport// function var for GC init
@@ -45,20 +45,23 @@ Ext.define('App.controller.Main',{
         }
 
         function handleCreateViewport(){
+        var b
+
             if(App.cfg.extjs.fading){
+                b = Ext.getBody()
                 // very strange composition to get gears to fadeOut and viewport to fadeIn
-                var b = Ext.getBody()
                 b.fadeOut({duration:777 ,callback:
-                    function fadingViewport(){
-                        Ext.fly('startup').remove()
-                        b.show()
-                        Ext.create('App.view.Viewport')
-                        b.fadeIn({
-                            easing: 'easeIn',
-                            duration: 1024,
-                            callback: appReady
-                        })
-                    }
+                function fadingViewport(){
+                    Ext.fly('startup').remove()
+                    b.show()
+                    Ext.create('App.view.Viewport')
+                    b.fadeIn({
+                        easing: 'easeIn',
+                        duration: 1024,
+                        callback: appReady
+                    })
+                    b = null
+                }
                 })
             } else {
                 Ext.fly('startup').remove()
@@ -79,11 +82,6 @@ Ext.define('App.controller.Main',{
             **/
             me.suspendEvent('createViewport')
             if(createViewport) createViewport = null// GC init
-
-            if(App.cfg.extjs.load.require.length){
-                Ext.require(App.cfg.extjs.load.require)
-                App.cfg.extjs.load = null// GC loading is done
-            }
 
             App.sts(// add first System Status message
                 App.cfg.backend.op,

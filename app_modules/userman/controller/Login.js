@@ -1,10 +1,12 @@
-Ext.define('App.controller.Login', {
-    extend: 'App.controller.Base',
+(function gc(l10n){
+// is done under M V C pattern
+Ext.define('App.controller.Login',{
+    extend: Ext.app.Controller,
 
-    views: [
+    views:[
         'userman.Login'// auto requires App.view.userman.Login
     ],
-    refs: [
+    refs:[
         { ref: 'user', selector: 'field[name=user]' },
         { ref: 'role', selector: 'field[name=role]' },
         { ref: 'pass', selector: 'field[name=pass]' },
@@ -12,9 +14,8 @@ Ext.define('App.controller.Login', {
         { ref: 'auth', selector: 'button[iconCls=ok]' }
     ],
     init: function controllerLoginInit(){
-        var me = this
-           ,defer = 0
-           ,User, user, role, pass, auth
+    var user, role, pass, auth
+       ,me = this, defer = 0
 
         Ext.select("#l10n > span").each(function l10n_changers(el){
             return (0 == el.dom.className.indexOf(l10n.lang)) ?
@@ -29,8 +30,9 @@ Ext.define('App.controller.Login', {
         pass = me.getPass()
         auth = me.getAuth()
         // data
-        User = App.model.userman.User// must be required first from app module
+        App.User = App.model.userman.User// must be required first from app module
         // action
+        user.disable()// mark to check exixting session
         user.onTriggerClick = onSessionShutdownClick
         user.focus()
         user.on({
@@ -68,11 +70,9 @@ Ext.define('App.controller.Login', {
                 'wes4UI': backendEventsLogin,
                 logout: logout
             }
-            //,controller: { }
-            //,store: {}
         })
 
-        User.login('?', getSessionInfo)// ask backend for current session
+        App.User.login('?', getSessionInfo)// ask backend for current session
 
         return
 
@@ -94,19 +94,18 @@ Ext.define('App.controller.Login', {
             reload()
         }
 
-        function reload(){
-            location.reload(true)
-        }
-
         function getSessionInfo(ret){
+            user.enable()// mark as ready
             if(ret.can){
                 user.emptyText = ret.user.id
                 user.applyEmptyText()
                 user.setHideTrigger(false)
+
                 role.suspendEvents()// prevent e.g. pass.enable()
                 role.setValue(l10n.um.roles[ret.can.__name] || ret.can.__name)
                 role.resumeEvents()
-                if('developer.local' == ret.can.__name){
+                if('developer.local' == ret.can.__name){//!!!devel helper
+                    console.log('[supro devel] fast pass for existing session')
                     authenticate()// fast pass in
                     return
                 }
@@ -116,34 +115,9 @@ Ext.define('App.controller.Login', {
             }
         }
 
-        //
-        function backendEventsLogin(success, data){
-            App.sts(
-               'backend events',
-                success ? data.length : data,// data || res.statusText
-                success ? l10n.stsOK : l10n.stsHE,
-                new Date
-            )
-            console.log(data)//TODO: Ext,Msg on error
-            console.table(data)
-        }
-
-        function handleInitBackendWaitEvents(msg){
-            App.sts(
-                msg,
-               'init backend Wait EventS',
-                l10n.stsOK,
-                new Date
-            )
-        }
-
-        function handleUserStatus(status){
-            App.backend.req('/um/lib/wait_events', status)// use non aborting `req`
-        }
-
         // auth data actions
         function onSessionShutdownClick(ev){
-            User.logout()
+            App.User.logout()
             ev && Ext.Msg.alert({
                 icon: Ext.Msg.INFO,
                 buttons: Ext.Msg.OK,
@@ -168,7 +142,7 @@ Ext.define('App.controller.Login', {
                 }
                 defer = setTimeout(function deferReqRoles(){
                     defer = 0
-                    User.login(newUserId, function getSessionInfo(ret){
+                    App.User.login(newUserId, function getSessionInfo(ret){
                         if(ret.can){
                             App.view.userman.Login.fadeOut(createViewportAuth)
                             return// auth is ok in this session
@@ -210,8 +184,8 @@ Ext.define('App.controller.Login', {
                 auth.disable()
             }
         }
-        function authenticate(){
-            if(arguments.length){// from button call arguments: `field, ev`
+        function authenticate(field){
+            if(field){// from button call arguments: `field, ev`
                 App.view.userman.Login.fadeInProgress(auth)
             } else {// from direct call
                 App.cfg.extjs.fading = false
@@ -221,7 +195,7 @@ Ext.define('App.controller.Login', {
             return
 
             function auth(){
-                User.auth(
+                App.User.auth(
                     user.getValue(),
                     role.getValue(),
                     pass.getValue(),
@@ -230,7 +204,6 @@ Ext.define('App.controller.Login', {
             }
             function callbackAuth(err, json, res){
                 if(!err){
-                    App.User = User
                     App.view.userman.Login.fadeOut(createViewportAuth)
                     if(!App.cfg.backend.url){// `browser`
                     /* NOTE: there is no way to match reload or window/tab close
@@ -260,9 +233,9 @@ Ext.define('App.controller.Login', {
         function createViewportAuth(){
         var bar = App.view.items_Bar, i = 0, f
 
-            me.destroy()// GC logout reloads page
+            me.destroy()// GC, logout reloads page
 
-            for(; i < bar.length; ++i){// search user status item
+            for(i = 0; i < bar.length; ++i){// search user status item
                 f = bar[i]
                 if('um.usts' == f.id){
                     f.tooltip = l10n.um.userStatus + ':<br><b>' + App.User.get('id') + '</b>'
@@ -273,6 +246,13 @@ Ext.define('App.controller.Login', {
                     )
                     break
                 }
+            }
+            if(App.User.modules){// per user/role UI module setup
+                if((f = App.User.modules.css)) for(i = 0; i < f.length; ++i){
+                    app.extjs_helper(f[i], App.backendURL)// css loading
+                }
+                app.extjs_helper = null// mark for GC
+                Ext.syncRequire(App.User.modules.js)
             }
 
             Ext.globalEvents.fireEvent('createViewport')
@@ -299,29 +279,68 @@ Ext.define('App.controller.Login', {
         function enableAuth(){
             auth.enable()
         }
-        function logout(){
-            Ext.Msg.alert({
-                icon: Ext.Msg.INFO,
-                buttons: Ext.Msg.OK,
-                title: l10n.um.logoutTitle,
-                msg: l10n.um.logoutMsg(User.get('id')),
-                fn: function(){
-                    User.logout(reload)
-                }
-            })
-        }
     },
     destroy: function destroy(){
-        this.callParent(arguments)
         App.view.userman.Login.destroy()
         /*
-         * NOTE: this controller is still referenced by EventBus via `me.listen()`
+         * NOTE: this controller is handling events `me.listen()`
          * TODO: in case of logout event from backend, this may show
          *       `view.userman.Login` again without reloading of all Viewport
          */
-        App.getApplication().controllers.removeAtKey('Login')
-        App.controller.Login = App.view.userman.Login = null
     }
 })
 
+//TODO refactor that
+function backendEventsLogin(success, data){
+    App.sts(
+       'backend events',
+        success ? data.length : data,// data || res.statusText
+        success ? l10n.stsOK : l10n.stsHE,
+        new Date
+    )
+    console.log(data)//TODO: Ext,Msg on error
+    console.table(data)
+}
+
+function handleInitBackendWaitEvents(msg){
+    App.sts(
+        msg,
+       'init backend Wait EventS',
+        l10n.stsOK,
+        new Date
+    )
+}
+
+function handleUserStatus(status){
+    App.backend.req('/um/lib/wait_events', status)// use non aborting `req`
+}
+
+function logout(){
+    Ext.Msg.alert({
+        icon: Ext.Msg.INFO,
+        buttons: Ext.Msg.OK,
+        title: l10n.um.logoutTitle,
+        msg: l10n.um.logoutMsg(App.model.userman.User.get('id')),
+        fn: function(){
+            App.User.logout(reload)
+        }
+    })
+}
+
+function reload(){
+    location.reload(true)
+}
+
+App.denyMsg = function denyMsg(){
+    Ext.Msg.alert({
+        icon: Ext.Msg.WARNING,
+        buttons: Ext.Msg.OK,
+        title: l10n.um.auth,
+        msg: l10n.um.deny,
+        fn: function(){ }
+    })
+}
+
 App.getApplication().getController('Login')/* dynamically load && init */
+
+})(l10n)
