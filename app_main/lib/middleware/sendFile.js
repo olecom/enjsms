@@ -10,7 +10,7 @@ var fs = require('fs')
                         if(err){
                             res.statusCode = 500
                             log('sendFile err: ', err)
-                            return res.txt(err.stack ? err.stack : err)
+                            return res.txt(err.code || String(err))
                         }
                         res.setHeader('Content-Length', stat.size)
                         res.setHeader('Content-Type',(
@@ -27,7 +27,7 @@ var fs = require('fs')
             function on_fstream_error(err){
                 res.statusCode = 500
                 log(err)
-                return res.txt(err)
+                return res.txt(err.code || String(err))
             }
         )
     }
