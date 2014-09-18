@@ -1,16 +1,19 @@
-App.um = { }
-App.backend.waitEvents = (function create_backend_wait_events(conn){
+App.um = { backend: { }}
+
+App.um.backend.waitEvents = (
+function create_backend_wait_events(conn){
+var defaults
     /* channel#2: receive events from backend */
-    var defaults
     conn.suspendEvents(false)// `this` fires own signal in callback()
     conn.url = App.backendURL + '/um/lib/wait_events'
-    conn.timeout = App.cfg.extjs.wait_events.timeout || (1 << 22)// ~ hour
+    conn.timeout = App.cfg.extjs.waitEvents.timeout || (1 << 22)// ~ hour
     conn.defer = null
     defaults = {
         autoAbort: true,// backend has only one `res` per `req.session`
         callback:
         function backend_events(o, success, res){
         var data
+
             if(success){
                 if(App.User.internalId){// tmp store for status in case of connection errors
                     App.User.internalId = ''
@@ -23,7 +26,7 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
                     console.error(res)
                     data = ex.stack
                     Ext.Msg.show({
-                       title: l10n.errun_title + ' JSON App.backend.waitEvents',
+                       title: l10n.errun_title + ' JSON App.um.backend.waitEvents',
                        buttons: Ext.Msg.OK,
                        icon: Ext.Msg.ERROR,
                        msg:
@@ -38,9 +41,11 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
                 if('usts@um' == data[0].ev){// init || set status
                     if(App.User.id.slice(4) == data[0].json.slice(4)){
                         App.User.id = data[0].json
-                        Ext.getCmp('um.usts').setIconCls(
-                            'appbar-user-' + App.User.id.slice(0, 4)
-                        )
+                        if((o = Ext.getCmp('um.usts'))){
+                            o.setIconCls(
+                                'appbar-user-' + App.User.id.slice(0, 4)
+                            )
+                        }
                     }
                 }
                 Ext.globalEvents.fireEventArgs(
@@ -59,7 +64,7 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
                 return// defaults.callback() is there
             }
             // if any error
-            console.error('App.backend.waitEvents:')
+            console.error('App.um.backend.waitEvents:')
             console.error(res)
 
             if(!App.User.internalId){
@@ -69,7 +74,7 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
             }
             conn.defer = Ext.defer(// retry a bit later
                 req,
-                App.cfg.extjs.wait_events.defer || (1 << 17)// ~ two minutes
+                App.cfg.extjs.waitEvents.defer || (1 << 17)// ~ two minutes
             )
             Ext.globalEvents.fireEventArgs(
                 'wes4UI',
@@ -106,6 +111,7 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
 
     function req(opts){
     var ev = 'initwes@UI'
+
         Ext.globalEvents.fireEventArgs(ev, [ ev ])
 
         //backend if no status: w.res.statusCode = 501// "Not Implemented"
@@ -118,5 +124,4 @@ App.backend.waitEvents = (function create_backend_wait_events(conn){
 
         return conn.request(Ext.applyIf(opts, defaults))
     }
-
-})(Ext.create('App.backend.Connection'))
+})(Ext.create(App.backend.Connection))

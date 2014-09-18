@@ -3,16 +3,20 @@
  * and for browsers(remote UI)
  */
 
-function runApp(){
+module.exports = runApp
+
+function runApp(cfg, db){
 var api      = require('./api.js')
    ,sendFile = require('./middleware/sendFile.js')
    ,_404     = require('./middleware/404.js')
-   ,connect = api.connect = require('connect')
-   ,app     = api.app = connect()
-   ,cfg     = api.cfg
+   ,connect  = api.connect = require('connect')
+   ,app      = api.app = connect()
+   ,mwConfig
 
     /* `l10n` files middleware factory for app modules */
     api.mwL10n = require('./middleware/l10n.js')
+    api.set_mwConfig = set_mwConfig
+    set_mwConfig()
 
     /* Add own middlewares */
 
@@ -29,42 +33,18 @@ var api      = require('./api.js')
     remote_extjs_cfg()
 
     app.use('/app_back.js' , _404)// hide
-    app.use('/app_front.js' , sendFile('app_front_http.js'))
+    app.use('/app_front.js' , sendFile('app_front_http.js'))// switch to web UI
 
-    /* TODO: save and load session info from files
-     *connect.session.MemoryStore.prototype.loadSync
-     *connect.session.MemoryStore.prototype.saveSync = function(path){
-     *   log('this.sessions: ', this.sessions, '\n')
-    }*/
-
-    app.use(connect.session({
-        secret: cfg.backend.sess_puzl
-       ,generate: function(req, res){
-            return !req.session && req.url === '/login'
-        }
-       ,cookie:{
-           /*
-            * `maxAge: null` browser lifetime session
-            * But: to enable UI to remove session on any unload/close event
-            *      see `Ext.EventManager.onWindowUnload` @
-            *      app_modules\userman\controller\Login.js
-            **/
-            maxAge: cfg.backend.hasOwnProperty('sess_maxage') ?
-                    cfg.backend.sess_maxage : 1 << 25// 9.3 hours ~one working day
-       }
-       //,store = require('connect-mongo')(app)
-    }))
-
-    require('../../app_modules')(api)
+    require('../../app_modules')(cfg, api)
 
     /* backend static files for HTTP users */
-    app.use('/' ,connect['static'](__dirname + '/..', { index: 'app.htm' }))
+    app.use('/', connect['static'](__dirname + '/..', { index: 'app.htm' }))
 
-    app.use('/test.js' , sendFile('test.js'))
+    app.use('/test.js', sendFile('test.js'))
     /* final stage: error path */
     app.use(require('./middleware/errorHandler.js'))
        .use(_404)// no middleware handled request
-    .listen(cfg.backend.job_port ,function app_is_up_and_running(){
+    .listen(cfg.backend.job_port, function app_is_up_and_running(){
         log('^ app is up and running\n' +
             new Date().toISOString()
         )
@@ -72,17 +52,25 @@ var api      = require('./api.js')
     .timeout = (1 << 23)// default timeout for long events waitings requests
     return
 
+    function set_mwConfig(mw){
+        mwConfig = mw || function($ ,res){ res.json(cfg.extjs) }
+
+        return cfg// return global config to auth module
+    }
+
+    function use_mwConfig(req, res, next){
+        return mwConfig(req, res, next)
+    }
+
     function remote_extjs_cfg(){
-    var fs = require('fs')
-        if(cfg.extjs.pathFile){
-            cfg.extjs.path = fs.readFileSync(cfg.extjs.pathFile).toString().trim()
+        if(cfg.backend.extjs.pathFile){
+            cfg.extjs.path = require('fs').readFileSync(cfg.backend.extjs.pathFile)
+                                          .toString().trim()
         }
         cfg.extjs.path = __dirname + '/../../' + cfg.extjs.path
-        app.use('/extjs/'                  ,connect['static'](cfg.extjs.path))
-        app.use('/extjs/docs/extjs-build/' ,connect['static'](cfg.extjs.path))
-        cfg.extjs.path = 'extjs/'// switch local to external path
-        app.use('/app.config.extjs.json' ,function($ ,res){ res.json(cfg.extjs) })
+        app.use('/extjs/',                  connect['static'](cfg.extjs.path))
+        app.use('/extjs/docs/extjs-build/', connect['static'](cfg.extjs.path))
+        cfg.extjs.path = 'extjs/'// switch local to external http path
+        app.use('/app.config.extjs.json', use_mwConfig)// provide isolated cfg
     }
 }
-
-module.exports = runApp

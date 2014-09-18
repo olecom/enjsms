@@ -1,4 +1,7 @@
-function process_uglify_js(process, global){
+
+module.exports = processSETUP
+
+function processSETUP(global, process){
 
     global.__res = null// catch request to inform UI, see note in 'uncaughtException'
 
@@ -17,7 +20,4 @@ function process_uglify_js(process, global){
     process.on('exit', function process_exit(){
         log('$ backend process exit event')
     })
-
 }
-
-module.exports = process_uglify_js

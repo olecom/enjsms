@@ -23,13 +23,15 @@ var xhr = new XMLHttpRequest
             extjs_config = JSON.parse(req.responseText)
             if(url){
         // `nw` context
-                app.config.extjs.load = extjs_config.load
-                app.extjs_load(document, window)
+                url = app.config.extjs.path
+                app.config.extjs = extjs_config
+                app.config.extjs.path = url
+                app.extjs_helper()
                 return
             }
         // `browser` context
         } else {// load after HEAD check
-            app.extjs_load(document, window)
+            app.extjs_helper()
             return
         }
 
@@ -43,7 +45,7 @@ var xhr = new XMLHttpRequest
         }
         req.open(// check for network availability of ExtJS
             'HEAD'
-           ,(url ? url : '') + app.config.extjs.path + 'ext-all-nw.js'
+           ,(url || '') + app.config.extjs.path + 'ext-all-nw.js'
            ,true
         )
         req.send()

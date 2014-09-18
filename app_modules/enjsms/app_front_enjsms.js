@@ -1,5 +1,4 @@
-Ext.ns('App.view')
-App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [],[
+App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [ ],[
 {
     text:
 '<img height="64" width="64" src="' + App.backendURL +
@@ -17,18 +16,17 @@ App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [],[
 
 Ext.define('ENJSMS.view.Viewport',
 {
-    extend: 'App.view.Window',
+    extend: App.view.Window,
     title: 'Picture of ENJSMS.view',
     wmImg: App.backendURL + '/enjsms/enjsms.png',
     wmTooltip: 'enjSMS',
     autoScroll: true,
-    width: 1104,
-    height: 600,
+    layout: 'auto',
+    width: 1111,
+    height: 577,
     items:[
     {
         xtype: 'image',
         src: App.backendURL + '/enjsms/sms.jpg'
-    }
-    ]
-}
-)
+    }]
+})

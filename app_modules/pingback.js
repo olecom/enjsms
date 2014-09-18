@@ -1,11 +1,14 @@
-function pingback(api){// run external text here
-var ui
+
+module.exports = pingback
+
+function pingback(api, cfg){// run external text here
+var ui, App_backend_JS = 'App.backend.JS'
 
     api.app.use('/pingback.js'
    ,function mwPingBack(req, res, next){
     var ret = { success: false }
 
-        if(req.session && req.session.can['App.backend.JS']){
+        if(req.session && req.session.can && req.session.can[App_backend_JS]){
             if(req.txt) try {
                 new Function(
                    'ret, api, req, res, next', req.txt
@@ -30,17 +33,19 @@ var ui
    ,function mwPingBackUI(req, res, next){
     var component
 
-        if(req.session && req.session.can['App.backend.JS']){
+        if(req.session && req.session.can && req.session.can[App_backend_JS]){
             component = ui
         } else {
             res.statusCode = 401
         }
         res.js(component)
     })
-    api.cfg.extjs.load.require.push('App.backend.JS')
+//    api.cfg.extjs.load.require.push()
 
-    ui = 'App.backend.JS = (' + (
-/* == ExtJS code == */
+    ui = App_backend_JS + ' = (' + (
+/*
+ * == ExtJS code ==
+ **/
 function create_pingback(){
 /* running JavaScript inside backend via App.backend.req()
  * usage:
@@ -65,7 +70,9 @@ var url = App.backendURL + '/pingback.js'
         console.log('result is here: `App.backend.JS.res`')
     }
 }
-/* -- ExtJS code ends here -- */).toString() + ')()'
-}
+/*
+ * -- ExtJS code ends here --
+ **/).toString() + ')()'
 
-module.exports = pingback
+    return { css: null, js:[ App_backend_JS ], cfg: cfg }
+}

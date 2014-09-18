@@ -1,4 +1,28 @@
 //App.cfg['App.um.view.Userman'] = {// fast `App` loading; `App.create()` must be used
+(function gc(l10n){
+
+App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [ ],[
+{
+    text:
+'<img height="64" width="64" src="' + App.backendURL +
+'/css/userman/userman_shortcut.png"/>' +
+'<br/><br/>' +
+l10n.um.users +
+'<br/>'
+   ,height:110 ,minWidth:92
+   ,tooltip: l10n.um.tooltip
+   ,handler:
+    function open_userman(btn){
+    var tb = Ext.getCmp('wm').items.getByKey('um.view.Userman')
+        if(tb){
+            tb.toggle(true)
+        } else {
+            App.create('um.controller.Userman', btn)
+        }
+    }
+}
+])
+
 Ext.define('App.um.view.Userman',{ // slow initial loading
     extend: App.view.Window,
     title: 'App.um.view.Userman',
@@ -37,3 +61,4 @@ Ext.define('App.um.view.Userman',{ // slow initial loading
     ]
 }
 )
+})(l10n)

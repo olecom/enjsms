@@ -1,36 +1,34 @@
+/*
+ * Application modules loader
+ **/
 
 module.exports = app_modules
 
-function app_modules(api){// Application modules loader
-var m = '', err = '', cfg = ''
+function app_modules(cfg, api){
+var m, mpath
+   ,err = ''
    ,fs = require('fs')
-   ,auth = function no_auth(){ }
+   ,modules = { }// private list of modules
 
-    for(m in api.cfg.app.modules){
-        if('?' === m[0]) continue// skip special modules
-        if(api.cfg.app.modules['?auth']){
-            auth = api.cfg.app.modules['?auth']
-            api.cfg.app.modules['?auth'] = null
-        }
-        auth(m)// setup && pre check
-        try {// stat on FS e.g.: app_modules/userman/
+    api.getModules = get_modules
+    for(m in cfg.modules){
+        mpath = './' + m
+        try {
             if(fs.statSync(__dirname + '/' + m).isDirectory()){
-                cfg = api.cfg.app.modules[m]
-                //e.g.: app_modules/userman/app_back_userman.js
-                m = './' + m + '/app_back_' + m + '.js'
+                // check e.g.: app_modules/userman/app_back_userman.js
+                mpath += '/app_back_' + m
             }
-        } catch(ex){ /* directory check failed */ }
-        if(!cfg){// will try to load file e.g.: app_modules/pingback.js
-            cfg = api.cfg.app.modules[m]
-            m = './' + m + '.js'
-        }
+        } catch(ex){/* will try to load file e.g.: app_modules/pingback.js */}
+        mpath += '.js'
         try {// to load the module
-            require(m)(api, cfg)// `cfg` isn't used so far in app modules...
+            modules[m] = require(mpath)(api, cfg.modules[m])
         } catch(ex){
-            err += m.replace(/[.]js/, '[.js]') + ':\n!!!' + ex.stack + '\n'
+            err += mpath.replace(/[.]js/, '[.js]') + ':\n!!!' + ex.stack + '\n'
         }
-        cfg = ''
-        auth()// post check
     }
-    err && log('Error load app module(s) from `config`:\n', err)
+    return err && log('Error loading app module(s) from `config`:\n', err)
+
+    function get_modules(){
+        return modules
+    }
 }

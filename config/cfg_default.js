@@ -2,78 +2,72 @@ config = {
 /* NOTE: this is not JSON just JavaScript
  *       idea is taken from github.com/louischatriot/mongo-edit
  */
-    /* standard configuration of extjs+node-webkit application */
+    /* standard configuration of extjs+node[.js -webkit] application */
 
+    lang: 'ru',// base localization, must be provided by any module as fallback
     log: 'log/',
-    app:{
-        modules:{// cfg things from 'app_modules'
-        // order matters as in middlewares
-            '?auth': null,// callback to auth modules in loader (implemented by `userman`)
-            userman:{//#0: authentication and authorization (plus Chat)
-                store: 'fs' // TODO: fs || db
-               ,data: '/data/um' // store fs: chat logs
-               ,rbac:{
-                   can:{
-                        'module.pingback': true
-                       ,'module.enjsms': true
-                    }
-                   ,roles:{
-                        'user.test':[
-                            'module.enjsms'
-                           ,'App.controller.Chat', 'App.view.Chat','/chat'
-                        ]
-                    }
-                   ,users:{
-                        test:{
-                            pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
-                            roles: [ 'user.test' ],
-                            name: 'test user'
-                        }
+    modules:{// cfg for stack of things from 'app_modules'
+    // order matters as in middlewares
+        //'?auth': null,// callback to auth modules in loader (implemented by `userman`)
+        userman:{//#0: authentication and authorization (plus Chat)
+            store: 'fs' // TODO: fs || db
+            //sess_maxage: //null: browser lifetime; default: ~9.3 hours one working day
+           ,sess_puzl: 'puzzle-word$54321X'
+           ,data: '/data/um'// store fs: chat logs
+           ,rbac:{
+               can:{// list of permissions with arbitrary positive value
+                    'module.pingback': true//FIXME: add modules to can while loading
+                   ,'module.enjsms': true
+                }
+               ,roles:{
+                    'user.test':[
+                        // select valid in `can` permissions for role
+                        'module.enjsms'
+                        // this are being added in `can` by `userman` module
+                       ,'App.um.controller.Chat','App.um.view.Chat','/um/chat'
+                    ]
+                }
+               ,users:{
+                    'utest':{
+                        pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
+                        roles:[ 'user.test' ],
+                        name: 'Test User'
                     }
                 }
+            },
+            extjs:{
+                waitEvents:{
+                    timeout: 7777777,// 2.16 hours vs max on backend: (1 << 23) = 2.33
+                    defer: 77777// if error on minute and half
+                }
             }
-            /* after auth anything can go in not particular order */
-           ,enjsms: true// sms app dummy
-           ,pingback: true
         }
+       /* after auth anything can go in no particular order */
+       ,enjsms: true
+       ,pingback: true
     },
-    lang: 'ru',// base localization, must be provided by any module as fallback
     extjs:{
-        name: 'App',             // default
-        appFolder: '.',          // default
-        launch: null,            // default
-        controllers: [ ],        // default
-        load:{
-            requireLaunch: [ ],  // components to require in `Applicaion.launch()`
-            require: [ ],        // array of common 'Class.Names' App must require
-                                 // to use some app modules without auth
-            css: [ ]
-        }
-        /* removable / changable items */
-       ,pathFile: 'extjs.txt'
-       ,path: 'ext-4.2.1.883/'   // search extjs.txt or this above './'; 'extjs/' is for HTML
-       ,fading: true             // visual effects for content appearance
-       ,wait_events:{            // NOTE: config is for userman's module Class
-            timeout: 7777777,    // 2.16 hours vs max on backend: (1 << 23) = 2.33
-           defer: 77777          // minute and half
-        }
+        path: 'ext-4.2.1.883/',// find and provide this path; 'extjs/' is for web
+        launch:  null,/*{ css: [ ], js: [ ]} loaded by `extjs_launch()` */
+        modules: null,/*{ css: [ ], js: [ ]} */
+        fading:  true// visual effects for content appearance
     },
     backend:{
         file: 'app_main/app_back.js',
         ctl_port: 3008,
         job_port: 3007,
-        //sess_maxage: //null: browser lifetime; default: ~9.3 hours one working day
-        sess_puzl: 'puzzle-word$54321X'
-       ,init_timeout: 123
-
-       ,mongodb:{ //'mongodb://' + process.env.MONGODS + process.env.MONGO_DBNAME
+        init_timeout: 123
+       ,extjs:{
+            pathFile: 'extjs.txt'// search this file (extjs.txt)
+       }
+       ,mongodb:{//'mongodb://' + process.env.MONGODS + process.env.MONGO_DBNAME
             url: 'mongodb://127.0.0.1:27027/'
            ,db_name: 'supro_GLOB'
-           ,options:{// you know what you doing here!
+           ,options:{// you know what you are doing here!
                bufferMaxEntries: 0,
                forceServerObjectId: true,
                journal: true
-           }
+            }
         }
     }
 }

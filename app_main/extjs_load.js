@@ -4,26 +4,29 @@
 
 var app// FIXME: check if this can be just `App`, one global var is needed
 
-(function gc_wrapper(con){
+(function gc_wrapper(doc, w, con){
     app = {
         config: null,
         btn: null,// quick launch buttons to access when error
-        extjs_load: extjs_load_gc_wrapped
+        extjs_helper: extjs_load_gc_wrapped
     }
     return
 
 /* init stuff must be garbage collected */
 
-function extjs_load_gc_wrapped(doc ,w){
-var path, extjs
+function extjs_load_gc_wrapped(){
+var path, extjs, t
 
-    if(app.config.extjs.load.css.length){
-        for(path in app.config.extjs.load.css){
-            css_load(app.config.extjs.load.css[path], app.config.backend.url)
+    extjs = app.config.extjs
+    path = extjs.path
+    css_load(path + 'resources/css/ext-all.css')
+
+    if(extjs.launch && extjs.launch.css){
+        for(t = 0; t < extjs.launch.css.length; ++t){
+            css_load(extjs.launch.css[t], app.config.backend.url)
         }
     }
-    path = app.config.extjs.path
-    css_load(path + 'resources/css/ext-all.css')
+
     extjs = doc.createElement('script')
     extjs.setAttribute('type', 'application/javascript')
     extjs.setAttribute('charset', 'utf-8')
@@ -34,7 +37,7 @@ var path, extjs
         if(!w.Ext) return// waiting if xhr HEAD check is done
 
         clearInterval(extjs)
-        app.extjs_load = null//mark for GC
+        app.extjs_helper = css_load
         path = Ext.Loader.getPath('Ext')//ExtJS 5: config is OK, remove this
         extjs = path + '/../locale/ext-lang-' + l10n.lang + '.js'
         Ext.Loader.loadScript({
@@ -49,44 +52,47 @@ var path, extjs
             'ExtJS is at <' + path + '>'
         )
         Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')
-        Ext.Loader.setPath('Ext.uxo', app.config.extjs.appFolder + '/uxo')
 
         if(app.config.backend.url){// `nw` context`
             app.config.extjs.appFolder = app.config.backend.url
-           /*
-            * patch ExtJS Loader to work from "file://" in `node-webkit`
+           /* patch ExtJS Loader to work from "file://" in `node-webkit`
             * also `debugSourceURL` removed in `ext-all-debug.js#loadScriptFile()`
-            * it crushes `eval` there
+            * it crushes `eval` there it's critical (plus there are more patches)
             **/
             Ext.Loader._getPath = Ext.Loader.getPath
             Ext.Loader.getPath = function getPath(className){
+            // load from remote IP, but API from `App.backendURL = '127.0.0.1'`
                 return '/' == className[0] ?
                     app.config.backend.url + className + '.js' :
                     Ext.Loader._getPath(className)
             }
         }
 
-        app.config.extjs.launch = extjs_launch
-        app.config.extjs.controllers.push('Main')
-        Ext.application(app.config.extjs)
+        Ext.application({
+            name: 'App',
+            appFolder: app.config.extjs.appFolder || '.',
+            controllers:[ 'Main' ],// loads App.controller.Main
+            launch: extjs_launch
+        })
 
         return
     }, 1024)
     con.log('extjs_load: done, waiting for ExtJS')
 
     return
+}
 
-    function css_load(url, backend){
-        var el = doc.createElement('link')
-        el.setAttribute('rel', 'stylesheet')
-        el.setAttribute('href', (backend || '') + url)
-        doc.head.appendChild(el)
-    }
+function css_load(url, backend){
+var el = doc.createElement('link')
+
+    el.setAttribute('rel', 'stylesheet')
+    el.setAttribute('href', (backend || '') + url)
+    doc.head.appendChild(el)
+    el = null
 }
 
 function extjs_launch(){
-    delete app.config.extjs.launch
-    delete app.extjs_load
+var t
 
     // global `App` object is available now
     if(app.backend_check){
@@ -99,7 +105,8 @@ function extjs_launch(){
         delete app.backend_terminate
     }
     App.cfg = app.config
-    App.backendURL = App.cfg.backend.url || ''
+    App.backendURL = App.cfg.backend.url ?
+                    'http://127.0.0.1:' + App.cfg.backend.job_port : ''
     App.create = sub_app_create
     App.reload = sub_app_reload_devel_view
     App.getHelpAbstract = get_help_abstract
@@ -114,7 +121,7 @@ function extjs_launch(){
     * > l10n._ns = 'so'; 'code with l10n("stuff")' ; l10n._ns = ''
     * > l10n.so.stuff
     **/
-    var t = l10n
+    t = l10n
     l10n = l10n_provider
     l10n._ns = ''
     Ext.apply(l10n, t)
@@ -122,26 +129,28 @@ function extjs_launch(){
     // NOTE: Ext JSON decoding is useful for JS-as-JSON with `l10n` as values
     con.log('ExtJS Ext.encode: always native `JSON.stringify()`')
     Ext.encode = JSON.stringify
+    Ext.Error.handle = Ext_Error_handle// by Ext.Error.raise()
 
     Ext.state.Manager.setProvider(new Ext.state.LocalStorageProvider)
-    Ext.Error.handle = Ext_Error_handle// by Ext.Error.raise()
     // Start loading The Application
-    Ext.syncRequire('App.backend.Connection')// `req`<->`res` with backend
-    Ext.syncRequire('App.model.Base') // loading Models manually, then [M]VC
-    Ext.syncRequire('App.store.CRUD') // our CRUD for `Ext.data.*`
-    Ext.syncRequire('App.view.Window')// provide core View Class(es)
+    Ext.Loader.setPath('Ext.uxo', App.app.appFolder + '/uxo')
 
-    t = App.cfg.extjs.load.requireLaunch.length
-    if(t){// load stuff required by backend
+    t = Ext.Array.push([
+        'App.model.Base',          // loading Models manually, then [M]VC
+        'App.backend.Connection',  // `req`<->`res` with backend
+        'App.store.CRUD',          // our CRUD for `Ext.data.*`
+        'App.view.Window',         // provide core View Class(es)
+        'App.view.desktop.Status'  // provide status
+    ], App.cfg.extjs.launch.js || [ ])// backend stuff, if exists
+
     var j, i = 0, l = Ext.fly('startup').dom.lastChild
 
-        do {
-            l.innerHTML += '<br>' + (j = App.cfg.extjs.load.requireLaunch[i])
-            Ext.syncRequire(j)
-        } while(++i < t)
-    }
+    do {
+        l.innerHTML += '<br>' + (j = t[i])// show progress
+        Ext.syncRequire(j)
+    } while(++i < t.length)
 
-    if(false !== App.cfg.createViewport){// if no app module (e.g. userman auth) does that
+    if(false !== App.cfg.createViewport){// if no app auth module (e.g. userman)
         Ext.globalEvents.fireEvent('createViewport')
     }
 
@@ -234,7 +243,13 @@ function sub_app_reload_devel_view(panel, tool, event){
 var url, url_l10n
 
     if(!panel.wmId){
-        con.warn("window doesn't support development mode")
+        con.warn(url = "window doesn't support development mode")
+        Ext.Msg.show({
+            title: l10n.errun_title,
+            buttons: Ext.Msg.OK,
+            icon: Ext.Msg.ERROR,
+            msg: url
+        })
         return
     }
 
@@ -242,6 +257,7 @@ var url, url_l10n
 
     url_l10n = App.backendURL + '/l10n/' + panel.wmId
               .replace(/([^.]+)[.].*$/, l10n.lang + '_$1.js')
+
     Ext.Loader.loadScript({
         url: url_l10n
        ,onLoad: function l10n_reloaded(){
@@ -292,4 +308,4 @@ err.sourceMethod + '</b>'
     return !con.warn(err)
 }
 
-})(window.console)
+})(document, window, window.console)

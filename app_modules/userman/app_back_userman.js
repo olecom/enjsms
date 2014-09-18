@@ -12,46 +12,72 @@ module.exports = userman
 
 function userman(api, cfg){
 var app = api.app
+   ,Config, Modules
    ,Can ,Roles ,Users
-   ,n ,f ,m ,files ,wes ,rbac
+   ,n ,f ,files ,wes ,rbac
 
-    wes = api.wes = require('./lib/wait_events.js')(api)
-    rbac = require('./lib/rbac.js')(api)
+    if(!cfg || 'string' != typeof cfg.data){// cfg check
+        throw new Error('Not a string: `config.modules.userman.data`')
+    }
+    if('function' != typeof api.set_mwConfig){
+        throw new Error('Not a function: `api.set_mwConfig()`')
+    }
 
-    Can = api.can = rbac.can
-    Roles = api.roles = rbac.roles
-    Users = api.users = rbac.users
+    api.wes = wes = require('./lib/wait_events.js')(/*cfg*/)
+    rbac = require('./lib/rbac.js')(cfg)
+
+    Can = rbac.can
+    Roles = rbac.roles
+    Users = rbac.users
 
     initAuth()// set default 'deny' authorization for all permissions
 
-    files = [
-        '/crypto/SHA1',
-        /* true M V C loading */
-        '/model/User',// + client's requested `l10n`
-        '/view/Login', '/view/items_Bar', '/view/items_Shortcuts',
-        '/controller/Login'
+    files = [// files as class names are loaded by `Ext.syncRequire()`
+        '/um/crypto/SHA1',
+        /* (l10n) M V C loading */
+        '/um/model/User',// + client's requested `l10n`
+        '/um/view/Login',
+        '/um/controller/Login'
     ]
 
-    for(f = 0; f < files.length; f++){// provide [files] w/o auth
-        n = '/um' + (m = files[f])// apply own namespace
-        api.cfg.extjs.load.requireLaunch.push(n)// UI `Ext.syncRequire(that)`
-        n += '.js'// for this backend
-        app.use(n, api.connect.sendFile(__dirname + (m += '.js'), true))
+    for(f = 0; f < files.length; f++){// provide [files] before auth middleware
+        n = files[f]// prepared path for UI loading
+        n = n + '.js'// provide file from backend
+        app.use(n, api.connect.sendFile(__dirname + n.slice(3), true))
     }
 
+    /* TODO: save and load session info from files
+     *connect.session.MemoryStore.prototype.loadSync
+     *connect.session.MemoryStore.prototype.saveSync = function(path){
+     *   log('this.sessions: ', this.sessions, '\n')
+     *}
+     **/
+
+    app.use(api.connect.session({
+        secret: cfg.sess_puzl
+       ,generate: function(req, res){
+            return !req.session && req.url === '/login'
+        }
+       ,cookie:{
+           /*
+            * `maxAge: null` browser lifetime session
+            * But: to enable UI to remove session on any unload/close event
+            *      see `Ext.EventManager.onWindowUnload` @
+            *      app_modules\userman\controller\Login.js
+            **/
+            maxAge: cfg.hasOwnProperty('sess_maxage') ?
+                    cfg.sess_maxage : 1 << 25// 9.3 hours ~one working day
+       }
+       //,store = require('connect-mongo')(app)
+    }))
+
+    // high priority mw
     app.use(mwBasicAuthorization)// apply default 'deny' from `initAuth()`
 
-    api.cfg.extjs.load.require.push('App.backend.waitEvents')
-    app.use('/um/lib/wait_events', wes.mwPutWaitEvents)
-    app.use(n = '/backend/waitEvents.js', api.connect.sendFile(__dirname + n, true))
+    app.use('/um/lib/wait_events', wes.mwPutWaitEvents)// UI: 'App.um.backend.waitEvents'
+    app.use('/um' + (n = '/backend/waitEvents.js'), api.connect.sendFile(__dirname + n, true))
 
-    // cfg check for more functionality
-    if(!cfg || 'string' != typeof cfg.data){
-        throw new Error('Not a string: `config.app.modules.userman.data`')
-    }
-
-    // high priority
-    app.use('/um/lib/chat', require('./lib/chat.js')(api))// backend API && MVC UI:
+    app.use('/um/lib/chat', require('./lib/chat.js')(cfg, api))// backend API && MVC UI:
     app.use('/um' + (n = '/model/chatUser.js'), api.connect.sendFile(__dirname + n, true))
     app.use('/um' + (n = '/view/Chat.js'), api.connect.sendFile(__dirname + n, true))
     app.use('/um' + (n = '/controller/Chat.js'), api.connect.sendFile(__dirname + n, true))
@@ -61,8 +87,7 @@ var app = api.app
     app.use('/um' + (n = '/controller/Userman.js'), api.connect.sendFile(__dirname + n, true))
 
     // low priority stuff:
-    n = '/css/userman/css'
-    api.cfg.extjs.load.css.push(n)
+    n = '/css/userman/css'// NOTE: `n` holds value used in `return`
     app.use(n, api.connect.sendFile(__dirname + '/userman.css', true))
     app.use('/css/userman/', api.connect['static'](__dirname + '/css/'))
 
@@ -72,19 +97,78 @@ var app = api.app
     app.use('/auth', mwAuthenticate)// '/auth' creates `req.session.user`'
     app.use('/logout', mwLogout)
 
-    return
+    // isolate modules from access to app and other modules' configs
+    Modules = api.getModules()// reference to all (being loaded now) modules
+    Config  = api.set_mwConfig(mwAuthBasedConfig)// get app config here
+    api.getModulesConfig = api.set_mwConfig = null// deny other modules to do it
 
-/* Permission/Role/User setup example see `rbac.js` */
+    return { css:[ n ], js: files, cfg: cfg }
 
-    function check_type_and_apply_perm(can){
+    function mwAuthBasedConfig(req, res, i){
+        if(!Config.extjs.launch){// setup after loading of all modules
+            Config.extjs.launch = {
+                css: Modules.userman.css, js: Modules.userman.js
+            }
+            if(Modules.userman.cfg.extjs) for(i in Modules.userman.cfg.extjs){
+                Config.extjs[i] = Modules.userman.cfg.extjs[i]
+            }
+            delete Modules.userman// no need, eveything is here
+        }
+        return res.json(Config.extjs)
+    }
+
+    function initAuth(){
+   /*
+    ** types of permissions:
+    * 1) 'App.backend.JS': Class name is file name  == >> '/backend/JS'
+    * 2) '/um/' || '/so/': backend URL (API calls)
+    * 3) 'App.view.Window->tools.refresh': UI subclass permission (nothing special)
+    * 4) 'module.pingback' || 'modules.*': allowed app modules
+    *
+    ** any permissions (allowing something) must be false (deny by default)
+    ** for any non relevant role/user
+    *
+    ** apply this logic here for:
+    *
+    * 1) Can.Static
+    * 2) Can.API
+    * -) Can.UI (not really as it is not a file/URL to serve)
+    * -) Can:Modules (not really as it is not a file/URL to serve)
+    *
+    * Permission/Role/User config example see `rbac.js`
+    **/
+    var p, r, i
+
+        for(p in Can){
+            if('boolean' == typeof Can[p]){
+                check_type_and_init_can(p)
+            }// skip all other, can arrays are expanded in `rbac_setup()`
+        }
+        for(p in Roles){
+            r = Roles[p]
+            if(!Array.isArray(r)){
+                log('Warning: role "' + p + '" is not Array')
+                continue
+            }
+            for(i = 0; i < r.length; ++i){
+                if(Array.isArray(r[i])) continue// no array in Roles, just `can`s
+                check_type_and_init_can(r[i])
+            }
+        }
+
+rbac.merge(cfg.rbac)// use after init
+//log('rbac initAuth: ', require('util').inspect(rbac, { depth : 6 }))
+    }
+
+    function check_type_and_init_can(can){
         if(!can){
-            log('Warning: permission name is not defined')
+            log('Warning: permission name is not defined or assigned `true`')
             return
         }
         do {
             if(0 == can.indexOf('module.')
                  ||~can.indexOf('->')){
-            // it is not a file to serve
+            // it is not a file to serve, thus skip other types of cans
                 break
             }
             if('/' == can[0]){//#2
@@ -97,73 +181,62 @@ var app = api.app
         } while(0)
         // secured permissions are being checked in `create_auth()` when
         // `req.session.can` is created
-        Can[can] = true// there is such permission
+        Can[can] = true// such permission is available now
     }
 
-    function initAuth(){
-   /*
-    ** types of permissions:
-    * 1) 'App.backend.JS': Class name is file name  == >> '/backend/JS'
-    * 2) 'App.view.Window->tools.refresh': subclass permission (nothing special)
-    * 3) '/um/' || '/chat': backend URL (API calls)
-    * 4) 'module.pingback' || 'modules.*': allowed app modules
-    *
-    ** any permissions (allow something) must be false (deny by default)
-    * 1) Can.Static
-    * 2) Can.API
-    * -) Can.UI (not really as it is not a file to serve)
-    * -) Can:Modules (not really as it is not a file to serve)
-    *
-    ***/
-    var p, r, i
-        for(p in Can){
-            if('boolean' == typeof Can[p]){
-                check_type_and_apply_perm(p)
-            }// skip all other, can arrays are expanded in `rbac_setup()`
-        }
-        for(p in Roles){
-            r = Roles[p]
-            if(!Array.isArray(r)){
-                log('Warning: role "' + p + '" is not Array')
-                continue
+    function mwLogin(req, res){
+    var u, ret = { success: false, roles:[ ], err: null }
+
+        if(req.session && (u = req.txt)){
+            if(req.session.can){// auth-d show permissions list - "can"
+                ret.success = true
+                ret.can = req.session.can
+                ret.user = req.session.user
+
+                return res.json(ret)// fast path
             }
-            for(i = 0; i < r.length; ++i){
-                if(Array.isArray(r[i])) continue// skip; array in Roles must be from Can
-                check_type_and_apply_perm(r[i])
+
+            u = u.split('\n')[0]// user_id
+            if((u = Users[u])){// pre auth shows roles
+                ret.success = true
+                ret.roles = u.roles
+
+                return res.json(ret)// fast path
             }
+            // if no user found, then auth will fail,
+            // don't tell it here (security by obscurity)
+        } else {
+            ret.err = '!session_txt'
         }
-        rbac.merge(api.cfg.app.modules.userman.rbac)// use after init
-//log('rbac initAuth: ', require('util').inspect(rbac, { depth : 6 }))
+        return res.json(ret)
     }
 
     function mwBasicAuthorization(req, res, next){
     // see `create_auth()`
     var i, idx, can, perm
+        return next()
         /* protect namespace of this from any no auth access */
         if(0 == req.url.indexOf('/um/')){// TODO: configure other protected namespaces
             do {
-                if(req.session){
-                    if(req.session.user){
-                        break
-                    }
+                if(req.session && req.session.user){
+                    break// go further
                 }
                 res.statusCode = 401// no auth
                 req.session || res.statusCode++// 402 no session
-                res.end()
-                return
+                return res.end()
             } while(0)
         }
 
-        /* turn ExtJS Class URL into `Can.backend` index
-         * /backend/JS.js?_dc=1395638116367
-         * /backend/JS
-         */
+       /* turn ExtJS Class URL into `Can.backend` index
+        * /backend/JS.js?_dc=1395638116367
+        * /backend/JS
+        */
         idx = req.url.indexOf('.js?')
         perm = req.url
         if(req.session && (can = req.session.can)){// auth
             if(~idx){// *.js files
                 perm = perm.slice(0, idx)
-                if(Can.Static.hasOwnProperty(perm) && can.Static[perm]){
+                if(can.Static[perm]){
 log('allow session Can.Static: ' + perm)
                     return next()// allow connect.static
                 }
@@ -215,7 +288,118 @@ log('allow Can.Static: ' + perm)
                 ) + '\n}// Unauthorized'
             )
         }
-        return
+        return null
+    }
+
+    function mwAuthenticate(req, res){
+   /* req.session.user = {// user data for UI (no pass)
+    *     id: u.id,
+    *     name: u.name,
+    *     roles: u.roles
+    * }
+    **/
+    var data, u, r,
+        ret = { success: false, user: null, err: null, can: null }
+
+        if(req.session){// i.e. there is '/login' but no `/logout`
+            if((ret.can = req.session.can)){
+                ret.user = req.session.user
+                ret.modules = req.session.modules
+                ret.success = true
+                res.json(ret)
+                ret.can = null//security: don't show permissions to others
+                wes.broadcast('login@um', ret)
+
+                return// fast path
+            }
+            /* check user *iff* there is no one in `req.session` */
+            if(!req.session.user && (data = req.txt)){
+                data = data.split('\n')//: 'user_id\nrole_name\npass_sha1'
+                u = Users[data[0]]
+                r = data[1]
+                // check password and role name in user's allowed roles list
+                ret.success = u && u.pass === data[2] && !!(
+                              r &&~u.roles.indexOf(r))
+
+                if('developer.local' === r &&
+                   '127.0.0.1' !== req.socket.remoteAddress){
+                    ret.success = false//security: don't allow remote access
+                    ret.err = '!access'
+                }
+                if(ret.success){
+                    if(req.session.fail){
+                        req.session.fail = 0
+                    }
+                    ret.user = req.session.user = {// user data for UI (no pass)
+                        id: u.id || data[0],
+                        name: u.name,
+                        roles: u.roles
+                    }
+                    create_auth(req.session, r)// permissions are in session
+                    ret.can = req.session.can// permissions for UI
+
+                    ret.modules = req.session.modules = {// one time setup
+                        css:[ ],
+                        js:[ 'App.um.backend.waitEvents' ],
+                        extjs:{ }
+                        //todo per user modules css and js
+                    }
+                    // special case of this module:
+                    // add shortcuts/views manually if allowed
+                    data = 'App.um.view.Chat'
+                    ret.can[data] && ret.modules.js.push(data)
+                    data = 'App.um.view.Userman'
+                    ret.can[data] && ret.modules.js.push(data)
+                    // setup other modules
+                    for(r in Modules) if(ret.can['module.' + r] || ret.can['module.*']){
+                        data = Modules[r].css
+                        if(data) for(u = 0; u < data.length; ++u){
+                            ret.modules.css.push(data[u])
+                        }
+                        data = Modules[r].js
+                        if(data) for(u = 0; u < data.length; ++u){
+                            ret.modules.js.push(data[u])
+                        }
+                        if((data = Modules[r].cfg.extjs)) for(u in data){
+                            ret.modules.extjs[u] = (data[u])
+                        }
+                    }
+
+                    res.json(ret)
+                    //security: don't show private info to others
+                    ret.can  = ret.modules = null
+                    ret.user = ret.user.name
+                    wes.broadcast('auth@um', ret)
+
+                    return// fast path
+                } else {
+                    ret.err || (ret.err = '!bad_upr')
+                }
+            } else {
+                ret.err = '!data'
+            }
+
+            if(ret.err){
+                req.session.fail = req.session.fail ? ++req.session.fail : 1
+                if(4 == req.session.fail){// brute force preventer
+                    req.session.user = true// stop auth check
+                    setTimeout((
+                    function prepare_allow_failer(failer){
+                        return function allow_failer(){
+                            failer.destroy()
+                        }
+                    })(req.session),
+                        1 << 22
+                    )// wait hour or so to allow next login
+                }
+            }
+            res.statusCode = 400
+        } else {
+            res.statusCode = 402
+            ret.err = '!session'
+        }
+        res.json(ret)
+        wes.broadcast('auth@um', ret)
     }
 
     function create_auth(session, role_name){
@@ -224,7 +408,7 @@ log('allow Can.Static: ' + perm)
     *     __name: 'role.name'
     *     // access to static (Class) files
     *     // if file URL (i.e. with '*.js' postfix; stripped)  is in there
-    *     // then allow access (which is denied by default)
+    *     // then allow access (which is denied by default by `initAuth()`)
     *    ,Static: { '/backend/JS': true }
     *     // access to API calls
     *     // `mwBasicAuthorization` scans this array for every URL that is
@@ -237,6 +421,7 @@ log('allow Can.Static: ' + perm)
     * }
     **/
     var can, d, p, i, roll
+
         can = Roles[role_name] || { __name: 'no role name' }
         if(Array.isArray(can)){// compile permissions from role setup
             roll = can
@@ -282,7 +467,7 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                 }
             } else {
             // security: check any new permission
-                if(null === rbac.secure_can(j)){// no such perm-n
+                if(null === rbac.fuses_can(j)){// no such perm-n
                     for(i = 0; i < Can.API.length; ++i){// all API must heve permission
                         if(0 == Can.API[i].indexOf(j)){// j: "/p", API[i]: '/pingback'
                             is_api = true
@@ -290,8 +475,8 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
                             break// stop scan; deny subsets of API from app modules
                         }
                     }
-                    if(!is_api){// allow API or any other perm-n from app modules
-                        check_type_and_apply_perm(j)
+                    if(!is_api){// allow API or any other (new) perm-n from app modules
+                        check_type_and_init_can(j)
                     }
                 } else {
                     log('!Security `apply_permission`: skip secure permission "' + j + '"')
@@ -299,112 +484,6 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
             }
         }
     }
-
-    function mwLogin(req, res){
-    var ret = { success: false, roles: [], err: null }
-       ,u
-
-        if(req.session && (u = req.txt)){
-            if(req.session.can){// auth-d show permissions list - "can"
-                ret.success = true
-                ret.can = req.session.can
-                ret.user = req.session.user
-                res.json(ret)
-                return// fast path
-            }
-
-            u = u.split('\n')[0]// user_id
-            if((u = Users[u])){// pre auth shows roles
-                ret.success = true
-                ret.roles = u.roles
-                res.json(ret)
-                return// fast path
-            }
-            //if no user found, then auth will fail, don't tell it here
-        } else {
-            ret.err = '!session_txt'
-        }
-        res.json(ret)
-    }
-
-    function mwAuthenticate(req, res){
-   /* req.session.user = {// user data for UI (no pass)
-    *     id: u.id,
-    *     name: u.name,
-    *     roles: u.roles
-    * }
-    **/
-    var ret = { success: false, user: null, err: null, can: null }
-       ,data
-       ,u ,r
-
-        if(req.session){
-            if((ret.can = req.session.can)){
-                ret.user = req.session.user
-                ret.success = true
-                res.json(ret)
-                ret.can = null//security: don't show permissions to others
-                wes.broadcast('login@um', ret)
-                return// fast path
-            }
-            /* check user *iff* there is no one in `req.session` */
-            if(!req.session.user && (data = req.txt)){
-                data = data.split('\n')//: 'user_id\nrole_name\npass_sha1'
-                u = Users[data[0]]
-                r = data[1]
-                // check password and role name in user's allowed roles list
-                ret.success = u && u.pass === data[2] && !!(
-                              r &&~u.roles.indexOf(r))
-
-                if('developer.local' === r &&
-                   '127.0.0.1' !== req.socket.remoteAddress){
-                    ret.success = false//security: don't allow remote access
-                    ret.err = '!remote_access'
-                }
-                if(ret.success){
-                    if(req.session.fail){
-                        req.session.fail = 0
-                    }
-                    ret.user = req.session.user = {// user data for UI (no pass)
-                        id: u.id,
-                        name: u.name,
-                        roles: u.roles
-                    }
-                    create_auth(req.session, r)// permissions are in session
-                    ret.can = req.session.can// permissions for UI
-                    res.json(ret)
-                    ret.can = null//security: don't show permissions to others
-                    wes.broadcast('auth@um', ret)
-                    return// fast path
-                } else {
-                    ret.err || (ret.err = '!bad_upr')
-                }
-            } else {
-                ret.err = '!data'
-            }
-
-            if(ret.err){
-                req.session.fail = req.session.fail ? ++req.session.fail : 1
-                if(4 == req.session.fail){// brute force preventer
-                    req.session.user = true// stop auth check
-                    setTimeout((
-                        function prepare_allow_failer(failer){
-                            return function allow_failer(){
-                                failer.destroy()
-                            }
-                        })(req.session)
-                        , 1 << 22)// wait hour or so to allow next login
-                }
-            }
-            res.statusCode = 400
-        } else {
-            res.statusCode = 402
-            ret.err = '!session'
-        }
-        res.json(ret)
-        wes.broadcast('auth@um', ret)
-    }
-    //!!! TODO: save/load MemoryStore with all sessions
 
     function mwLogout(req, res){
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
@@ -416,6 +495,6 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
             }
             req.session.destroy()
         }
-        res.json()
+        return res.json()
     }
 }
