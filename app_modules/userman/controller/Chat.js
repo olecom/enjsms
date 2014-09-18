@@ -141,9 +141,11 @@ var id = 'App.um.controller.Chat'
                     {
                         usr: App.User.id,
                         msg: prev
+                    },
+                    function (err){
+                        !err && text.setValue((curr = ''))
                     }
                 )
-                text.setValue((curr = ''))
             }
         }
 

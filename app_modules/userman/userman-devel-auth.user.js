@@ -8,7 +8,7 @@
 // ==/UserScript==
 
 function closure(w, localStorage, con){
-var username = localStorage['supro.user'] || 'devka'
+var username = localStorage['supro.user'] || 'dev'
    ,userrole = localStorage['supro.role'] || 'developer.local'
    ,password = localStorage['supro.pass'] || 'pass'
    ,pref = '[supro devel] '
@@ -22,12 +22,13 @@ var loop, user
         if(!w.App.view) return
         if(!w.App.view.userman) return
 
+        user = Ext.ComponentQuery.query('field[name=user]')[0]
+        if(!user) return
+        if(user.disabled) return
+
         clearInterval(loop)
 
 con.log(pref + 'auto auth start (to stop disable this userscript e.g. in `chrome://extensions/`)')
-
-        user = Ext.ComponentQuery.query('field[name=user]')[0]
-        if(!user) return
 
         if(user.emptyText != l10n.um.loginUserBlank){
 con.log(pref + 'auto auth exit, session exists')

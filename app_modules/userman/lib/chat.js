@@ -3,8 +3,8 @@
  **/
 module.exports = chat
 
-function chat(api){
-var chat_api = { 'user': null, 'text': null, 'deve': load_api }
+function chat(cfg, api){
+var chat_api = { 'user': null, 'text': null, 'deve': load_chat_api }
    ,url = require('url')
    ,qs = require('connect/node_modules/qs')
    ,fs = require('fs')
@@ -16,7 +16,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
        ,log_file: null
        ,log_file_name: ''
     }
-   ,dir = process.cwd() + api.cfg.app.modules.userman.data + '/chat'
+   ,dir = process.cwd() + cfg.data + '/chat'
 
     fs.stat(dir,
         function stat_um_data_chat_dir(err, d){
@@ -24,7 +24,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
                 require('mkdirp').mkdirp(dir,
                     function mkdirp_um_data_chat_dir(err){
                         if(err) throw(err)
-                        load_api()
+                        load_chat_api()
                     }
                 )
                 return
@@ -32,7 +32,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
             if(!d.isDirectory()){
                 throw new Error('Is not a directory: ' + dir)
             }
-            load_api()// init api
+            load_chat_api()// init api
         }
     )
 
@@ -61,8 +61,7 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
         return undefined
     }
 
-    function load_api(){
-
+    function load_chat_api(){
         if(local.log_file){// close and clear log file write stream
             local.log_file.end(null, do_load)
             local.log_file = null
@@ -75,19 +74,18 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_api }
 
         function do_load(){
         var m, tmp
+
             local.log_dir || (local.log_dir = dir)// provide new or existing log dir
-            for(m in chat_api){
-                if(0 != m.indexOf('deve')){
-                    chat_api[m] && (tmp = chat_api[m])
-                    try {
-                        chat_api[m] = new Function(
-                           'ret, api, local, req, res, next',
-                            fs.readFileSync(__dirname + '/chat_' + m + '.js', 'utf8')
-                        )
-                    } catch(ex){
-                        log('exec fail:', ex)
-                        tmp && (chat_api[m] = tmp)
-                    }
+            for(m in chat_api) if(0 != m.indexOf('deve')){
+                chat_api[m] && (tmp = chat_api[m])
+                try {
+                    chat_api[m] = new Function(
+                       'ret, api, local, req, res, next',
+                        fs.readFileSync(__dirname + '/chat_' + m + '.js', 'utf8')
+                    )
+                } catch(ex){
+                    log('exec fail:', ex)
+                    tmp && (chat_api[m] = tmp)
                 }
             }
         }

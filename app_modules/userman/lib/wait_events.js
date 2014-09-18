@@ -1,4 +1,4 @@
-function wait_events(api){
+function wait_events(/*cfg*/){
 var Waits = {// pool of waiting server events `req`uests from UI
 /*
  * Waits = {
@@ -18,6 +18,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
         ,get_id: get_id
         ,list_ids: list_ids
         ,broadcast: broadcast
+        ,session: session
         ,cleanup: cleanup
     }
 
@@ -118,7 +119,24 @@ var Waits = {// pool of waiting server events `req`uests from UI
         }
     }
 
-    function queue_event(session, ev){
+    function broadcast(ev, json){
+        for(var id in Waits){
+            _queue_event(Waits[id],{ ev:ev, json:json })
+        }
+        return json
+    }
+
+    function session(sessionID, ev, json){
+    var sn
+
+        if((sn = Waits[sessionID])){
+             _queue_event(sn,{ ev:ev, json:json })
+        }
+    }
+
+    // private tools
+
+    function _queue_event(session, ev){
         session.queue.push(ev)
         if(!session.timer){
             session.timer = setTimeout(
@@ -136,13 +154,6 @@ var Waits = {// pool of waiting server events `req`uests from UI
                 ,512
             )
         }
-    }
-
-    function broadcast(ev, json){
-        for(var id in Waits){
-            queue_event(Waits[id],{ ev:ev, json:json })
-        }
-        return json
     }
 }
 
