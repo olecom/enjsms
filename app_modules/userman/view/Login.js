@@ -1,9 +1,10 @@
-(function gc(l10n){
-
+/*
+ *  setup top bar
+ **/
 App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [ ],[
     '-'
     ,{
-        iconCls: 'appbar-user-onli',
+        iconCls: 'appbar-user-onli',// initial in backend by `App.um.wes()`
         id: 'um.usts'
        ,height: 28
        ,tooltip: '', text: ''// filled by controller after auth
@@ -38,7 +39,7 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [ ],[
                 } else {
                     App.create('um.controller.Userman')
                 }
-                this.up('button').hideMenu()
+                return this.up('button').hideMenu()
             }
         }
 
@@ -46,7 +47,8 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [ ],[
 
         function onItemClick(item){
             item.up('button').setIconCls(item.iconCls).hideMenu()
-            Ext.globalEvents.fireEventArgs('usts@UI', [ item.iconCls.slice(12) ])// appbar-user-
+            // send new 4-char status from 'appbar-user-????'
+            Ext.globalEvents.fireEventArgs('usts@UI',[ item.iconCls.slice(12)])
         }
     }
                 )()// buttongroup.items
@@ -63,13 +65,14 @@ App.view.items_Bar = Ext.Array.push(App.view.items_Bar || [ ],[
     }
 ])
 
-Ext.define('App.view.userman.Login',{
+Ext.define('App.um.view.LoginWindow',{
     xtype: 'app-login',
     extend: Ext.container.Container,
     layout: 'fit',
-    singleton: true,
     constrain: true,
     /* draggable: true, by 'login-dd' in constructor() */
+    modal: false,
+    form: null, user: null, role: null, pass: null, auth: null,
     floating: true, shadow: false
     ,style: 'opacity: 0; background-color: #FFFFFF;'
           + 'padding: 14px; width: 354px; height: 313px;'
@@ -104,10 +107,10 @@ Ext.define('App.view.userman.Login',{
     }]
 
     ,id: 'login',
-    constructor: function constructorLogin(){
+    constructor: function constructorLogin(config){
     var me = this
 
-        me.callParent()
+        me.callParent([config])
         /* after initComponent()
          * Movable Container: make drag handler on top, not whole area
          */
@@ -115,7 +118,7 @@ Ext.define('App.view.userman.Login',{
         Ext.panel.Panel.prototype.initSimpleDraggable.call(me)
         me.draggable = me.header = null
  	},
-    destroy:function(){
+    destroy: function(){
         this.form.destroy()
         this.form = null
         this.callParent()
@@ -169,7 +172,7 @@ Ext.define('App.view.userman.Login',{
             hideLabels: true,
             cls: 'transparent',
             margin: '20px 0 0 0',
-            items: [{
+            items:[{
                 /* ExtJS 5 deprecated: 'Ext.form.field.Text'.triggers */
                 xtype: 'triggerfield',
                 triggerCls: 'login-shutdown',
@@ -192,7 +195,7 @@ Ext.define('App.view.userman.Login',{
                 editable: false,
                 displayField: 'role',
                 valueField: '=',
-                store: Ext.create('Ext.data.Store',{
+                store: Ext.create(Ext.data.Store,{
                     fields: [ 'role', '=' ]
                 }),
                 disabled: true
@@ -213,7 +216,10 @@ Ext.define('App.view.userman.Login',{
                 disabled: true
             }]
         })
+
+        me.user = me.form.down('field[name=user]')
+        me.role = me.form.down('field[name=role]')
+        me.pass = me.form.down('field[name=pass]')
+        me.auth = me.form.down('button[iconCls=ok]')
     }
 })
-
-})(l10n)

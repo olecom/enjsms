@@ -25,6 +25,7 @@ l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
 "'PAGE_UP/PAGE_DOWN': scroll chat room",
         user_in: 'Enter',
         user_out: 'Quit',
+        user_reload: 'Reload list of users',
         send: "send"
    }
 
@@ -36,8 +37,13 @@ l10n.um = { lang: 'en'// localization is used only in UI for ease of updates
    ,loginUserBlank: 'user id'
    ,loginOk: 'Enter the system'
    ,loginCurrentSession: 'Continue session'
+   ,loginConflict: 'Session is Active!'
    ,logoutTitle: 'Session'
-   ,logoutMsg: function(id){ return 'Current session of user <b>"' + id + '"</b> is closed' }
+   ,logoutMsg: function(id, role){
+        return 'End current session?<br><br>' +
+               'User: <b>"' + id + '"</b><br>'+
+               'Role: <b>"' + role + '"</b>'
+    }
 
    ,l10n: 'Localization setup'
    ,l10nReset: 'Use default configured localization'

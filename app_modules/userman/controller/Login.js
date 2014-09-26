@@ -1,36 +1,46 @@
-(function gc(l10n){
+(function gc_controller_Login(l10n){
 // is done under M V C pattern
-Ext.define('App.controller.Login',{
+Ext.define('App.um.controller.Login',{
     extend: Ext.app.Controller,
 
-    views:[
-        'userman.Login'// auto requires App.view.userman.Login
-    ],
-    refs:[
-        { ref: 'user', selector: 'field[name=user]' },
-        { ref: 'role', selector: 'field[name=role]' },
-        { ref: 'pass', selector: 'field[name=pass]' },
-
-        { ref: 'auth', selector: 'button[iconCls=ok]' }
-    ],
     init: function controllerLoginInit(){
     var user, role, pass, auth
-       ,me = this, defer = 0
+       ,me = this, defer
 
-        Ext.select("#l10n > span").each(function l10n_changers(el){
-            return (0 == el.dom.className.indexOf(l10n.lang)) ?
-                    el.dom.style.opacity = 0.5 :// fade out current flag
+        if(!App.um.view.Login){
+            App.um.view.Login = new App.um.view.LoginWindow
+            defer = 0// login
+        } else {
+            defer = 1// relogin
+        }
+
+        App.um.view.Login.el.select("#l10n > span").each(function l10n_changers(el){
+            if(!defer){// login
+                if(0 == el.dom.className.indexOf(l10n.lang)){
+                    el.dom.style.opacity = 0.5// fade out current flag
+                    el.dom.style.cursor = 'not-allowed'
+                } else {
                     el.dom.onclick = l10n_set_and_change// install changer
+                }
+                return
+            } else {// relogin: disable all
+                el.dom.style.opacity = 0.5
+                el.dom.style.cursor = 'not-allowed'
+                return
+            }
         })
 
-        App.cfg.createViewport = false// tell `Main`, this will fire `createViewport`
+        if(defer) return me.relogin()
+
+        App.cfg.createViewport = false// tell `Main`, me will fire `createViewport`
         // UI refs
-        user = me.getUser()
-        role = me.getRole()
-        pass = me.getPass()
-        auth = me.getAuth()
+        user = App.um.view.Login.user
+        role = App.um.view.Login.role
+        pass = App.um.view.Login.pass
+        auth = App.um.view.Login.auth
         // data
-        App.User = App.model.userman.User// must be required first from app module
+        App.User = App.um.model.User// must be required first from app module
+        App.User.internalId = ''// reset to be used as User.id copy while offline
         // action
         user.disable()// mark to check exixting session
         user.onTriggerClick = onSessionShutdownClick
@@ -62,19 +72,16 @@ Ext.define('App.controller.Login',{
             click: authenticate
         })
 
-        me.listen({
-            global:{
-                /* runApp: Login widget is `singleton: true` and runs already */
+        App.app.listen({// bind to the Application controller as this one
+            global:{    // is destroyed after Login
                 'initwes@UI': handleInitBackendWaitEvents,
-                'usts@UI': handleUserStatus,
-                'wes4UI': backendEventsLogin,
+                'usts@UI': changeUserStatus,
+                'wes4UI': backendEventsCtlLogin,
                 logout: logout
             }
         })
 
-        App.User.login('?', getSessionInfo)// ask backend for current session
-
-        return
+        return App.User.login('?', getSessionInfo)// ask backend for current session
 
         function l10n_set_and_change(){
             if('l10n-reset' == this.className){
@@ -94,7 +101,9 @@ Ext.define('App.controller.Login',{
             reload()
         }
 
-        function getSessionInfo(ret){
+        function getSessionInfo(err, ret){
+            if(err) return
+
             user.enable()// mark as ready
             if(ret.can){
                 user.emptyText = ret.user.id
@@ -110,8 +119,7 @@ Ext.define('App.controller.Login',{
                     return
                 }
                 auth.setText(l10n.um.loginCurrentSession)
-                auth.enable()
-                return// auth is ok in this session
+                auth.enable()// auth is ok in this session
             }
         }
 
@@ -142,9 +150,11 @@ Ext.define('App.controller.Login',{
                 }
                 defer = setTimeout(function deferReqRoles(){
                     defer = 0
-                    App.User.login(newUserId, function getSessionInfo(ret){
+                    App.User.login(newUserId, function getSessionInfo(err, ret){
+                        if(err) return
+
                         if(ret.can){
-                            App.view.userman.Login.fadeOut(createViewportAuth)
+                            App.um.view.Login.fadeOut(createViewportAuth)
                             return// auth is ok in this session
                         }
 
@@ -186,15 +196,15 @@ Ext.define('App.controller.Login',{
         }
         function authenticate(field){
             if(field){// from button call arguments: `field, ev`
-                App.view.userman.Login.fadeInProgress(auth)
+                App.um.view.Login.fadeInProgress(do_auth)
             } else {// from direct call
                 App.cfg.extjs.fading = false
-                auth()// fast `developer.local`
+                do_auth()// fast `developer.local`
             }
 
             return
 
-            function auth(){
+            function do_auth(){
                 App.User.auth(
                     user.getValue(),
                     role.getValue(),
@@ -204,8 +214,9 @@ Ext.define('App.controller.Login',{
             }
             function callbackAuth(err, json, res){
                 if(!err){
-                    App.view.userman.Login.fadeOut(createViewportAuth)
-                    if(!App.cfg.backend.url){// `browser`
+                    App.um.view.Login.fadeOut(createViewportAuth)
+                    if(!App.backendURL){// `browser`
+                    //!!! do not apply shutdown for now !!!
                     /* NOTE: there is no way to match reload or window/tab close
                      *       in the browser.
                      *       Thus session is lost and relogin is required. But
@@ -223,17 +234,26 @@ Ext.define('App.controller.Login',{
                     }
                 } else {
                     // reload if no session (e.g. backend reloaded)
-                    (res.status && 402 === res.status) && location.reload(true)
-                    // continue (e.g. wrong password)
-                    user.selectText()
-                    App.view.userman.Login.fadeOutProgress()
+                    if(res.status && 402 === res.status) location.reload(true)
+                    if(res.status && 409 === res.status){// race inside session
+                        user.setHideTrigger(true)
+                        user.addCls('redwhite')
+                        user.disable()
+                        role.disable()
+                        pass.disable()
+                        auth.disable()
+                        auth.setText(l10n.um.loginConflict)
+                    } else {// continue (e.g. wrong password)
+                        user.selectText()
+                    }
+                    App.um.view.Login.fadeOutProgress()
                 }
             }
         }
         function createViewportAuth(){
         var bar = App.view.items_Bar, i = 0, f
 
-            me.destroy()// GC, logout reloads page
+            me.destroy()// Login is done
 
             for(i = 0; i < bar.length; ++i){// search user status item
                 f = bar[i]
@@ -280,18 +300,83 @@ Ext.define('App.controller.Login',{
             auth.enable()
         }
     },
+    relogin: function relogin(){
+    var user, role, pass, auth
+       ,me = this
+
+        user = App.um.view.Login.user
+        role = App.um.view.Login.role
+        pass = App.um.view.Login.pass
+        auth = App.um.view.Login.auth
+        auth.enable()
+
+        user.onTriggerClick = destroy
+        user.emptyText = App.User.id.replace(/....([^ ]+) .*/,'$1')
+        user.applyEmptyText()
+        user.enable()
+        user.setHideTrigger(false)
+
+
+        role.setValue(l10n.um.roles[App.User.can.__name] || App.User.can.__name)
+        role.disable()
+
+        pass.enable()
+        pass.on({
+            specialkey: function gotoAuth2(_, ev){
+                if(ev.getKey() == ev.ENTER){
+                    auth.focus()
+                }
+            }
+        })
+
+        pass.setValue(' ')// crutch to activate input field:
+        setTimeout(function(){
+            pass.setValue('')
+            pass.focus()
+        }, 128)
+
+        auth.on({ click: function(){
+            App.um.view.Login.fadeInProgress(function(){
+            App.User.login('?', function(err){
+                if(err) return
+            App.User.auth(
+                App.User.id.replace(/....([^@]+)@.*/,'$1'),
+                App.User.can.__name,
+                pass.getValue(), function(err){
+                    if(err) return App.um.view.Login.fadeOutProgress()
+
+            App.um.wes(App.User.internalId.slice(0,4))// saved status
+            return App.um.view.Login.fadeOut(destroy)
+                }
+            )})})
+        }})
+        return
+
+        function destroy(){
+            me.destroy()
+        }
+    },
     destroy: function destroy(){
-        App.view.userman.Login.destroy()
-        /*
-         * NOTE: this controller is handling events `me.listen()`
-         * TODO: in case of logout event from backend, this may show
-         *       `view.userman.Login` again without reloading of all Viewport
-         */
+    /*
+     * is not used any more
+     * NOTE: this controller is handling events `me.listen()`
+     * TODO: in case of logout event from backend, this may show
+     *       `App.um.view.Login` again without reloading of all Viewport
+     */
+        //App.um.view.Login.destroy()
+        App.um.view.Login.destroy()
+        App.um.view.Login = null// GC
+        this.application.eventbus.unlisten(this.id)
+        this.application.controllers.removeAtKey(this.id)
     }
 })
 
-//TODO refactor that
-function backendEventsLogin(success, data){
+/*
+ * Application wide event handlers
+ **/
+function backendEventsCtlLogin(success, data){
+var evn, cmp, s
+
     App.sts(
        'backend events',
         success ? data.length : data,// data || res.statusText
@@ -300,6 +385,39 @@ function backendEventsLogin(success, data){
     )
     console.log(data)//TODO: Ext,Msg on error
     console.table(data)
+
+    if('string' == typeof data) switch (data){// simple event
+        case 'Disconnect':
+        case 'Unauthorized':
+            if(App.um.view.Login) return// event is firing again (still no login)
+
+            (cmp = Ext.getCmp('um.usts')) && cmp.setIconCls('appbar-user-offl')
+            App.um.view.Login = new App.um.view.LoginWindow({ modal: true })
+            Ext.WindowManager.bringToFront(App.um.view.Login)
+            App.app.getController('App.um.controller.Login')// only strings
+        return
+        default:return
+    }
+
+    for(evn = 0; evn < data.length; ++evn) switch (data[evn].ev){
+        case 'Usts@um': if((cmp = Ext.getCmp('um.usts'))){
+            if(cmp.iconCls.slice(12) != (s = data[evn].json.slice(0, 4))){
+                cmp.setIconCls('appbar-user-' + s)
+            }
+        }
+        break
+        case 'Disconnect':
+            (cmp = Ext.getCmp('um.usts')) && cmp.setIconCls('appbar-user-offl')
+        break
+        case 'Unauthorized':
+
+            App.um.view.Login = new App.um.view.LoginWindow({ modal: true })
+            Ext.WindowManager.bringToFront(App.um.view.Login)
+            App.app.getController(App.um.controller.Login)
+
+        break
+        default:break
+    }
 }
 
 function handleInitBackendWaitEvents(msg){
@@ -311,18 +429,23 @@ function handleInitBackendWaitEvents(msg){
     )
 }
 
-function handleUserStatus(status){
-    App.backend.req('/um/lib/wait_events', status)// use non aborting `req`
+function changeUserStatus(status){
+    App.um.wes(status)
 }
 
 function logout(){
+    App.app.suspendEvents(false)
+
     Ext.Msg.alert({
-        icon: Ext.Msg.INFO,
-        buttons: Ext.Msg.OK,
+        buttons: Ext.Msg.YESNO,
+        icon: Ext.Msg.QUESTION,
         title: l10n.um.logoutTitle,
-        msg: l10n.um.logoutMsg(App.model.userman.User.get('id')),
-        fn: function(){
-            App.User.logout(reload)
+        msg: l10n.um.logoutMsg(
+            App.um.model.User.get('id'),
+            l10n.um.roles[App.User.can.__name] || App.User.can.__name
+        ),
+        fn: function(btn){
+            if('yes' == btn) App.User.logout(reload)
         }
     })
 }
@@ -341,6 +464,6 @@ App.denyMsg = function denyMsg(){
     })
 }
 
-App.getApplication().getController('Login')/* dynamically load && init */
+App.app.getController('App.um.controller.Login')/* init */
 
 })(l10n)
