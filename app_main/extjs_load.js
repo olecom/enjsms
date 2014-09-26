@@ -126,7 +126,7 @@ var t
     l10n._ns = ''
     Ext.apply(l10n, t)
 
-    // NOTE: Ext JSON decoding is useful for JS-as-JSON with `l10n` as values
+    // NOTE: Ext JSON decoding is useful for JS-as-JSON with `l10n` in values
     con.log('ExtJS Ext.encode: always native `JSON.stringify()`')
     Ext.encode = JSON.stringify
     Ext.Error.handle = Ext_Error_handle// by Ext.Error.raise()
@@ -141,7 +141,7 @@ var t
         'App.store.CRUD',          // our CRUD for `Ext.data.*`
         'App.view.Window',         // provide core View Class(es)
         'App.view.desktop.Status'  // provide status
-    ], App.cfg.extjs.launch.js || [ ])// backend stuff, if exists
+    ], App.cfg.extjs.launch.js || [ ])// more stuff from backend, if exists
 
     var j, i = 0, l = Ext.fly('startup').dom.lastChild
 

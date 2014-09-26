@@ -2,7 +2,7 @@
  * Connection to backend
  */
 Ext.define('App.backend.Connection',{
-    extend: 'Ext.data.Connection',
+    extend: Ext.data.Connection,
     method: 'POST',
     url: App.backendURL,
     defaultHeaders:{
@@ -74,4 +74,4 @@ function create_backend_request(conn){
         }
     }
 }
-)(Ext.create('App.backend.Connection'))
+)(Ext.create(App.backend.Connection))

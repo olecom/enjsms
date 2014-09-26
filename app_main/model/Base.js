@@ -119,10 +119,9 @@ Ext.define('App.model.BaseCRUD',{
     constructor: function(){
         if(this.url){
             // NOTE: Model's proxy doesn't play role in Store setup
-            App.cfg.backend.url && (this.url = App.cfg.backend.url + this.url)
             this.setProxy({
                 type: 'crud',
-                url: this.url
+                url: this.url = App.backendURL + this.url
             })
         }
 
