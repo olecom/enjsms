@@ -23,7 +23,7 @@ var app = api.app
         throw new Error('Not a function: `api.set_mwConfig()`')
     }
 
-    api.wes = wes = require('./lib/wait_events.js')(/*cfg*/)
+    api.wes = wes = require('./lib/wes.js')(/*cfg*/)
     rbac = require('./lib/rbac.js')(cfg)
 
     Can = rbac.can
@@ -74,8 +74,8 @@ var app = api.app
     // high priority mw
     app.use(mwBasicAuthorization)// apply default 'deny' from `initAuth()`
 
-    app.use('/um/lib/wait_events', wes.mwPutWaitEvents)// UI: 'App.um.backend.waitEvents'
-    app.use('/um' + (n = '/backend/waitEvents.js'), api.connect.sendFile(__dirname + n, true))
+    app.use('/um/lib/wes', wes.mwPutWaitEvents)// UI: 'App.um.wes'
+    app.use('/um' + (n = '/wes.js'), api.connect.sendFile(__dirname + n, true))
 
     app.use('/um/lib/chat', require('./lib/chat.js')(cfg, api))// backend API && MVC UI:
     app.use('/um' + (n = '/model/chatUser.js'), api.connect.sendFile(__dirname + n, true))
@@ -307,16 +307,31 @@ log('allow Can.Static: ' + perm)
         if(req.session){// i.e. there is '/login' but no `/logout`
             if((ret.can = req.session.can)){
                 ret.user = req.session.user
+
+                if(wes.is_online_reset(req)){// check and reset to prevent races
+                    res.statusCode = 409, ret.err = "Conflict"
+                    return res.json(ret)
+                }
+
                 ret.modules = req.session.modules
                 ret.success = true
                 res.json(ret)
-                ret.can = null//security: don't show permissions to others
-                wes.broadcast('login@um', ret)
 
-                return// fast path
+                //security: don't show permissions and modules to others
+                ret.can = ret.modules = null
+                return wes.broadcast('login@um', ret)// fast path out
             }
-            /* check user *iff* there is no one in `req.session` */
+           /*
+            * check user *iff* there is no one in `req.session`
+            * prevent race condition in login process by checking `wes`
+            */
             if(!req.session.user && (data = req.txt)){
+                if(!wes.init(req)){
+                    res.statusCode = 409, ret.err = "Conflict"
+                    res.json(ret)
+                    return wes.broadcast('auth@um', ret)
+                }
+
                 data = data.split('\n')//: 'user_id\nrole_name\npass_sha1'
                 u = Users[data[0]]
                 r = data[1]
@@ -329,6 +344,7 @@ log('allow Can.Static: ' + perm)
                     ret.success = false//security: don't allow remote access
                     ret.err = '!access'
                 }
+
                 if(ret.success){
                     if(req.session.fail){
                         req.session.fail = 0
@@ -340,10 +356,9 @@ log('allow Can.Static: ' + perm)
                     }
                     create_auth(req.session, r)// permissions are in session
                     ret.can = req.session.can// permissions for UI
-
                     ret.modules = req.session.modules = {// one time setup
                         css:[ ],
-                        js:[ 'App.um.backend.waitEvents' ],
+                        js:[ 'App.um.wes' ],// provide our UI class(es)
                         extjs:{ }
                         //todo per user modules css and js
                     }
@@ -367,14 +382,12 @@ log('allow Can.Static: ' + perm)
                             ret.modules.extjs[u] = (data[u])
                         }
                     }
-
                     res.json(ret)
-                    //security: don't show private info to others
-                    ret.can  = ret.modules = null
-                    ret.user = ret.user.name
-                    wes.broadcast('auth@um', ret)
 
-                    return// fast path
+                    //security: don't show private info to others
+                    ret.user = ret.user.name
+                    ret.can = ret.modules = null
+                    return wes.broadcast('auth@um', ret)// fast path
                 } else {
                     ret.err || (ret.err = '!bad_upr')
                 }
@@ -402,7 +415,7 @@ log('allow Can.Static: ' + perm)
             ret.err = '!session'
         }
         res.json(ret)
-        wes.broadcast('auth@um', ret)
+        return wes.broadcast('auth@um', ret)
     }
 
     function create_auth(session, role_name){
@@ -498,6 +511,6 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
             }
             req.session.destroy()
         }
-        return res.json()
+        return res.json('')
     }
 }

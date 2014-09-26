@@ -36,7 +36,7 @@ config = {
                 }
             },
             extjs:{
-                waitEvents:{
+                wes:{// wait events
                     timeout: 7777777,// 2.16 hours vs max on backend: (1 << 23) = 2.33
                     defer: 77777// if error on minute and half
                 }
