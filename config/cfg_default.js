@@ -8,7 +8,7 @@ config = {
     log: 'log/',
     modules:{// cfg for stack of things from 'app_modules'
     // order matters as in middlewares
-        //'?auth': null,// callback to auth modules in loader (implemented by `userman`)
+    // auth module overwrites default and sets up per-user auth module loading
         userman:{//#0: authentication and authorization (plus Chat)
             store: 'fs' // TODO: fs || db
             //sess_maxage: //null: browser lifetime; default: ~9.3 hours one working day
@@ -48,8 +48,8 @@ config = {
     },
     extjs:{
         path: 'ext-4.2.1.883/',// find and provide this path; 'extjs/' is for web
-        launch:  null,/*{ css: [ ], js: [ ]} loaded by `extjs_launch()` */
-        modules: null,/*{ css: [ ], js: [ ]} */
+        launch:  null,/*{ css:[ ], js:[ ]} loaded by `extjs_launch()` */
+        modules: null,/*{ css:[ ], js:[ ]} */
         fading:  true// visual effects for content appearance
     },
     backend:{

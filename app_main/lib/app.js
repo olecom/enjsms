@@ -11,12 +11,13 @@ var api      = require('./api.js')
    ,_404     = require('./middleware/404.js')
    ,connect  = api.connect = require('connect')
    ,app      = api.app = connect()
-   ,mwConfig
+   ,mwConfig, Modules
 
     /* `l10n` files middleware factory for app modules */
     api.mwL10n = require('./middleware/l10n.js')
+    /* UI/ExtJS per-user/role config changer */
     api.set_mwConfig = set_mwConfig
-    set_mwConfig()
+    set_mwConfig()// setup the simplest one
 
     /* Add own middlewares */
 
@@ -50,12 +51,39 @@ var api      = require('./api.js')
         )
     })
     .timeout = (1 << 23)// default timeout for long events waitings requests
+
+    if(api.getModules){// default reference to all (being loaded later) modules
+        Modules = api.getModules()
+    }
+
     return
 
     function set_mwConfig(mw){
-        mwConfig = mw || function($ ,res){ res.json(cfg.extjs) }
+        mwConfig = mw || addModulesConfigs
 
-        return cfg// return global config to auth module
+        return cfg// return global config to (any) auth module
+
+        function addModulesConfigs(req, res){
+        var i, j, k
+
+            if(Modules){// default all-for-all setup (auth module overwrites this)
+                for(i in Modules){
+                    k = Modules[i]
+                    if(k.css) for(j = 0; j < k.css.length; ++j){
+                        cfg.extjs.launch.css.push(k.css[j])
+                    }
+                    if(k.js)  for(j = 0; j < k.js.length; ++j){
+                        cfg.extjs.launch.js .push(k.js[j])
+                    }
+                    for(j in k.cfg.extjs){
+                        cfg.extjs[j] = k.cfg.extjs[i]
+                    }
+                }
+                Modules = null
+            }
+
+            return res.json(cfg.extjs)
+        }
     }
 
     function use_mwConfig(req, res, next){

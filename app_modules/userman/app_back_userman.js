@@ -100,14 +100,17 @@ var app = api.app
     // isolate modules from access to app and other modules' configs
     Modules = api.getModules()// reference to all (being loaded now) modules
     Config  = api.set_mwConfig(mwAuthBasedConfig)// get app config here
-    api.getModulesConfig = api.set_mwConfig = null// deny other modules to do it
+    api.getModules = api.set_mwConfig = null// deny other modules to do it
 
     return { css:[ n ], js: files, cfg: cfg }
 
     function mwAuthBasedConfig(req, res, i){
-        if(!Config.extjs.launch){// setup after loading of all modules
-            Config.extjs.launch = {
-                css: Modules.userman.css, js: Modules.userman.js
+        if(Modules.userman){// one time setup after loading of all modules
+            for(i = 0; i < Modules.userman.css.length; ++i){
+                Config.extjs.launch.css.push(Modules.userman.css[i])
+            }
+            for(i = 0; i < Modules.userman.js.length; ++i){
+                Config.extjs.launch.js.push(Modules.userman.js[i])
             }
             if(Modules.userman.cfg.extjs) for(i in Modules.userman.cfg.extjs){
                 Config.extjs[i] = Modules.userman.cfg.extjs[i]
