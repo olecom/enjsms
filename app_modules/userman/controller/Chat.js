@@ -41,7 +41,7 @@ var id = 'App.um.controller.Chat'
             })
         })
         users.load()
-
+        // select user of current session
         uname = '<b style="color:#DAA520">' + App.User.get('id') + '</b>&nbsp;|&nbsp;'
 
         // = text =
@@ -119,7 +119,7 @@ var id = 'App.um.controller.Chat'
         chat.down('[type=help]').el.dom.setAttribute(
 'data-qtip',
 'dev info, app module: <b>userman</b>;<br>' +
-'classes:<br><b>`model.userman.chatUser`<br>`view.Chat`<br>`controller.Chat`</b>'
+'classes:<br><b>`App.um.model.chatUser`<br>`App.um.view.Chat`<br>`App.um.controller.Chat`</b>'
         )
 
         return
@@ -155,7 +155,7 @@ var id = 'App.um.controller.Chat'
 
             if(success && (i = data.length)) do {// is Array or blow up
                 if(!(msg = data[--i])) continue
-
+                //TODO: refactor into hash of functions
                 if('usts@um' === msg.ev){// handle status change, login
                     users.findBy(function findUserId(item, id){
                         if(id.slice(4) == msg.json.slice(4)){
@@ -194,7 +194,17 @@ var id = 'App.um.controller.Chat'
                        '&nbsp;|&nbsp;'
                     )
                     msg = msg.msg
+                } else if('login@um' === msg.ev || 'initwes@um' === msg.ev){
+                    users.reload()// reload if unknown user ids
+                    // TODO: setInterval to reload to check deeply offline users
+                    msg = (
+                       '<i style="color:#4169E1">' +
+                        l10n.um.chat.user_reload +
+                       '</i>'
+                    )
+                    u = '<b style="color:#00FF00">&lt;&lt;->></b>&nbsp;|&nbsp;'
                 }
+
                 if(u){// print msg into chat room
                     msg_tpl.append(
                         tbl,
@@ -214,10 +224,8 @@ if(override) cfg.override = id
  *
  * Thus there are classes with run time development reloading for
  * - controllers (this one),
- * - slow view:
- *   Ext.define('App.view.Chat',...)
- * - and fast view definitions (config only):
- *   App.cfg['App.view.Userman'] = { ... }
+ * - view:
+ *   Ext.define('App.um.view.Chat',...)
  **/
 Ext.define(id, cfg)
 

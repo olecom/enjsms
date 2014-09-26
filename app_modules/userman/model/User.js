@@ -1,6 +1,6 @@
 Ext.syncRequire('/l10n/' + l10n.lang + '_um')// require l10n from model
 
-Ext.define('App.model.userman.User',{
+Ext.define('App.um.model.User',{
     extend: Ext.data.Model,//App.model.BaseCRUD,//FIXME: use of id internals in `waitEvent`
     singleton: true,// only one user in UI (`require`d before controllers by app module)
     can: null,// permissions; usage: `App.User.can['App.backend.JS'] && (run_that())`
@@ -22,18 +22,14 @@ Ext.define('App.model.userman.User',{
     login: function login(newUserId, get_session_info){
         App.backend.req('/login', newUserId,{
             autoAbort: true,
-            callback: function session_info(err, json){
-                if(!err){// controller (i.e. caller) updates UI
-                    get_session_info(json)
-                }
-            }
+            callback: get_session_info// controller (i.e. caller) updates UI
         })
     },
     auth: function auth(user, role, pass, callback){
     var me = this
 
         App.backend.req('/auth',
-            user + '\n' + role + '\n' + App.crypto.userman.SHA1.hash(pass),
+            user + '\n' + role + '\n' + App.um.crypto.SHA1.hash(pass),
             function auth_cb(err, ret, res){
                 if(!err){
                     me.can = ret.can

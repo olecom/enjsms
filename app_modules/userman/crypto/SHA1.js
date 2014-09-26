@@ -1,10 +1,10 @@
 /**
- * @class App.crypto.userman.SHA1
+ * @class App.um.crypto.SHA1
  * @singleton
  * https://github.com/existdissolve/CarTracker/tree/master/PartEight
  * https://code.google.com/p/extjsdyntran/source/browse/trunk/extjsdyntran/WebContent/examples/logindialog/js/Ext.ux.Crypto.SHA1.js?r=174
  */
-Ext.define('App.crypto.userman.SHA1', {
+Ext.define('App.um.crypto.SHA1', {
     singleton: true,
     // function 'f' [§4.1.1]
     f: function(s, x, y, z) {

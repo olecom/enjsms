@@ -42,7 +42,9 @@ var chat_api = { 'user': null, 'text': null, 'deve': load_chat_api }
     var ret = { success: false, data: null }//                               \..../
     var m = req.url.slice(1, 5)// call from UI: App.backend.req('/um/lib/chat/deve')
 
-        if('deve' === m && !req.session.can['App.view.Window->tools.refresh']){
+        if(!req.session || (
+           'deve' === m && !req.session.can['App.view.Window->tools.refresh'])
+        ){
             res.statusCode = 401// no auth
             return res.json(ret)
         }

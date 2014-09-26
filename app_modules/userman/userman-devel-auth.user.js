@@ -4,10 +4,11 @@
 // @namespace       supro
 // @description     supro userman app module auto auth; setup: localStorage['supro.user' || 'supro.role' || 'supro.pass']; defaults `olecom:developer.local:pass`
 // @match           http://localhost:3007/
-// @version         0.2
+// @version         0.4
 // ==/UserScript==
 
-function closure(w, localStorage, con){
+(function gc_setup(document){
+function supro_auth(w, localStorage, con){
 var username = localStorage['supro.user'] || 'dev'
    ,userrole = localStorage['supro.role'] || 'developer.local'
    ,password = localStorage['supro.pass'] || 'pass'
@@ -20,7 +21,7 @@ var loop, user
         if(!w.Ext) return
         if(!w.App) return
         if(!w.App.view) return
-        if(!w.App.view.userman) return
+        if(!w.App.um || !w.App.um.view) return
 
         user = Ext.ComponentQuery.query('field[name=user]')[0]
         if(!user) return
@@ -53,13 +54,13 @@ con.log(pref + 'auto auth set role && pass')
 }
 
 /* run script from site's scope, not here in userscript's sandbox */
-
 var script = document.createElement('script')
 
 script.appendChild(
     document.createTextNode(
-        '('+ closure.toString() + ')(window, localStorage, console)'
+        '('+ supro_auth.toString() + ')(window, localStorage, console)'
     )
 )
 
 document.head.appendChild(script)
+})(document)

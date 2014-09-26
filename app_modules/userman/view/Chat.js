@@ -1,7 +1,10 @@
-(function gc(l10n){
+/*
+ * Chat Logic
+ **/
+
 
 App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [ ],[
-{
+{// setup shortcuts
     text:
 '<img height="64" width="64" src="' + App.backendURL +
 '/css/userman/chat_64px.png"/>' +
@@ -30,13 +33,13 @@ Ext.define('App.um.view.Chat',
     wmTooltip: 'Chat',
     wmId: 'um.view.Chat',
     width: 777,
-    height: 555,
+    height: 444,
     layout: 'border',
     stateful: true,
     stateId: 'um.c',
     onEsc: Ext.emptyFn,
     items:[
-    {
+    {// chat input
         region: 'south',
         collapsible: !true,
         layout: 'hbox',
@@ -85,4 +88,3 @@ Ext.define('App.um.view.Chat',
     ]
 }
 )
-})(l10n)
