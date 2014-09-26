@@ -19,7 +19,8 @@ var xhr = new XMLHttpRequest
             l10n.extjsNotFound : l10n.errload_config_read
         )
 
-        if(req.responseText){// config
+        if(/config/.test(req.responseURL) ||      // Firefox
+          (!req.responseURL && req.responseText)){// node-webkit
             extjs_config = JSON.parse(req.responseText)
             if(url){
         // `nw` context
