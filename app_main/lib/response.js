@@ -1,3 +1,6 @@
+/*
+ * Add `res.sugar()`
+ */
 var http = require('http')
 
 http.ServerResponse.prototype.ContentTypes = {
@@ -9,15 +12,22 @@ http.ServerResponse.prototype.ContentTypes = {
 
 http.ServerResponse.prototype.json =
 /*  res.json({ success: true })
- *  res.json('{ "success": true }')
+ *  res.json('') -> valid JSON is empty string object: ""
  *  res.json(401, { msg: ' Authorization Required' })
+ *
+ *  res,json() -> blow up
  */
-function res_json(obj){
-    if(2 == arguments.length){// args: status / body
-        this.statusCode = obj
-        obj = arguments[1]
+function res_json(status, obj){
+    if('undefined' != typeof obj){
+        this.statusCode = status
+    } else {
+        obj = status
     }
-    if('string' != typeof obj) obj = obj && JSON.stringify(obj) || '{"success": true}'
+    try {
+        obj = JSON.stringify(obj)
+    } catch(ex){
+        obj = '{"success": false}'
+    }
     this.setHeader('Content-Length', Buffer.byteLength(obj))
     this.writeHead(this.statusCode, this.ContentTypes.AppJSON)
     this.end(obj)
