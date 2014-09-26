@@ -150,9 +150,10 @@ var t
         Ext.syncRequire(j)
     } while(++i < t.length)
 
-    if(false !== App.cfg.createViewport){// if no app auth module (e.g. userman)
+    if(false !== App.cfg.createViewport){// if no auth app_module
+        app.extjs_helper = null// mark for GC
         Ext.globalEvents.fireEvent('createViewport')
-    }
+    }// else userman's: `App.um.controller.Login->createViewportAuth()`
 
     con.log('ExtJS + App launch: OK')
 }
