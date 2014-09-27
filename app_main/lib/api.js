@@ -3,7 +3,7 @@ module.exports = { /* API setup */
     app: null,// connect()
     mwL10n: null,// `l10n` files middleware factory for app modules
     set_mwConfig: null,// set another middleware for serving config
-    getModulesConfig: null,// get ref from module loader
+    getModules: null,// get ref from module loader
     /* modules sub api (can be removed if no such app module used)
      * performance hint: placeholders tell V8 about future structure
      **/
