@@ -9,12 +9,26 @@
 ================================================================================
 */
 
-function ctl_backend_uglify_js(cfg, run_backend){
+module.exports = ctl_backend
+
+function ctl_backend(cfg, run_backend){
 var ipt  = require('util').inspect
+var close_handlers = [ ], allow = true
+
+    cfg.backend.ctl_on_close = function(handler){
+        if(!handler || 'function' != typeof handler){
+            allow = false
+            return
+        }
+        if(allow){
+            close_handlers.push(handler)
+        }
+        return
+    }
 
 var ctl = require('http').createServer(
 function proc_ctl_http_serv(req, res){
-    var body = ''
+var body = ''
 
     res.on('close', proc_ctl_res_unexpected_close)
 
@@ -22,7 +36,7 @@ function proc_ctl_http_serv(req, res){
     if ('/sts_running' == req.url){
         // empty
     } else if('/cmd_exit' == req.url){
-        the_end()
+        call_close_handlers(close_handlers)
         body += '$ is going down\n'
     } else if ('/cmd_stat' == req.url){
         body += Math.ceil(process.uptime()) + '\n' + ctl.toISOString()
@@ -75,11 +89,27 @@ ctl.listen(cfg.backend.ctl_port ,'127.0.0.1' ,run_backend)
 ctl.unref()// "allow the program to exit if this is the only active server in the event system"
 ctl = null// setup is over, waiting for 'listening' event, `ctl` is running flag
 
+function call_close_handlers(arr){
+var i, code = 0, n = arr.length
+
+    if(0 == n) return the_end(0)
+
+    for(i = 0; i < n; ++i){
+        arr[i](parallel_callback)
+    }
+    return undefined
+
+    function parallel_callback(err){
+        err && (code = n)
+        if(0 === --n){
+            the_end(code)
+        }
+    }
+}
+
 function the_end(code){
     process.nextTick(function(){
         process.exit(code ? code : 0)
     })
 }
 }
-
-module.exports = ctl_backend_uglify_js
