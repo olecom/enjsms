@@ -7,7 +7,7 @@ module.exports = { /* API setup */
     /* modules sub api (can be removed if no such app module used)
      * performance hint: placeholders tell V8 about future structure
      **/
-    db: null,// mongodb if configured
+    db: null,// mongodb if `supromongod` is configured
     um: null,// access point into `userman`
     wes: null// userman: waiting events (from backend to UI)
 }

@@ -5,7 +5,7 @@
 
 module.exports = runApp
 
-function runApp(cfg, db){
+function runApp(cfg){
 var api      = require('./api.js')
    ,sendFile = require('./middleware/sendFile.js')
    ,_404     = require('./middleware/404.js')
@@ -36,7 +36,8 @@ var api      = require('./api.js')
     app.use('/app_back.js' , _404)// hide
     app.use('/app_front.js' , sendFile('app_front_http.js'))// switch to web UI
 
-    require('../../app_modules')(cfg, api)
+    require('../../app_modules/')(cfg, api)
+    cfg.backend.ctl_on_close(/* finish on close setup, deny further additions */)
 
     /* backend static files for HTTP users */
     app.use('/', connect['static'](__dirname + '/..', { index: 'app.htm' }))

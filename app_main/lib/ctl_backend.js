@@ -22,25 +22,6 @@ function proc_ctl_http_serv(req, res){
     if ('/sts_running' == req.url){
         // empty
     } else if('/cmd_exit' == req.url){
-
-        if(cfg.backend.mongodb){
-            if((cfg = require('./mongodb.js').client)){
-            //FIXME: check `serverStatus.metrics.cursor.open.total`
-                return cfg.close(true, function end_with_mongodb(err){
-                    err && (body += '! MongoDB close error:' + err + '\n')
-                    body += '^ MongoDB connection was closed\n'
-                    log(body)
-
-                    res.writeHead(200 ,{ 'Content-Length': body.length,
-                                         'Content-Type': 'text/plain' }
-                    )
-                    res.end(body)
-
-                    return the_end(err ? 2 : 0)
-                })
-            }
-        }
-
         the_end()
         body += '$ is going down\n'
     } else if ('/cmd_stat' == req.url){

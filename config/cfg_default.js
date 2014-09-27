@@ -7,7 +7,7 @@ config = {
     lang: 'ru',// base localization, must be provided by any module as fallback
     log: 'log/',
     modules:{// cfg for stack of things from 'app_modules'
-    // order matters as in middlewares
+    // order matters: before auth module there are no restrictions to config
     // auth module overwrites default and sets up per-user auth module loading
         userman:{//#0: authentication and authorization (plus Chat)
             store: 'fs' // TODO: fs || db
@@ -54,20 +54,12 @@ config = {
     },
     backend:{
         file: 'app_main/app_back.js',
-        ctl_port: 3008,
         job_port: 3007,
+        ctl_port: 3008,
+        ctl_on_close: null,// set app module handlers for ctl close/app exit
         init_timeout: 123
        ,extjs:{
             pathFile: 'extjs.txt'// search this file (extjs.txt)
        }
-       ,mongodb:{//'mongodb://' + process.env.MONGODS + process.env.MONGO_DBNAME
-            url: 'mongodb://127.0.0.1:27027/'
-           ,db_name: 'supro_GLOB'
-           ,options:{// you know what you are doing here!
-               bufferMaxEntries: 0,
-               forceServerObjectId: true,
-               journal: true
-            }
-        }
     }
 }

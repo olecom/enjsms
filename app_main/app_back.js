@@ -14,14 +14,6 @@ var cfg = require('./lib/read_config.js')
             new Date().toISOString()
         )
 
-        if(!cfg.backend.mongodb) return require('./lib/app.js')(cfg)
-
-        return require('./lib/mongodb.js').connect(cfg.backend.mongodb,
-        function on_app_db(err, db){
-            err && process.exit(1)// it's over, don't even launch
-
-            return require('./lib/app.js')(cfg, db)
-        }
-        )
+        return require('./lib/app.js')(cfg)
     }
 })(global, process, console)
