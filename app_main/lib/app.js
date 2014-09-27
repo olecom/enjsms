@@ -40,7 +40,7 @@ var api      = require('./api.js')
     cfg.backend.ctl_on_close(/* finish on close setup, deny further additions */)
 
     /* backend static files for HTTP users */
-    app.use('/', connect['static'](__dirname + '/..', { index: 'app.htm' }))
+    app.use('/', connect['static'](__dirname + '/../', { index: 'app.htm' }))
 
     app.use('/test.js', sendFile('test.js'))
     /* final stage: error path */
