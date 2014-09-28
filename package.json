@@ -50,6 +50,7 @@
     },
     "dependencies": {
         "mongodb": "1.3.23",
+        "mkdirp": "0.3.5",
         "connect": "2.9.2-supro (low fat)"
     }
 }
