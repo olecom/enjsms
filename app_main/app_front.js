@@ -88,7 +88,7 @@ function node_webkit(app, con){
     setup_tray(app.tray ,app.w)
 
     // long xhr pooling gets messages from backend
-    load_config(app) && http.get(
+    load_config(app) && http.get(//TODO: use `agent:false`
         "http://127.0.0.1:" + app.config.backend.ctl_port
         ,backend_is_running
     ).on('error'
@@ -116,7 +116,7 @@ function backend_is_running(res){
 }
 
 function backend_ctl_errors(e){
-    if("ECONNRESET" == e.code){
+    if("ECONNRESET" == e.code){//TODO: use `agent:false` to remove this
         con.log('backend_ctl_errors: prev. backend connection has been reset, ignore')
         return
     }
