@@ -370,6 +370,8 @@ log('allow Can.Static: ' + perm)
                     ret.can[data] && ret.modules.js.push(data)
                     // setup other modules
                     for(r in Modules) if(ret.can['module.' + r] || ret.can['module.*']){
+                        if(!Modules[r]) continue
+
                         data = Modules[r].css
                         if(data) for(u = 0; u < data.length; ++u){
                             ret.modules.css.push(data[u])
