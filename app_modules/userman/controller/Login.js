@@ -195,6 +195,23 @@ Ext.define('App.um.controller.Login',{
             }
         }
         function authenticate(field){
+            // prevent session activation and stall on sudden page reload/crash
+            /* NOTE: there is no way to match reload or window/tab close
+             *       in the browser.
+             *       Thus session is lost and relogin is required. But
+             *       this can be automated by userscripts.
+             *       In Chrome `Ext.EventManager.onWindowUnload()` works.
+             *
+             * node-webkit: session is destroyed only on window `close`
+             **/
+            Ext.EventManager.onWindowUnload(do_logout)// `browser`
+            if(App.backendURL){// `nw`
+                app.w.on('close', function nw_close(){
+                    App.User.logoutUI()
+                    this.close(true)
+                })
+            }
+
             if(field){// from button call arguments: `field, ev`
                 App.um.view.Login.fadeInProgress(do_auth)
             } else {// from direct call
@@ -203,6 +220,10 @@ Ext.define('App.um.controller.Login',{
             }
 
             return
+
+            function do_logout(){
+                App.User.logoutUI()
+            }
 
             function do_auth(){
                 App.User.auth(
@@ -215,23 +236,6 @@ Ext.define('App.um.controller.Login',{
             function callbackAuth(err, json, res){
                 if(!err){
                     App.um.view.Login.fadeOut(createViewportAuth)
-                    if(!App.backendURL){// `browser`
-                    //!!! do not apply shutdown for now !!!
-                    /* NOTE: there is no way to match reload or window/tab close
-                     *       in the browser.
-                     *       Thus session is lost and relogin is required. But
-                     *       this can be automated by userscripts.
-                     *       In Chrome `Ext.EventManager.onWindowUnload()` works.
-                     *
-                     * node-webkit: session is destroyed only on window `close`
-                     **/
-                     //Ext.EventManager.onWindowUnload(App.User.logout)// leave session for now
-                    } else {// `nw`
-                        //app.w.on('close', function nw_close(){
-                        //    App.User.logout()
-                        //    this.close(true)
-                        //})
-                    }
                 } else {
                     // reload if no session (e.g. backend reloaded)
                     if(res.status && 402 === res.status) location.reload(true)
@@ -276,6 +280,8 @@ Ext.define('App.um.controller.Login',{
             }
 
             Ext.globalEvents.fireEvent('createViewport')
+            //!!! do not apply shutdown for now !!!
+            App.User.logoutUI = Ext.emptyFn
         }
 
         function gotoRoles(_, ev){

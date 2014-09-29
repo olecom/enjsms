@@ -43,6 +43,9 @@ Ext.define('App.um.model.User',{
             }
         )
     },
+    logoutUI: function logout(){// switch for event handlers
+        App.User.logout()
+    },
     logout: function logout(cb){
         App.backend.req('/logout', null, cb)
     }
