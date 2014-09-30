@@ -16,15 +16,16 @@ config = {
            ,data: '/data/um'// store fs: chat logs
            ,rbac:{
                can:{// list of permissions with arbitrary positive value
-                    'module.pingback': true//FIXME: add modules to can while loading
-                   ,'module.enjsms': true
+                    'module.pingback': true,
+                    'module.enjsms': true,
+                    'module.example': true
                 }
                ,roles:{
                     'user.test':[
-                        // select valid in `can` permissions for role
-                        'module.enjsms'
-                        // this are being added in `can` by `userman` module
-                       ,'App.um.controller.Chat','App.um.view.Chat','/um/chat'
+                        'module.enjsms'// select this `can`, etc.
+                       ,'App.um.wes',
+                       ,'App.um.controller.Chat', 'App.um.view.Chat'
+                       ,'/um/lib/wes', '/um/lib/chat'
                     ]
                 }
                ,users:{
@@ -43,6 +44,7 @@ config = {
             }
         }
        /* after auth anything can go in no particular order */
+       ,example: true
        ,enjsms: true
        ,pingback: true
     },
