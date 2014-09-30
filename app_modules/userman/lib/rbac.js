@@ -273,10 +273,17 @@ log('!Security `merge_rbac`: reject role secure permission "' + m[k] + '"')
     }
 
     function mwRBAC(req, res, next){// manage permissions, roles, users sets
-    var ret = { success: true, data: rbac_api }
+    var ret = { success: true, data: { }}//                             \.../
+    var m = req.url.slice(1, 5)// UI call: App.backend.req('/um/lib/rbac/can')
 
+        switch (m){// API is protected, thus `req.session` must be valid
+            case 'can': req.session.can && (ret.data = req.session.can)
+                break
+            case 'all': ret.data = rbac_api
+                break
+            default:break
+        }
 
-
-        res.json(ret)// big fat todo
+        return res.json(ret)// big fat todo
     }
 }

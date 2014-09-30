@@ -23,7 +23,7 @@ config = {
                ,roles:{
                     'user.test':[
                         'module.enjsms'// select this `can`, etc.
-                       ,'App.um.wes',
+                       ,'App.um.wes'
                        ,'App.um.controller.Chat', 'App.um.view.Chat'
                        ,'/um/lib/wes', '/um/lib/chat'
                     ]
