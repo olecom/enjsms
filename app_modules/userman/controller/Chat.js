@@ -4,12 +4,8 @@ var id = 'App.um.controller.Chat'
    ,cfg = {
     extend: Ext.app.Controller,
     __name: id,
-    models:[
-        'App.um.model.chatUser'
-    ],
-    views:[
-        'App.um.view.Chat'
-    ],
+    models:['App.um.model.chatUser'],
+    views: ['App.um.view.Chat'],
     //!!!chat: null,// dev tools: App.getApplication().getController('Chat').chat
     init:
     function controllerChatInit(){
