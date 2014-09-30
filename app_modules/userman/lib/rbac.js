@@ -9,8 +9,9 @@ var dir, rbac_api, fs = require('fs')
     rbac_api = {
         fuses_can: null,// permission fuses
         can: null, roles: null, users: null,// rbac data
-        mw: mwRBAC,// manager API for UI
-        merge: merge_rbac_from_others
+        merge: merge_rbac_from_others,
+        // API: manager for UI
+        mwRBAC: mwRBAC
     }
 
     default_access_data()
@@ -42,6 +43,7 @@ var dir, rbac_api, fs = require('fs')
     var fuse, backend_js_class, backend_js_api
 
         fuse = rbac_api.fuses_can = rbac_api_fuses_can_setup()
+        /* Protection of permissions */
         // this module can be implemented or copied by third party
         // this is just an example of permissions protection
         backend_js_class = 'App.backend.JS'// depends on `pingback` app_module
@@ -49,21 +51,25 @@ var dir, rbac_api, fs = require('fs')
         fuse(backend_js_class, true)// setup fuse permissions
         fuse(backend_js_api, true)
         fuse('module.*', true)
-
+        /* set of permissions */
         rbac_api.can = {
-            backend:[// a block of permissions
+            backend:[// union of permissions to be expanded in role by auth
                 'App.view.desktop.BackendTools'// UI classes
                 ,fuse(backend_js_class)// annotated secure permission used
                 ,fuse(backend_js_api)// annotated secure permission used
             ]
            ,userman:[
-                'App.um.controller.Userman',
+                '/um/',// all backend API calls (URL based)
+                'App.um.controller.Userman',// simple single permissions
                 'App.um.view.Userman',
-                '/um/'// protect backend API calls (URL based)
+                'App.um.wes'
             ]
            ,chat:[
-                'App.um.controller.Chat',// simple single permissions
-                'App.um.view.Chat'// api is from userman
+                '/um/lib/wes', '/um/lib/chat'// backend API calls (URL based)
+                ,'App.um.wes'
+                //NOTE: 'App.um.model.chatUser' is accessible if not listed here
+                ,'App.um.view.Chat'
+                ,'App.um.controller.Chat'
            ]
             //// simple permissions, e.g.:
             //,'App.um.view.Chat': true
@@ -74,7 +80,7 @@ var dir, rbac_api, fs = require('fs')
             }
            ,API:[ ]// by default deny access to API calls (iterate array of subsets)
         }
-
+        /* set of roles */
         rbac_api.roles = {// 'role': new Array(of `can`s)
             'developer.local':[
                 rbac_api.can.backend// can do all from specified `can` block
@@ -83,26 +89,41 @@ var dir, rbac_api, fs = require('fs')
                ,'App.view.Window->tools.refresh'// developer's stuff
                ,fuse('module.*')// allow any app module to load
             ]
-           ,'admin.local':[ 'App.view.desktop.BackendTools' ]// single true-permissions
-           ,'developer':[ fuse(backend_js_class) ]
+           ,'admin.local':[
+                'App.view.desktop.BackendTools',
+                'module.example',// if enabled in config will be allowed
+                'module.enjsms',
+                rbac_api.can.chat
+           ]
+           ,'enjsms+chat':[
+                'module.enjsms',// order is not followed in shortcuts
+                //'/um/lib/rbac', allow e.g. `App.backend.req('/um/lib/rbac/can')`
+                rbac_api.can.chat
+           ]
+           //,'developer':[ fuse(backend_js_class) ]
         }
         fuse(backend_js_class, false)// deny access by this permission for others
         fuse(backend_js_api, false)// deny access by this permission for others
         fuse('module.*', false)
-
+        /* set of users */
         rbac_api.users = {
             dev:{
                 id: 'dev',
                 // require('crypto').createHash('sha1').update(pass).digest('hex')
                 pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
                 roles:[ 'developer.local', 'admin.local' ],
-                name: 'default login'
+                name: 'full dev login'
+            }
+            ,admin:{
+                id: 'admin',
+                pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
+                roles:[ 'admin.local' ],
+                name: 'admin login'
             }
             ,test:{
                 id: 'test',
-                // require('crypto').createHash('sha1').update(pass).digest('hex')
                 pass: '9d4e1e23bd5b727046a9e3b4b7db57bd8d6ee684',
-                roles:[ 'developer.local', 'admin.local' ],
+                roles:[ 'enjsms+chat' ],
                 name: 'test login'
             }
         }
@@ -155,6 +176,7 @@ console.log('eca a: ', a)
                 }
                 return (fuses_can[id] = (val === true)) ? id : ''
             }
+
             if(fuses_can.hasOwnProperty(id)){
                return fuses_can[id] ? id : ''
             }
@@ -195,22 +217,23 @@ console.log('eca a: ', a)
         secure = rbac_api.fuses_can
         for(i in rbac){
             if(!rbac_api.hasOwnProperty(i)){// check if `rbac_api` has such category
-                log('!Security `merge_rbac`: overwrite attempt of "' + i + '"')
+log('!Security `merge_rbac`: overwrite attempt of "' + i + '"')
                 continue// don't allow anything from untrusted sources
             }
             src = rbac[i], dst = rbac_api[i]
             for(j in src){// from source to destination
                 if(dst.hasOwnProperty(j)){
-                    log('!Security `merge_rbac`: overwrite attempt of `' + i + '["' + j + '"]`')
+//log('!Security `merge_rbac`: overwrite attempt of `' + i + '["' + j + '"]`')
+                    // new: just skip `can` that exists already
                     continue// don't allow overwrite anything
                 }
                 if('can' == i){
                     if(Array.isArray(src[j])){
-                        log('`merge_rbac`: skip array can.' + j)
+log('`merge_rbac`: skip array can.' + j)
                         continue// disable arrays (nothing can be there)
                     }
                     if(null !== secure(j)){
-                        log('!Security `merge_rbac`: skip secure permission "' + j + '"')
+log('!Security `merge_rbac`: skip secure permission "' + j + '"')
                         continue// there is such permission in `fuses_can`
                     }
                 } else if('roles' == i){// check perms thru `fuses_can`
@@ -218,28 +241,30 @@ console.log('eca a: ', a)
                         continue// skip
                     }// role_name: [ ]
 
-//console.log('merge role m: ' + m)
+//log('merge role m: ' + m)
                     for(k = 0; k < m.length; ++k){
-//console.log('merge role m[k]: ' + m[k])
+//log('merge role m[k]: ' + m[k])
                         if(null !== secure(m[k])){
-                            log('!Security `merge_rbac`: reject role secure permission "' + m[k] + '"')
+log('!Security `merge_rbac`: reject role secure permission "' + m[k] + '"')
                             m[k] = ''// there is such permission in `fuses_can`
-                        } else {// check API subsets
-//console.log('merge role API: ', rbac_api.can.API)
+                        }/* else {// check API subsets
+//log('merge role API: ', rbac_api.can.API)
                             for(ii = 0; ii < rbac_api.can.API.length; ++ii){
                             // all API must heve permission
-//console.log('merge role API[ii]: ' + rbac_api.can.API[ii])
+//log('merge role API[ii]: ' + rbac_api.can.API[ii])
                                 if(0 == rbac_api.can.API[ii].indexOf(m[k])){
                                 // j: "/p", API[i]: '/pingback'
                                     log(
-                                        '!Security `merge_rbac`: skip secure API subset "' +
+'!Security `merge_rbac`: skip secure API subset "' +
                                         m[k] + '" in role "'+ j + '"'
                                     )
-                                    m[k] = ''
-                                    break// stop scan; deny subsets of API from app modules
+                                    m[k] = ''???
+                                    break
+                    // stop scan; deny subsets of API from app modules
+                    // ??? what app modules ???
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
                 dst[j] = src[j]

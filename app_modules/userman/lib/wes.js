@@ -81,7 +81,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
     var w, s
 
         if(!req.session || !req.session.user || !(w = Waits[req.sessionID])){
-            return res.statusCode = 401, res.end()// 'Unauthorized'
+            return res.statusCode = 401, res.json('')// 'Unauthorized'
         }
         if(!req.txt){
             return res.statusCode = 501, res.json(

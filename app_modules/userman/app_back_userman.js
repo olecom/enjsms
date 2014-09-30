@@ -82,7 +82,7 @@ var app = api.app
     app.use('/um' + (n = '/view/Chat.js'), api.connect.sendFile(__dirname + n, true))
     app.use('/um' + (n = '/controller/Chat.js'), api.connect.sendFile(__dirname + n, true))
 
-    app.use('/um/lib/rbac', rbac.mw)
+    app.use('/um/lib/rbac', rbac.mwRBAC)
     app.use('/um' + (n = '/view/Userman.js'), api.connect.sendFile(__dirname + n, true))
     app.use('/um' + (n = '/controller/Userman.js'), api.connect.sendFile(__dirname + n, true))
 
@@ -101,6 +101,8 @@ var app = api.app
     Modules = api.getModules()// reference to all (being loaded now) modules
     Config  = api.set_mwConfig(mwAuthBasedConfig)// get app config here
     api.getModules = api.set_mwConfig = null// deny other modules to do it
+
+log('TODO: drop priviledges so other app modules can not access anything')
 
     return { css:[ n ], js: files, cfg: cfg }
 
@@ -123,8 +125,8 @@ var app = api.app
     function initAuth(){
    /*
     ** types of permissions:
-    * 1) 'App.backend.JS': Class name is file name  == >> '/backend/JS'
-    * 2) '/um/' || '/so/': backend URL (API calls)
+    * 1) 'App.um.wes': Access class name as file name  == >> 'userman/wes.js'
+    * 2) '/um/lib/wes' || '/so/': backend URL (API calls)
     * 3) 'App.view.Window->tools.refresh': UI subclass permission (nothing special)
     * 4) 'module.pingback' || 'modules.*': allowed app modules
     *
@@ -133,8 +135,14 @@ var app = api.app
     *
     ** apply this logic here for:
     *
-    * 1) Can.Static
-    * 2) Can.API
+    * 1) Can.Static: hash of (static) files to check permission against
+    *        if address+file is here, then permission to access it is required
+    *        i.e. if not here then access is allowed by default
+    *
+    * 2) Can.API: array of URL prefixes to be checked as API calls
+    *        to access API full URL (or prefix as wildcard) must be listed here
+    *        i.e. if not here then access is denied by default
+    *
     * -) Can.UI (not really as it is not a file/URL to serve)
     * -) Can:Modules (not really as it is not a file/URL to serve)
     *
@@ -150,7 +158,7 @@ var app = api.app
         for(p in Roles){
             r = Roles[p]
             if(!Array.isArray(r)){
-                log('Warning: role "' + p + '" is not Array')
+                log('Warning: role "' + p + '" is not an Array')
                 continue
             }
             for(i = 0; i < r.length; ++i){
@@ -159,7 +167,7 @@ var app = api.app
             }
         }
 
-rbac.merge(cfg.rbac)// use after init
+        rbac.merge(cfg.rbac)// use after init
 //log('rbac initAuth: ', require('util').inspect(rbac, { depth : 6 }))
     }
 
@@ -217,7 +225,7 @@ rbac.merge(cfg.rbac)// use after init
     function mwBasicAuthorization(req, res, next){
     // see `create_auth()`
     var i, idx, can, perm
-        return next()
+
         /* protect namespace of this from any no auth access */
         if(0 == req.url.indexOf('/um/')){// TODO: configure other protected namespaces
             do {
@@ -226,30 +234,33 @@ rbac.merge(cfg.rbac)// use after init
                 }
                 res.statusCode = 401// no auth
                 req.session || res.statusCode++// 402 no session
-                return res.end()
+                return res.json('')
             } while(0)
         }
 
-       /* turn ExtJS Class URL into `Can.backend` index
+       /* turn ExtJS Class URL e.g.:
         * /backend/JS.js?_dc=1395638116367
         * /backend/JS
+        *
+        * into `Can.backend` can hash index
         */
         idx = req.url.indexOf('.js?')
+log('basic auth:', req.url)
         perm = req.url
         if(req.session && (can = req.session.can)){// auth
             if(~idx){// *.js files
                 perm = perm.slice(0, idx)
                 if(can.Static[perm]){
-log('allow session Can.Static: ' + perm)
+log('.allow session Can.Static: ' + perm)
                     return next()// allow connect.static
                 }
-            } else {
-log('perm: ' + perm + ' can: ', can)
+            } else {// API
+log('perm: ' + perm)
                 for(i = 0; i < can.API.length; ++i){// scan all API
 log('check: ' + can.API[i])
                     if(0 == perm.indexOf(can.API[i])){// for subsets
                     // e.g. '/um/' in ''/um/lib...''
-log('allow "' + perm + '" by can.API: ' + can.API[i])
+log('.allow "' + perm + '" by can.API: ' + can.API[i])
                         return next()// allow API
                     }
                 }
@@ -257,38 +268,50 @@ log('allow "' + perm + '" by can.API: ' + can.API[i])
             // all other falls thru
         }
 
-        if(!Can.Static.hasOwnProperty(perm)){// no auth
-           for(i = 0; i < Can.API.length; ++i){// all API must heve permission
-log('Check: ' + Can.API[i])
+        /*
+         * Default policy "deny" means:
+         * - URL to be NOT listed in `Can.Static` (protected list of files)
+         * then
+         * -- for API calls (URL other than *.js) to be NOT listed in `Can.API`
+         **/
+        if(!Can.Static.hasOwnProperty(perm)){
+            // not *.js files -- all API must heve permission
+            if(!~idx) for(i = 0; i < Can.API.length; ++i){
+log('check policy deny: ' + Can.API[i])
                 if(0 == perm.indexOf(Can.API[i])){
                 // search for subsets e.g. '/um/' in ''/um/lib...''
-log('disallow "' + perm + '" by Can.API: ' + Can.API[i])
+log('!disallow "' + perm + '" by not in Can.Static and in Can.API: ' + Can.API[i])
                     perm = ''
                     break
                 }
             }
             if(perm){
-log('allow Can.Static: ' + perm)
+log('.allow by not in Can.Static and not in Can.API if not *.js: ' + perm)
                 return next()// allow stuff that is NOT listed there
             }
             // fall thru to disallow
         }
         // disallow
+        perm = req.url
         if(!~idx){// not *.js files
             res.statusCode = 401// crud reject (API calls)
             res.json({ success: false, err: "URL '"+ (perm || '/') + "' Unauthorized" })
         } else {
+            perm = perm.slice(0, idx)
            /* gracefully reject Classes loaded from MVC files by phony UI e.g.:
             *   Ext.ns("App.view.desktop.BackendTools")
             *   App.view.desktop.BackendTools = Ext.Component// Unauthorized
             **/
+log('!deny perm:', perm)
             perm = 'App' + perm.replace(/[/]/g, '.')
+log('!deny cmp:', perm)
             res.js(
                'if(window.Ext){\n' +
+               '    console.warn("Unauthorized: ' + perm + '")\n' +
                '    Ext.ns("' + perm + '")\n    ' +
                     perm + ' = Ext.' + (
                     ~perm.indexOf('.controller.') ? 'app.Controller' : 'Component'
-                ) + '\n}// Unauthorized'
+                ) + '\n}\n'
             )
         }
         return null
