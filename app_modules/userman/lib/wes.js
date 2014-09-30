@@ -169,8 +169,21 @@ var Waits = {// pool of waiting server events `req`uests from UI
     var sn
 
         if((sn = Waits[sessionID])){
-            sn.timer && clearTimeout(sn.timer)
-            sn.res = null
+            if(sn.timer){
+                clearTimeout(sn.timer)
+                sn.timer = 0
+            }
+            if(sn.res){
+                sn.res.json('')
+                sn.res = null
+            }
+            if(sn.last_res){
+                sn.last_res = null
+            }
+            if(sn.next_res){
+                sn.next_res.json('')
+                sn.next_res = null
+            }
             delete Waits[sessionID]
             num--
         }
