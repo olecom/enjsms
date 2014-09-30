@@ -235,8 +235,9 @@ Ext.define('App.um.controller.Login',{
             }
             function callbackAuth(err, json, res){
                 if(!err){
-                    App.um.view.Login.fadeOut(createViewportAuth)
+                    return App.um.view.Login.fadeOut(createViewportAuth)
                 } else {
+                    App.User.logoutUI = Ext.emptyFn// prevent shutdown
                     // reload if no session (e.g. backend reloaded)
                     if(res.status && 402 === res.status) location.reload(true)
                     if(res.status && 409 === res.status){// race inside session
@@ -250,7 +251,7 @@ Ext.define('App.um.controller.Login',{
                     } else {// continue (e.g. wrong password)
                         user.selectText()
                     }
-                    App.um.view.Login.fadeOutProgress()
+                    return App.um.view.Login.fadeOutProgress()
                 }
             }
         }
@@ -348,8 +349,19 @@ Ext.define('App.um.controller.Login',{
             App.User.auth(
                 App.User.get('id'),
                 App.User.can.__name,
-                pass.getValue(), function(err){
-                    if(err) return App.um.view.Login.fadeOutProgress()
+                pass.getValue(), function(err, json, res){
+                    if(err){
+                        if(res.status && 402 === res.status){
+                            App.denyMsg()
+                        } else if(res.status && 409 === res.status){
+                            user.setHideTrigger(false)
+                            role.disable()
+                            pass.disable()
+                            auth.disable()
+                            auth.setText(l10n.um.loginConflict)
+                        }
+                        return App.um.view.Login.fadeOutProgress()
+                    }
 
             App.um.wes(App.User.internalId.slice(0,4))// saved status
             return App.um.view.Login.fadeOut(destroy)

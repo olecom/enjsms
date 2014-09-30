@@ -308,7 +308,7 @@ log('allow Can.Static: ' + perm)
             if((ret.can = req.session.can)){
                 ret.user = req.session.user
 
-                if(wes.is_online_reset(req)){// check and reset to prevent races
+                if(wes.is_online(req)){// check and reset to prevent races
                     res.statusCode = 409, ret.err = "Conflict"
                     return res.json(ret)
                 }
@@ -391,6 +391,7 @@ log('allow Can.Static: ' + perm)
                     ret.can = ret.modules = null
                     return wes.broadcast('auth@um', ret)// fast path
                 } else {
+                    wes.reset_online(req)
                     ret.err || (ret.err = '!bad_upr')
                 }
             } else {

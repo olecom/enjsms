@@ -29,7 +29,8 @@ var Waits = {// pool of waiting server events `req`uests from UI
          mwPutWaitEvents: mwPutWaitEvents
         ,get_id: get_id
         ,list_ids: list_ids
-        ,is_online_reset: is_online_reset
+        ,is_online: is_online
+        ,reset_online: reset_online
         ,broadcast: broadcast
         //,singlecast: singlecast
         ,init: init
@@ -37,9 +38,11 @@ var Waits = {// pool of waiting server events `req`uests from UI
     }
 
     function init(req){
-        if(!Waits[req.sessionID]){
+    var w
+
+        if(!(w = Waits[req.sessionID])){
             Waits[req.sessionID] = {
-                id: '',// empty id indicates that session is not active yet
+                id: '',// empty `id` indicates that session is not active yet
                 res: null,// first `res` is being sent back with status confirmation
                 last_res: null,// last finished `res`
                 next_res: null,// new to be `res` after new status and flush
@@ -49,7 +52,7 @@ var Waits = {// pool of waiting server events `req`uests from UI
             num++
             return true
         }
-        return false
+        return !w.id// wes is there, check activation by `id` contents
     }
     // ID: `status(4 chars) + user_id@remote_addr' 'session_id`
     // see: `App.um.wes` for description; init: 'appbar-user-onli'
@@ -136,12 +139,13 @@ var Waits = {// pool of waiting server events `req`uests from UI
         return (req = Waits[req.sessionID]) ? req.id : 'null'
     }
 
-    function is_online_reset(req){
+    function is_online(req){
     var online, w
 
         if((w = Waits[req.sessionID])){
             if(!w.id || ~w.id.indexOf('offl')){// 'appbar-user-offl'
                 (!w.id) && (online = w.res && w.last_res)
+
                 if(!online){
                     w.id = new_id(req)// update status of `App.User`
                     w.queue.push({ ev: 'Usts@um', json: w.id })// with 'login@um'
@@ -152,6 +156,14 @@ var Waits = {// pool of waiting server events `req`uests from UI
             }
         }
         return !!online
+    }
+
+    function reset_online(req){
+    var w
+
+        if((w = Waits[req.sessionID])){
+            w.id = ''// reset active mark (wrong password or something)
+        }
     }
 
     function list_ids(){
