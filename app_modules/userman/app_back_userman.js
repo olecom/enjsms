@@ -381,7 +381,7 @@ log('!deny cmp:', perm)
                     ret.can = req.session.can// permissions for UI
                     ret.modules = req.session.modules = {// one time setup
                         css:[ ],
-                        js:[ 'App.um.wes' ],// provide our UI class(es)
+                        js: ['App.um.wes'],// provide `wes` if role `can` it
                         extjs:{ }
                         //todo per user modules css and js
                     }

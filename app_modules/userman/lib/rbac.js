@@ -58,15 +58,16 @@ var dir, rbac_api, fs = require('fs')
                 ,fuse(backend_js_class)// annotated secure permission used
                 ,fuse(backend_js_api)// annotated secure permission used
             ]
+           ,'App.um.wes': true// `wes` UI + API are included by default in roles
+           ,'/um/lib/wes': true
            ,userman:[
                 '/um/',// all backend API calls (URL based)
                 'App.um.controller.Userman',// simple single permissions
-                'App.um.view.Userman',
-                'App.um.wes'
+                'App.um.view.Userman'
             ]
            ,chat:[
-                '/um/lib/wes', '/um/lib/chat'// backend API calls (URL based)
-                ,'App.um.wes'
+                '/um/lib/chat'// backend API calls (URL based)
+                ,'App.um.wes', '/um/lib/wes'// NOTE: include this for any role
                 //NOTE: 'App.um.model.chatUser' is accessible if not listed here
                 ,'App.um.view.Chat'
                 ,'App.um.controller.Chat'
