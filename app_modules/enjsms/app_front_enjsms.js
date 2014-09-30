@@ -9,7 +9,9 @@ App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [ ],[
    ,tooltip: 'SMS via VOIP modems (screen shot)'
    ,handler:
     function launch_enjsms(){
-        new ENJSMS.view.Viewport({ constrainTo: Ext.getCmp('desk').getEl() })
+        (new ENJSMS.view.Viewport({
+            constrainTo: Ext.getCmp('desk').getEl()
+        })).maximize()
     }
 }
 ])
