@@ -1,5 +1,4 @@
 Ext.syncRequire( '/l10n/' + l10n.lang + '_example')// require l10n first time
-Ext.ns('App.example.controller')
 
 App.view.items_Shortcuts = Ext.Array.push(App.view.items_Shortcuts || [ ],[
 {

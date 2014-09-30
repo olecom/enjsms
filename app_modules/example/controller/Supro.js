@@ -31,4 +31,4 @@ var id = 'App.example.controller.Supro'
 }
 if(override) cfg.override = id
 Ext.define(id, cfg)
-})(App.example.controller.Supro)
+})(App.example && App.example.controller.Supro)
