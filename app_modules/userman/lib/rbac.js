@@ -69,8 +69,8 @@ var dir, rbac_api, fs = require('fs')
             //,'App.um.view.Chat': true
             //// has no practical use, because they are duplicated in roles
 
-           ,Static:{// by default deny access to Class or other files by `initAuth()`
-                '/pingback.js': false// deny `backend_js_api` even here
+           ,Static:{
+            // by default deny access to Class or other files by `initAuth()`
             }
            ,API:[ ]// by default deny access to API calls (iterate array of subsets)
         }

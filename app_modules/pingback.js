@@ -1,10 +1,15 @@
+/*
+ * running JavaScript inside backend
+ * such effect can be impemented by any app module
+ * but maybe this will have some more access to app internals (TODO)
+ **/
 
 module.exports = pingback
 
 function pingback(api, cfg){// run external text here
-var ui, App_backend_JS = 'App.backend.JS'
+var ui, App_backend_JS = 'App.backend.JS'// UI component
 
-    api.app.use('/pingback.js'
+    api.app.use('/pingback'// backend API
    ,function mwPingBack(req, res, next){
     var ret = { success: false }
 
@@ -16,17 +21,16 @@ var ui, App_backend_JS = 'App.backend.JS'
                     ret, api, req, res, next
                 )
                 if(ret.async){
-                    return// user code must do all further response processing
+                    return null// user code must do all further response processing
                 }
                 ret.success = true
             } catch(ex){
-                next(ex.stack)// pass to the standard error handling middleware
-                return
+                return next(ex.stack)// pass to the standard error handling middleware
             }
         } else {
             res.statusCode = 401
         }
-        res.json(ret)
+        return res.json(ret)
     })
 
     api.app.use('/backend/JS.js'
@@ -40,7 +44,6 @@ var ui, App_backend_JS = 'App.backend.JS'
         }
         res.js(component)
     })
-//    api.cfg.extjs.load.require.push()
 
     ui = App_backend_JS + ' = (' + (
 /*
@@ -52,7 +55,7 @@ function create_pingback(){
  * > App.backend.JS(' ret.data = { val: 123 } ')
  * >>{"success":true,"data":{"val":123}}
  **/
-var url = App.backendURL + '/pingback.js'
+var url = App.backendURL + '/pingback'
    ,appjs = { 'Content-Type': 'application/javascript; charset=utf-8' }
 
     return function run_js_code_on_backend(code, cb){
