@@ -170,13 +170,17 @@ Ext.define('App.um.controller.Login',{
                             return
                         }
                         var models = new Array(ret.roles.length)
+                           ,Role = role.store.model
                            ,i = 0, r
 
                         for(; i < ret.roles.length; i++){
                             r = ret.roles[i]
-                            models[i] = { role: l10n.um.roles[r] || r, '=': r }
+                            models[i] = new Role({
+                                role: l10n.um.roles[r] || r,
+                                '=': r
+                            })
                         }
-                        role.store.loadData(models, false)
+                        role.store.loadRecords(models, false)
 
                         if(role.disabled){
                             role.enable()
