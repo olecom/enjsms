@@ -73,6 +73,7 @@ l10n = { lang: 'ru',//!!! локализация используется тол
     ,stsCheck: 'ПРОВЕРКА работы основной `nodejs`'
     ,stsRestarting: '(2 сек.) запускается новый основной `nodejs`'
     ,stsKilling: 'УБИТЬ основной `nodejs` (завис)'
+    ,stsShutdown: 'ЗАВЕРШЕНИЕ работы основной `node.js`'
     ,stsBackendPid: function(pid){
         return '' + pid + ' - идентификатор основного процесса(nodejs) системы'
     }

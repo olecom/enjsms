@@ -73,6 +73,7 @@ name_example
     ,stsCheck: 'CHECK main `nodejs`'
     ,stsRestarting: '(2 sec.) starting new `nodejs`'
     ,stsKilling: 'KILL/TERMINATE `nodejs` (hangs)'
+    ,stsShutdown: 'SHUTDOWN main `node.js`'
     ,stsBackendPid: function(pid){
         return '' + pid + ' - PID of the main nodejs process of the system'
     }

@@ -97,6 +97,7 @@ function node_webkit(app, con){
     app.backend_check = check_backend
     app.backend_restart = restart
     app.backend_terminate = terminate
+    app.backend_shutdown = shutdown
     return
 
 function backend_is_running(res){
@@ -314,6 +315,21 @@ function restart(){
             ,2048
         )
     }
+}
+
+function shutdown(){
+    http.get({
+        hostname: '127.0.0.1',
+        port: app.config.backend.ctl_port,
+        path: '/cmd_exit',
+        agent: false
+    }, function(res){
+        App.sts(l10n.stsShutdown, l10n.stsStopSystem, l10n.stsOK)
+        //TODO check if still is up or grep for pid
+    }).on('error', function(e){
+        con.error("Shutdown error: " + e.message)
+        App.sts(l10n.stsShutdown, e.message, l10n.stsOK)
+    })
 }
 
 function terminate(){

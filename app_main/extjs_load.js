@@ -103,10 +103,12 @@ var t
         App.doCheckBackend = app.backend_check
         App.doRestartBackend = app.backend_restart
         App.doTerminateBackend = app.backend_terminate
+        App.doShutdownBackend = app.backend_shutdown
 
         delete app.backend_check
         delete app.backend_restart
         delete app.backend_terminate
+        delete app.backend_shutdown
     }
     App.cfg = app.config
     App.backendURL = App.cfg.backend.url ?

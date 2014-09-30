@@ -18,12 +18,12 @@ Ext.define ('App.view.desktop.BackendTools',{
         text: l10n.stsStopSystem
        ,iconCls: 'sg-s'
        ,handler: function(){
-            if(App.doStopBackend)// TODO request cmd_exit, stop mongoDB
-                App.doStopBackend()
+            if(App.doShutdownBackend)
+                App.doShutdownBackend()
             else Ext.Error.raise({
                 msg: l10n.oops_rcif,
                 sourceClass:'App.view.desktop.BackendTools',
-                sourceMethod: 'App.doStopBackend'
+                sourceMethod: 'App.doShutdownBackend'
             })
        }
     },'-',{
