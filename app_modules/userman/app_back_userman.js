@@ -507,10 +507,10 @@ log('perm apply:"' + j + '"; Can[j]: ', Can[j])
         if(req.session && !req.session.fail){// disallow bruteforce check bypass
             if(req.session.user){// one user login per session
                 wes.broadcast('out@um', wes.get_id(req))
-                wes.cleanup(req.sessionID)
                 req.session.user = null
                 req.session.can = null
             }
+            wes.cleanup(req.sessionID)
             req.session.destroy()
         }
         return res.json('')
