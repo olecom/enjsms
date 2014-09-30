@@ -343,10 +343,10 @@ Ext.define('App.um.controller.Login',{
 
         auth.on({ click: function(){
             App.um.view.Login.fadeInProgress(function(){
-            App.User.login('?', function(err){
+            App.User.login(App.User.get('id'), function(err, ret){
                 if(err) return
             App.User.auth(
-                App.User.id.replace(/....([^@]+)@.*/,'$1'),
+                App.User.get('id'),
                 App.User.can.__name,
                 pass.getValue(), function(err){
                     if(err) return App.um.view.Login.fadeOutProgress()
@@ -395,6 +395,7 @@ var evn, cmp, s
     if('string' == typeof data) switch (data){// simple event
         case 'Disconnect':
         case 'Unauthorized':
+        case 'Payment Required':
             if(App.um.view.Login) return// event is firing again (still no login)
 
             (cmp = Ext.getCmp('um.usts')) && cmp.setIconCls('appbar-user-offl')
