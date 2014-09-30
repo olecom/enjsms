@@ -54,16 +54,20 @@ var path, extjs, t
         Ext.Loader.setPath('Ext.ux', path + '/../examples/ux')
 
         if(app.config.backend.url){// `nw` context`
-            app.config.extjs.appFolder = app.config.backend.url
+            app.config.extjs.appFolder = ('http://127.0.0.1:' +
+                app.config.backend.job_port
+            )
            /* patch ExtJS Loader to work from "file://" in `node-webkit`
             * also `debugSourceURL` removed in `ext-all-debug.js#loadScriptFile()`
             * it crushes `eval` there it's critical (plus there are more patches)
+            *
+            * `app.config.backend.url` has external IP (for remote HTTP)
             **/
             Ext.Loader._getPath = Ext.Loader.getPath
             Ext.Loader.getPath = function getPath(className){
-            // load from remote IP, but API from `App.backendURL = '127.0.0.1'`
+            // load from `App.backendURL = '127.0.0.1'`
                 return '/' == className[0] ?
-                    app.config.backend.url + className + '.js' :
+                    App.backendURL + className + '.js' :
                     Ext.Loader._getPath(className)
             }
         }
@@ -118,7 +122,7 @@ var t
     * need to fill of the `l10n` files use call:
     * > l10n('create_season')
     * The namespace of a module can be selected by:
-    * > l10n._ns = 'so'; 'code with l10n("stuff")' ; l10n._ns = ''
+    * > l10n._ns = 'so'; 'code with l10n("stuff")'; l10n._ns = ''
     * > l10n.so.stuff
     **/
     t = l10n
